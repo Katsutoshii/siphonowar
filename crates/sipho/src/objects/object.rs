@@ -1,7 +1,5 @@
 use std::f32::consts::PI;
 
-use self::effects::{EffectCommands, EffectSize, FireworkSpec};
-
 use super::{
     carry::{CarriedBy, Carrier, CarryEvent},
     neighbors::{AlliedNeighbors, EnemyNeighbors},
@@ -9,6 +7,7 @@ use super::{
 };
 use crate::prelude::*;
 use bevy::{ecs::query::QueryData, prelude::*};
+use sipho_vfx::fireworks::EffectCommands;
 
 /// Plugin for running zooids simulation.
 pub struct ObjectPlugin;
@@ -253,7 +252,7 @@ impl Object {
                 grid.remove(entity, grid_entity);
                 commands.entity(entity).despawn_recursive();
                 effect_commands.make_fireworks(FireworkSpec {
-                    size: EffectSize::Medium,
+                    size: VfxSize::Medium,
                     transform: *transform,
                     team: *team,
                 });

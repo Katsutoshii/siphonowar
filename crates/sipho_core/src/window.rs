@@ -1,9 +1,7 @@
 use bevy::{
     prelude::*,
-    window::{Cursor, PresentMode, PrimaryWindow, WindowMode, WindowTheme},
+    window::{Cursor, PresentMode, WindowMode, WindowTheme},
 };
-
-use crate::prelude::Configs;
 
 pub trait ScalableWindow {
     fn scaled_size(&self) -> Vec2;
@@ -43,15 +41,15 @@ pub fn custom_plugin() -> WindowPlugin {
     }
 }
 
-pub fn resize_window(mut query: Query<&mut Window, With<PrimaryWindow>>, configs: Res<Configs>) {
-    if configs.is_changed() {
-        let mut window = query.single_mut();
-        let scale_factor = window.scale_factor();
-        if configs.window_size != Vec2::ZERO {
-            window.resolution.set_physical_resolution(
-                (configs.window_size.x * scale_factor) as u32,
-                (configs.window_size.y * scale_factor) as u32,
-            );
-        }
-    }
-}
+// pub fn resize_window(mut query: Query<&mut Window, With<PrimaryWindow>>) {
+//     if configs.is_changed() {
+//         let mut window = query.single_mut();
+//         let scale_factor = window.scale_factor();
+//         if configs.window_size != Vec2::ZERO {
+//             window.resolution.set_physical_resolution(
+//                 (configs.window_size.x * scale_factor) as u32,
+//                 (configs.window_size.y * scale_factor) as u32,
+//             );
+//         }
+//     }
+// }

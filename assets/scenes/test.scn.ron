@@ -20,6 +20,13 @@
         ),
       }
     ),
+    "sipho_core::grid::spec::GridSpec": (
+      rows: 256,
+      cols: 256,
+      width: 64.0,
+      visualize: false,
+      visualize_navigation: false,
+    ),
     "sipho::inputs::InputConfig": InputConfig(
       keyboard: {
         KeyX: SpawnHead,
@@ -34,13 +41,6 @@
         Right: Secondary,
         Middle: PanCamera,
       }
-    ),
-    "sipho::grid::spec::GridSpec": (
-      rows: 256,
-      cols: 256,
-      width: 64.0,
-      visualize: false,
-      visualize_navigation: false,
     ),
     "sipho::grid::obstacles::ObstaclesSpec": ([
       ((134, 134), Full),

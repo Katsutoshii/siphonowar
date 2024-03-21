@@ -33,6 +33,7 @@ impl Plugin for InputActionPlugin {
                 (
                     InputEvent::update.in_set(SystemStage::Spawn),
                     ControlEvent::update.after(InputEvent::update),
+                    pan_camera.after(ControlEvent::update),
                 ),
             );
     }
@@ -265,5 +266,23 @@ impl Index<ControlAction> for ControlTimers {
 impl IndexMut<ControlAction> for ControlTimers {
     fn index_mut(&mut self, i: ControlAction) -> &mut Self::Output {
         self.get_mut(&i).unwrap()
+    }
+}
+
+pub fn pan_camera(
+    mut control_events: EventReader<ControlEvent>,
+    mut camera: Query<(&CameraController, &mut Transform), With<MainCamera>>,
+) {
+    for &ControlEvent {
+        action,
+        state: _,
+        position,
+    } in control_events.read()
+    {
+        if action != ControlAction::PanCamera {
+            continue;
+        }
+        let (controller, mut camera_transform) = camera.single_mut();
+        controller.set_position(&mut camera_transform, position);
     }
 }

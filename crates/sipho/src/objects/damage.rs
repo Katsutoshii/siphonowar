@@ -2,8 +2,6 @@ use bevy::prelude::*;
 
 use crate::prelude::*;
 
-use self::effects::{EffectSize, FireworkSpec};
-
 pub struct DamagePlugin;
 impl Plugin for DamagePlugin {
     fn build(&self, app: &mut App) {
@@ -80,7 +78,7 @@ impl DamageEvent {
             {
                 health.damage(event.amount);
                 effects.make_fireworks(FireworkSpec {
-                    size: EffectSize::Small,
+                    size: VfxSize::Small,
                     team,
                     transform,
                 });

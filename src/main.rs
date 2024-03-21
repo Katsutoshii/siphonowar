@@ -1,5 +1,9 @@
 use bevy::prelude::*;
-use sipho::prelude::*;
+
+pub mod prelude {
+    pub use sipho::prelude::*;
+}
+use prelude::*;
 
 #[cfg(feature = "debug")]
 mod debug;
@@ -9,7 +13,7 @@ fn main() {
     app.add_plugins(SiphonowarPlugin);
     #[cfg(feature = "debug")]
     {
-        app.add_plugins(debug::DebugPlugin)
+        app.add_plugins(debug::DebugPlugin);
     }
     app.run();
 }

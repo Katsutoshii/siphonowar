@@ -6,8 +6,6 @@ use bevy::{
 
 use crate::prelude::*;
 
-use self::window::ScalableWindow;
-
 use super::{
     fog::{VisibilityUpdate, VisibilityUpdateEvent},
     shader_plane::{ShaderPlaneAssets, ShaderPlanePlugin},

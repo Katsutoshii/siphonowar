@@ -13,15 +13,9 @@ impl Plugin for LoadableScenePlugin {
             .register_type::<Name>()
             .register_type::<core::num::NonZeroU16>()
             .add_systems(PreStartup, load_system)
-            .add_systems(FixedUpdate, save_system)
-            .insert_resource(SceneSpec);
+            .add_systems(FixedUpdate, save_system);
     }
 }
-
-/// Use this to tag entities that should be saved in the scene.
-#[derive(Resource, Default, Reflect)]
-#[reflect(Resource)]
-pub struct SceneSpec;
 
 /// Use this to tag entities that should be saved in the scene.
 #[derive(Component, Default, Reflect)]

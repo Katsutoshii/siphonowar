@@ -1,8 +1,6 @@
 use crate::prelude::*;
 use bevy::prelude::*;
 
-mod spec;
-pub use spec::{GridSize, GridSpec, RowCol, RowColDistance};
 mod fog;
 pub use fog::FogPlugin;
 mod entity;

@@ -7,10 +7,7 @@ use bevy::{
     window::PrimaryWindow,
 };
 
-use crate::cursor::CursorAssets;
 use crate::prelude::*;
-
-use self::window::ScalableWindow;
 
 pub struct CameraPlugin;
 impl Plugin for CameraPlugin {
@@ -21,10 +18,9 @@ impl Plugin for CameraPlugin {
             .add_systems(
                 FixedUpdate,
                 (
-                    CameraController::update_bounds.after(window::resize_window),
+                    CameraController::update_bounds, //.after(window::resize_window),
                     CameraController::update,
                     CameraController::update_drag,
-                    CameraController::pan_to_position,
                 ),
             );
     }
@@ -100,11 +96,10 @@ impl Default for CameraController {
 impl CameraController {
     fn update_bounds(
         grid_spec: Res<GridSpec>,
-        configs: Res<Configs>,
         mut controller_query: Query<(&mut Self, &Camera, &GlobalTransform), With<MainCamera>>,
         window: Query<&Window, With<PrimaryWindow>>,
     ) {
-        if !(grid_spec.is_changed() || configs.is_changed()) {
+        if !grid_spec.is_changed() {
             return;
         }
         let (mut controller, camera, camera_transform) = controller_query.single_mut();
@@ -214,24 +209,6 @@ impl CameraController {
             event_writer.send(CameraMoveEvent {
                 position: camera_transform.translation.xy(),
             });
-        }
-    }
-
-    pub fn pan_to_position(
-        mut control_events: EventReader<ControlEvent>,
-        mut camera: Query<(&CameraController, &mut Transform), With<MainCamera>>,
-    ) {
-        for &ControlEvent {
-            action,
-            state: _,
-            position,
-        } in control_events.read()
-        {
-            if action != ControlAction::PanCamera {
-                continue;
-            }
-            let (controller, mut camera_transform) = camera.single_mut();
-            controller.set_position(&mut camera_transform, position);
         }
     }
 

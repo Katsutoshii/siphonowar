@@ -1,4 +1,4 @@
-use crate::{objects::ObjectSpec, prelude::*};
+use crate::{prelude::*, ObjectSpec};
 use bevy::prelude::*;
 use bevy_console::{reply, AddConsoleCommand, ConsoleCommand, ConsolePlugin};
 use clap::Parser;

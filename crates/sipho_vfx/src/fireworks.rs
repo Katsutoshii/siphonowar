@@ -3,8 +3,8 @@ use bevy::{ecs::system::SystemParam, prelude::*};
 use bevy_hanabi::prelude::*;
 
 /// Plugin for effects.
-pub struct EffectsPlugin;
-impl Plugin for EffectsPlugin {
+pub struct FireworkPlugin;
+impl Plugin for FireworkPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(HanabiPlugin)
             .init_resource::<EffectAssets>()
@@ -99,16 +99,11 @@ impl FromWorld for EffectAssets {
     }
 }
 
-/// Represents size of an effect.
-pub enum EffectSize {
-    Small,
-    Medium,
-}
 /// Describes a firework to create.
 pub struct FireworkSpec {
     pub team: Team,
     pub transform: Transform,
-    pub size: EffectSize,
+    pub size: VfxSize,
 }
 
 /// Schedule despawn for a particle.
@@ -142,8 +137,8 @@ impl EffectCommands<'_, '_> {
             ScheduleDespawn(Timer::from_seconds(0.5, TimerMode::Once)),
             ParticleEffectBundle {
                 effect: ParticleEffect::new(match spec.size {
-                    EffectSize::Small => self.assets.small_fireworks[spec.team].clone(),
-                    EffectSize::Medium => self.assets.fireworks[spec.team].clone(),
+                    VfxSize::Small => self.assets.small_fireworks[spec.team].clone(),
+                    VfxSize::Medium => self.assets.fireworks[spec.team].clone(),
                 }),
                 transform: spec.transform,
                 ..Default::default()

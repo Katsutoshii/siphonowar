@@ -1,39 +1,32 @@
 use bevy::prelude::*;
 
-pub mod camera;
 pub mod config;
-pub mod console;
-pub mod cursor;
-pub mod effects;
 pub mod grid;
 pub mod inputs;
 pub mod objects;
 pub mod scene;
 pub mod selector;
 pub mod waypoint;
-pub mod window;
 
 pub mod prelude {
+    pub use sipho_core::prelude::*;
+    pub use sipho_vfx::prelude::*;
+
     pub use crate::{
-        camera::{CameraController, CameraMoveEvent, MainCamera},
         config::Configs,
-        cursor::Cursor,
-        effects,
-        effects::EffectCommands,
         grid::{
             CreateWaypointEvent, EntityGridEvent, EntitySet, Grid2, Grid2Plugin, GridEntity,
-            GridSize, GridSpec, NavigationGrid2, Obstacle, RowCol, RowColDistance,
+            NavigationGrid2, Obstacle,
         },
         inputs::{ControlAction, ControlEvent},
         objects::{
             DamageEvent, Health, InteractionConfigs, Object, ObjectCommands, ObjectConfig,
-            ObjectConfigs, Objective, ObjectiveConfig, ObjectiveDebugger, Objectives,
+            ObjectConfigs, ObjectSpec, Objective, ObjectiveConfig, ObjectiveDebugger, Objectives,
         },
         selector::Selected,
         waypoint::Waypoint,
-        window, SiphonowarPlugin,
+        SiphonowarPlugin,
     };
-    pub use sipho_core::prelude::*;
 }
 
 use prelude::*;
@@ -53,17 +46,10 @@ impl Plugin for SiphonowarPlugin {
             inputs::InputActionPlugin,
             grid::GridPlugin,
             objects::ObjectsPlugin,
-            console::CustomConsolePlugin,
             scene::LoadableScenePlugin,
             selector::SelectorPlugin,
             waypoint::WaypointPlugin,
-            camera::CameraPlugin,
-            cursor::CursorPlugin,
-            effects::EffectsPlugin,
-        ))
-        .add_systems(
-            FixedUpdate,
-            window::resize_window.in_set(SystemStage::Spawn),
-        );
+            sipho_vfx::VfxPlugin,
+        ));
     }
 }
