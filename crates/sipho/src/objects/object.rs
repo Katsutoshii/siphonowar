@@ -241,25 +241,25 @@ impl Object {
 
     /// System for objects dying.
     pub fn death(
-        mut objects: Query<(Entity, &Self, &GridEntity, &Health, &Transform, &Team)>,
+        mut objects: Query<(Entity, &Self, &GridEntity, &Health, &GlobalTransform, &Team)>,
         mut commands: Commands,
         mut object_commands: ObjectCommands,
         mut effect_commands: EffectCommands,
         mut grid: ResMut<Grid2<EntitySet>>,
     ) {
-        for (entity, object, grid_entity, health, transform, team) in &mut objects {
+        for (entity, object, grid_entity, health, &transform, team) in &mut objects {
             if health.health <= 0 {
                 grid.remove(entity, grid_entity);
                 commands.entity(entity).despawn_recursive();
                 effect_commands.make_fireworks(FireworkSpec {
                     size: VfxSize::Medium,
-                    transform: *transform,
+                    transform: transform.into(),
                     team: *team,
                 });
                 if object == &Object::Plankton {
                     object_commands.spawn(ObjectSpec {
                         object: Object::Food,
-                        position: transform.translation.xy(),
+                        position: transform.translation().xy(),
                         ..default()
                     })
                 }

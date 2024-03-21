@@ -211,7 +211,7 @@ impl NavigationGrid2 {
     /// Also create new ones for moved waypoints.
     pub fn update_waypoints(
         all_objectives: Query<(Entity, &Objectives), Without<Waypoint>>,
-        transforms: Query<&Transform>,
+        transforms: Query<&GlobalTransform>,
         mut grid: ResMut<Self>,
         obstacles: Res<Grid2<Obstacle>>,
         spec: Res<GridSpec>,
@@ -222,12 +222,13 @@ impl NavigationGrid2 {
         for (entity, objectives) in all_objectives.iter() {
             if let Some(followed_entity) = objectives.last().get_followed_entity() {
                 let source_rowcol = if let Ok(source_transform) = transforms.get(entity) {
-                    spec.to_rowcol(source_transform.translation.xy())
+                    spec.to_rowcol(source_transform.translation().xy())
                 } else {
                     continue;
                 };
                 if let Ok(destination_transform) = transforms.get(followed_entity) {
-                    let destination_rowcol = spec.to_rowcol(destination_transform.translation.xy());
+                    let destination_rowcol =
+                        spec.to_rowcol(destination_transform.translation().xy());
                     let value = match destinations.entry(destination_rowcol) {
                         Entry::Occupied(o) => o.into_mut(),
                         Entry::Vacant(v) => v.insert(Vec::with_capacity(1)),

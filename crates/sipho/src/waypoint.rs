@@ -65,7 +65,7 @@ impl Waypoint {
 
     pub fn update(
         mut control_events: EventReader<ControlEvent>,
-        mut selection: Query<(&Selected, &mut Objectives, &Transform), Without<Self>>,
+        mut selection: Query<(&Selected, &mut Objectives, &GlobalTransform), Without<Self>>,
         mut event_writer: EventWriter<CreateWaypointEvent>,
         mut commands: Commands,
         assets: Res<WaypointAssets>,
@@ -85,7 +85,7 @@ impl Waypoint {
                 if selected.is_selected() {
                     objectives.clear();
                     objectives.push(Objective::FollowEntity(entity));
-                    sources.push(transform.translation.xy());
+                    sources.push(transform.translation().xy());
                 }
             }
             if !sources.is_empty() {

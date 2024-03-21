@@ -123,8 +123,8 @@ impl Objective {
     /// Resolves an objective.
     pub fn resolve(
         &mut self,
-        transform: &Transform,
-        query: &Query<(&Transform, Option<&Velocity>), Without<CarriedBy>>,
+        transform: &GlobalTransform,
+        query: &Query<(&GlobalTransform, Option<&Velocity>), Without<CarriedBy>>,
         time: &Time,
         config: &ObjectiveConfig,
     ) -> ResolvedObjective {
@@ -134,7 +134,7 @@ impl Objective {
                 if let Ok((other_transform, _other_velocity)) = query.get(*entity) {
                     ResolvedObjective::FollowEntity {
                         entity: *entity,
-                        position: other_transform.translation.xy(),
+                        position: other_transform.translation().xy(),
                     }
                 } else {
                     warn!("Invalid entity for follow!");
@@ -149,8 +149,8 @@ impl Objective {
             } => {
                 cooldown.tick(time.delta());
                 if let Ok((other_transform, other_velocity)) = query.get(*entity) {
-                    let position = transform.translation.xy();
-                    let other_position = other_transform.translation.xy();
+                    let position = transform.translation().xy();
+                    let other_position = other_transform.translation().xy();
                     let target_position = other_position
                         + if let Some(velocity) = other_velocity {
                             velocity.0
@@ -240,8 +240,14 @@ impl Objectives {
 
     /// Update acceleration from the current objective.
     pub fn update(
-        mut query: Query<(&mut Self, &Object, &Transform, &Velocity, &mut Acceleration)>,
-        others: Query<(&Transform, Option<&Velocity>), Without<CarriedBy>>,
+        mut query: Query<(
+            &mut Self,
+            &Object,
+            &GlobalTransform,
+            &Velocity,
+            &mut Acceleration,
+        )>,
+        others: Query<(&GlobalTransform, Option<&Velocity>), Without<CarriedBy>>,
         configs: Res<Configs>,
         grid_spec: Res<GridSpec>,
         navigation_grid: Res<NavigationGrid2>,
@@ -254,7 +260,7 @@ impl Objectives {
             }
             let config = configs.objects.get(object).unwrap();
             let obstacles_acceleration = obstacles_grid
-                .obstacles_acceleration(transform.translation.xy(), *velocity)
+                .obstacles_acceleration(transform.translation().xy(), *velocity)
                 * config.obstacle_acceleration;
             *acceleration += obstacles_acceleration;
             let resolved = objectives.resolve(transform, &others, &time, &config.objective);
@@ -267,8 +273,8 @@ impl Objectives {
     /// If there are invalid entity references (deleted entities), remove those objectives.
     pub fn resolve(
         &mut self,
-        transform: &Transform,
-        query: &Query<(&Transform, Option<&Velocity>), Without<CarriedBy>>,
+        transform: &GlobalTransform,
+        query: &Query<(&GlobalTransform, Option<&Velocity>), Without<CarriedBy>>,
         time: &Time,
         config: &ObjectiveConfig,
     ) -> ResolvedObjective {
@@ -303,13 +309,13 @@ impl ResolvedObjective {
     // Returns acceleration for this objective.
     pub fn acceleration(
         &self,
-        transform: &Transform,
+        transform: &GlobalTransform,
         velocity: Velocity,
         config: &ObjectConfig,
         grid_spec: &GridSpec,
         navigation_grid: &NavigationGrid2,
     ) -> Acceleration {
-        let position = transform.translation.xy();
+        let position = transform.translation().xy();
         match self {
             Self::FollowEntity {
                 entity: _,

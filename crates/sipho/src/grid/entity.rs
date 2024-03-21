@@ -14,13 +14,13 @@ pub struct GridEntity {
 }
 impl GridEntity {
     pub fn update(
-        mut query: Query<(Entity, &mut Self, &Transform)>,
+        mut query: Query<(Entity, &mut Self, &GlobalTransform)>,
         mut grid: ResMut<Grid2<EntitySet>>,
         mut event_writer: EventWriter<EntityGridEvent>,
     ) {
         for (entity, mut grid_entity, transform) in &mut query {
             if let Some(event) =
-                grid.update_entity(entity, grid_entity.cell, transform.translation.xy())
+                grid.update_entity(entity, grid_entity.cell, transform.translation().xy())
             {
                 grid_entity.cell = event.cell;
                 event_writer.send(event);

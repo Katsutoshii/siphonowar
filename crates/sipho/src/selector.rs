@@ -45,7 +45,13 @@ impl Selector {
         mut commands: Commands,
         mut query: Query<(&mut Self, &mut Transform, &mut Visibility)>,
         mut objects: Query<
-            (&Object, &Transform, &Team, &mut Selected, &Mesh2dHandle),
+            (
+                &Object,
+                &GlobalTransform,
+                &Team,
+                &mut Selected,
+                &Mesh2dHandle,
+            ),
             Without<Self>,
         >,
         grid: Res<Grid2<EntitySet>>,
@@ -90,7 +96,7 @@ impl Selector {
                     for entity in grid.get_entities_in_aabb(&aabb) {
                         let (_object, transform, team, mut selected, mesh) =
                             objects.get_mut(entity).unwrap();
-                        if aabb.contains(transform.translation.xy()) {
+                        if aabb.contains(transform.translation().xy()) {
                             if selected.is_selected() || *team != configs.player_team {
                                 continue;
                             }

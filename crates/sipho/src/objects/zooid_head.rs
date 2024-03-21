@@ -44,7 +44,7 @@ impl ZooidHead {
 
     /// System to spawn zooids on Z key.
     pub fn spawn_zooids(
-        query: Query<(&Self, Entity, &Transform, &Velocity, &Team)>,
+        query: Query<(&Self, Entity, &GlobalTransform, &Velocity, &Team)>,
         mut commands: ObjectCommands,
         configs: Res<Configs>,
         mut control_events: EventReader<ControlEvent>,
@@ -59,7 +59,7 @@ impl ZooidHead {
                             + (i as f32) * 0.00001 * (zindex::ZOOIDS_MAX - zindex::ZOOIDS_MIN);
                         let velocity: Vec2 = Vec2::Y * config.spawn_velocity + velocity.0;
                         commands.spawn(ObjectSpec {
-                            position: transform.translation.xy() + velocity,
+                            position: transform.translation().xy() + velocity,
                             velocity: Some(Velocity(velocity)),
                             team: *team,
                             zindex,

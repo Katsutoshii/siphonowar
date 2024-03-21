@@ -70,12 +70,15 @@ impl Mul<f32> for Acceleration {
 
 /// Apply velocity changes.
 pub fn update(
-    mut query: Query<(
-        &mut Transform,
-        &mut Velocity,
-        &mut Acceleration,
-        &PhysicsMaterialType,
-    )>,
+    mut query: Query<
+        (
+            &mut Transform,
+            &mut Velocity,
+            &mut Acceleration,
+            &PhysicsMaterialType,
+        ),
+        Without<Parent>,
+    >,
     materials: Res<PhysicsMaterials>,
 ) {
     for (mut transform, mut velocity, mut acceleration, material_type) in &mut query {

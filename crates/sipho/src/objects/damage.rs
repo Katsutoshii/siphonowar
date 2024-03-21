@@ -62,7 +62,7 @@ pub struct DamageEvent {
 }
 impl DamageEvent {
     pub fn update(
-        mut query: Query<(&mut Acceleration, &mut Health, &Team, &Transform)>,
+        mut query: Query<(&mut Acceleration, &mut Health, &Team, &GlobalTransform)>,
         mut events: EventReader<DamageEvent>,
         mut effects: EffectCommands,
     ) {
@@ -80,7 +80,7 @@ impl DamageEvent {
                 effects.make_fireworks(FireworkSpec {
                     size: VfxSize::Small,
                     team,
-                    transform,
+                    transform: transform.into(),
                 });
                 *acceleration += Acceleration(event.velocity.0 * 2.);
             }
