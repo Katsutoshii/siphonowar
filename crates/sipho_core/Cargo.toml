@@ -1,0 +1,18 @@
+[package]
+edition = "2021"
+name = "sipho_core"
+version = "0.1.0"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+bevy = {version = "0.13.0", features = ["dynamic_linking", "file_watcher"]}
+bevy-inspector-egui = "0.23.4"
+bevy_console = "0.11.1"
+bevy_hanabi = "0.10.0"
+bevy_mod_raycast = "0.17.0"
+clap = "4.5.2"
+derive_more = "0.99.17"
+profiling-procmacros = "1.0.15"
+rand = "0.8.5"
+serde = "1.0.192"
