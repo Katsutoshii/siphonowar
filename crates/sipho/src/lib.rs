@@ -8,7 +8,6 @@ pub mod effects;
 pub mod grid;
 pub mod inputs;
 pub mod objects;
-pub mod raycast;
 pub mod scene;
 pub mod selector;
 pub mod waypoint;
@@ -28,9 +27,8 @@ pub mod prelude {
         inputs::{ControlAction, ControlEvent},
         objects::{
             DamageEvent, Health, InteractionConfigs, Object, ObjectCommands, ObjectConfig,
-            ObjectConfigs, Objective, ObjectiveConfig, ObjectiveDebugger, Objectives, Team,
+            ObjectConfigs, Objective, ObjectiveConfig, ObjectiveDebugger, Objectives,
         },
-        raycast::{RaycastEvent, RaycastTarget},
         selector::Selected,
         waypoint::Waypoint,
         window, SiphonowarPlugin,
@@ -59,7 +57,6 @@ impl Plugin for SiphonowarPlugin {
             scene::LoadableScenePlugin,
             selector::SelectorPlugin,
             waypoint::WaypointPlugin,
-            raycast::RaycastPlugin,
             camera::CameraPlugin,
             cursor::CursorPlugin,
             effects::EffectsPlugin,

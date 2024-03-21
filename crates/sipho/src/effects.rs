@@ -1,5 +1,3 @@
-use std::ops::Index;
-
 use crate::prelude::*;
 use bevy::{ecs::system::SystemParam, prelude::*};
 use bevy_hanabi::prelude::*;
@@ -98,12 +96,6 @@ impl FromWorld for EffectAssets {
             fireworks: Team::ALL.map(|team| assets.add(firework_effect(team, 20.))),
             small_fireworks: Team::ALL.map(|team| assets.add(firework_effect(team, 5.))),
         }
-    }
-}
-impl Index<Team> for [Handle<EffectAsset>; Team::COUNT] {
-    type Output = Handle<EffectAsset>;
-    fn index(&self, index: Team) -> &Self::Output {
-        &self[index as usize]
     }
 }
 

@@ -4,8 +4,10 @@ use bevy::prelude::*;
 pub mod aabb;
 pub mod meshes;
 pub mod physics;
+pub mod raycast;
 pub mod rowcol;
 pub mod stages;
+pub mod team;
 pub mod zindex;
 
 pub mod prelude {
@@ -16,8 +18,10 @@ pub mod prelude {
             self, Acceleration, PhysicsBundle, PhysicsMaterial, PhysicsMaterialType, PhysicsPlugin,
             Velocity,
         },
+        raycast::{RaycastCommands, RaycastEvent, RaycastTarget},
         rowcol::{RowCol, RowColDistance},
         stages::SystemStage,
+        team::{Team, TeamMaterials},
         zindex, CorePlugin,
     };
 }

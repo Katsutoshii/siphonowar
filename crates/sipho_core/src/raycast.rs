@@ -55,14 +55,6 @@ impl RaycastCommands<'_, '_> {
     }
 }
 
-/// Plugin to add a waypoint system where the player can click to create a waypoint.
-pub struct RaycastPlugin;
-impl Plugin for RaycastPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_event::<RaycastEvent>();
-    }
-}
-
 #[derive(Event, Debug, Clone)]
 pub struct RaycastEvent {
     pub entity: Entity,
