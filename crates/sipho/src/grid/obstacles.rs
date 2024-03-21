@@ -28,6 +28,7 @@ impl Plugin for ObstaclesPlugin {
                 (
                     Grid2::<Obstacle>::update.after(Grid2::<Obstacle>::resize_on_change),
                     ObstaclesShaderMaterial::update.after(Grid2::<Obstacle>::resize_on_change),
+                    Grid2::<Obstacle>::bounce_off_obstacles.in_set(SystemStage::PostCompute),
                 ),
             );
     }
@@ -92,11 +93,7 @@ impl Grid2<Obstacle> {
             //         .max(0.);
             let directional_adjustment = 1.;
             let direction = Vec2::new(direction.1 as f32, direction.0 as f32);
-            acceleration += Acceleration(
-                -magnitude
-                    * directional_adjustment
-                    * direction,
-            );
+            acceleration += Acceleration(-magnitude * directional_adjustment * direction);
         }
         acceleration
     }
@@ -115,13 +112,20 @@ impl Grid2<Obstacle> {
             acceleration +=
                 self.obstacle_acceleration(position, velocity, obstacle_rowcol, (dr, dc));
         }
-        // for (dr, dc) in [(1, 1), (1, -1), (-1, -1), (-1, 1)] {
-        //     let obstacle_rowcol = ((row as i16 + dr) as u16, (col as i16 + dc) as u16);
-        //     acceleration +=
-        //         self.obstacle_acceleration(position, velocity, obstacle_rowcol, (dr, dc))
-        //             * 2f32.sqrt();
-        // }
         acceleration
+    }
+
+    /// Bounce simulated objects off obstacles.
+    pub fn bounce_off_obstacles(
+        obstacles: Res<Self>,
+        mut query: Query<(&mut Transform, &mut Velocity)>,
+    ) {
+        for (mut transform, mut velocity) in query.iter_mut() {
+            if obstacles[obstacles.to_rowcol(transform.translation.xy())] != Obstacle::Empty {
+                velocity.0 *= -0.5;
+                transform.translation += velocity.0.extend(0.);
+            }
+        }
     }
 }
 

@@ -7,9 +7,7 @@ pub mod cursor;
 pub mod effects;
 pub mod grid;
 pub mod inputs;
-pub mod meshes;
 pub mod objects;
-pub mod physics;
 pub mod raycast;
 pub mod scene;
 pub mod selector;
@@ -28,12 +26,10 @@ pub mod prelude {
             GridSize, GridSpec, NavigationGrid2, Obstacle, RowCol, RowColDistance,
         },
         inputs::{ControlAction, ControlEvent},
-        meshes,
         objects::{
             DamageEvent, Health, InteractionConfigs, Object, ObjectCommands, ObjectConfig,
             ObjectConfigs, Objective, ObjectiveConfig, ObjectiveDebugger, Objectives, Team,
         },
-        physics::{Acceleration, PhysicsBundle, PhysicsMaterial, PhysicsMaterialType, Velocity},
         raycast::{RaycastEvent, RaycastTarget},
         selector::Selected,
         waypoint::Waypoint,
@@ -55,6 +51,7 @@ impl Plugin for SiphonowarPlugin {
                 })
                 .set(window::custom_plugin()),
             config::ConfigPlugin,
+            CorePlugin,
             inputs::InputActionPlugin,
             grid::GridPlugin,
             objects::ObjectsPlugin,
@@ -64,7 +61,6 @@ impl Plugin for SiphonowarPlugin {
             waypoint::WaypointPlugin,
             raycast::RaycastPlugin,
             camera::CameraPlugin,
-            physics::PhysicsPlugin,
             cursor::CursorPlugin,
             effects::EffectsPlugin,
         ))

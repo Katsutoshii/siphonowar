@@ -1,5 +1,25 @@
 (
   resources: {
+    "sipho_core::physics::PhysicsMaterials": PhysicsMaterials(
+      {
+        Default: PhysicsMaterial(
+          max_velocity: 9.0,
+          velocity_smoothing: 0.0,
+        ),
+        Zooid: PhysicsMaterial(
+          max_velocity: 5.5,
+          velocity_smoothing: 0.5,
+        ),
+        SlowZooid: PhysicsMaterial(
+          max_velocity: 4.5,
+          velocity_smoothing: 0.5,
+        ),
+        Plankton: PhysicsMaterial(
+          max_velocity: 1.0,
+          velocity_smoothing: 0.5,
+        ),
+      }
+    ),
     "sipho::inputs::InputConfig": InputConfig(
       keyboard: {
         KeyX: SpawnHead,
@@ -34,26 +54,6 @@
       ((135, 126), Full),
       ((134, 126), UpLeft),
     ]),
-    "sipho::physics::PhysicsMaterials": PhysicsMaterials(
-      {
-        Default: PhysicsMaterial(
-          max_velocity: 9.0,
-          velocity_smoothing: 0.0,
-        ),
-        Zooid: PhysicsMaterial(
-          max_velocity: 5.5,
-          velocity_smoothing: 0.5,
-        ),
-        SlowZooid: PhysicsMaterial(
-          max_velocity: 4.5,
-          velocity_smoothing: 0.5,
-        ),
-        Plankton: PhysicsMaterial(
-          max_velocity: 1.0,
-          velocity_smoothing: 0.5,
-        ),
-      }
-    ),
     "sipho::config::Configs": Configs(
       // window_size: Vec2(
       //   x: 1600.,
