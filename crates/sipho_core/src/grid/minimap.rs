@@ -6,12 +6,6 @@ use bevy::{
 
 use crate::prelude::*;
 
-use super::{
-    fog::{VisibilityUpdate, VisibilityUpdateEvent},
-    shader_plane::{ShaderPlaneAssets, ShaderPlanePlugin},
-    ShaderPlaneMaterial,
-};
-
 /// Plugin for visualizing the grid.
 /// This plugin reads events from the entity grid and updates the shader's input buffer
 /// to light up the cells that have entities.

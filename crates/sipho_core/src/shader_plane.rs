@@ -1,6 +1,5 @@
 use crate::prelude::*;
 use bevy::{
-    prelude::*,
     sprite::{Material2d, Material2dPlugin, MaterialMesh2dBundle},
     window::PrimaryWindow,
 };

@@ -1,14 +1,8 @@
-use bevy::{
-    prelude::*,
-    render::render_resource::{AsBindGroup, ShaderRef},
-    sprite::Material2d,
-};
-
 use crate::prelude::*;
 
-use super::{
-    shader_plane::{ShaderPlaneAssets, ShaderPlanePlugin},
-    ShaderPlaneMaterial,
+use bevy::{
+    render::render_resource::{AsBindGroup, ShaderRef},
+    sprite::Material2d,
 };
 
 /// Plugin for fog of war.

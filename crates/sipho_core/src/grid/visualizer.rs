@@ -1,15 +1,9 @@
 use bevy::{
-    prelude::*,
     render::render_resource::{AsBindGroup, ShaderRef},
     sprite::Material2d,
 };
 
 use crate::prelude::*;
-
-use super::{
-    shader_plane::{ShaderPlaneAssets, ShaderPlanePlugin},
-    ShaderPlaneMaterial,
-};
 
 /// Plugin for visualizing the grid.
 /// This plugin reads events from the entity grid and updates the shader's input buffer

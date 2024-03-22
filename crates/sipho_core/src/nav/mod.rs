@@ -1,11 +1,11 @@
 /// Sparse grid flow for path finding.
 use crate::prelude::*;
-use bevy::{
-    prelude::*,
-    utils::{Entry, HashMap},
-};
+use bevy::utils::{Entry, HashMap};
 
-use super::{AStarRunner, SparseGrid2};
+pub mod astar;
+pub mod debug;
+
+pub use {astar::AStarRunner, debug::NavigationVisualizerPlugin};
 
 /// Plugin for flow-based navigation.
 pub struct NavigationPlugin;
@@ -20,7 +20,8 @@ impl Plugin for NavigationPlugin {
                     NavigationGrid2::resize_on_change,
                     NavigationGrid2::create_waypoints.in_set(SystemStage::PostApply),
                 ),
-            );
+            )
+            .add_plugins(NavigationVisualizerPlugin);
     }
 }
 

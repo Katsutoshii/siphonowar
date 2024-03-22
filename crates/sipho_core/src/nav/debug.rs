@@ -1,14 +1,7 @@
 use crate::prelude::*;
 use bevy::{
-    prelude::*,
     render::render_resource::{AsBindGroup, ShaderRef},
     sprite::Material2d,
-};
-
-use super::{
-    navigation::NavigationCostEvent,
-    shader_plane::{ShaderPlaneAssets, ShaderPlanePlugin},
-    ShaderPlaneMaterial,
 };
 
 pub struct NavigationVisualizerPlugin;

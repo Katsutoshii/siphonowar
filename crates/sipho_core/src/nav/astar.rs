@@ -7,8 +7,6 @@ use bevy::utils::HashMap;
 
 use crate::prelude::*;
 
-use super::navigation::SparseFlowGrid2;
-
 /// State for running A* search to fill out flow cost grid.
 /// See https://doc.rust-lang.org/std/collections/binary_heap/index.html#examples
 #[derive(Copy, Clone, PartialEq)]

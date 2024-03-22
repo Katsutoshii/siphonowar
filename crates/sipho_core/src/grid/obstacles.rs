@@ -5,11 +5,6 @@ use bevy::{
     sprite::Material2d,
 };
 
-use super::{
-    shader_plane::{ShaderPlaneAssets, ShaderPlanePlugin},
-    ShaderPlaneMaterial,
-};
-
 /// Plugin for obstacles.
 /// Obstacles are implemented as a hacky force field in the center of each cell they are present in.
 /// TODO: prevent glitchy movement when objects try to move past obstacles.

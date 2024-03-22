@@ -1,31 +1,23 @@
 use crate::prelude::*;
 use bevy::prelude::*;
 
-pub mod astar;
 pub mod entity;
 pub mod fog;
 pub mod grid2;
 pub mod minimap;
-pub mod navigation;
-pub mod navigation_visualizer;
 pub mod obstacles;
 pub mod rowcol;
-pub mod shader_plane;
 pub mod sparse_grid2;
 pub mod spec;
 pub mod visualizer;
 
 pub use {
-    astar::AStarRunner,
     entity::{EntityGridEvent, EntitySet, GridEntity},
-    fog::FogPlugin,
+    fog::{FogPlugin, VisibilityUpdate, VisibilityUpdateEvent},
     grid2::{Grid2, Grid2Plugin},
     minimap::{MinimapPlugin, MinimapShaderMaterial},
-    navigation::{CreateWaypointEvent, NavigationCostEvent, NavigationGrid2, NavigationPlugin},
-    navigation_visualizer::NavigationVisualizerPlugin,
     obstacles::{Obstacle, ObstaclesPlugin},
     rowcol::{RowCol, RowColDistance},
-    shader_plane::{ShaderPlaneAssets, ShaderPlaneMaterial},
     sparse_grid2::SparseGrid2,
     spec::{GridSize, GridSpec},
     visualizer::GridVisualizerPlugin,
@@ -41,8 +33,6 @@ impl Plugin for GridPlugin {
                 GridVisualizerPlugin,
                 MinimapPlugin,
                 ObstaclesPlugin,
-                NavigationPlugin,
-                NavigationVisualizerPlugin,
                 FogPlugin,
                 Grid2Plugin::<EntitySet>::default(),
             ))
