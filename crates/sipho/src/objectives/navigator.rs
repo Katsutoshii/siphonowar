@@ -73,12 +73,13 @@ impl Navigator {
             let target_rowcol = spec.to_rowcol(navigator.target);
 
             if let Some(flow_grid) = grid.get(&target_rowcol) {
+                let target_cell_center = flow_grid.grid.to_world_position(target_rowcol);
                 let flow_acceleration =
                     flow_grid.grid.flow_acceleration5(position) * config.nav_flow_factor;
                 let slow_force = config.objective.slow_force(
                     *velocity,
                     position,
-                    navigator.target,
+                    target_cell_center,
                     flow_acceleration,
                 ) * navigator.slow_factor;
                 *acceleration += flow_acceleration + slow_force;

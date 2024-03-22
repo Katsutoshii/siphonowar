@@ -23,7 +23,7 @@ impl Plugin for ObstaclesPlugin {
                 (
                     Grid2::<Obstacle>::update.after(Grid2::<Obstacle>::resize_on_change),
                     ObstaclesShaderMaterial::update.after(Grid2::<Obstacle>::resize_on_change),
-                    Grid2::<Obstacle>::bounce_off_obstacles.in_set(SystemStage::PostCompute),
+                    Grid2::<Obstacle>::bounce_off_obstacles.in_set(SystemStage::PostApply),
                 ),
             );
     }
@@ -117,7 +117,7 @@ impl Grid2<Obstacle> {
     ) {
         for (mut transform, mut velocity) in query.iter_mut() {
             if obstacles[obstacles.to_rowcol(transform.translation.xy())] != Obstacle::Empty {
-                velocity.0 *= -0.5;
+                velocity.0 *= -1.5;
                 transform.translation += velocity.0.extend(0.);
             }
         }
