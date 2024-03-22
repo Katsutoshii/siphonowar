@@ -23,7 +23,7 @@ impl Plugin for ObstaclesPlugin {
                 (
                     Grid2::<Obstacle>::update.after(Grid2::<Obstacle>::resize_on_change),
                     ObstaclesShaderMaterial::update.after(Grid2::<Obstacle>::resize_on_change),
-                    Grid2::<Obstacle>::bounce_off_obstacles.in_set(SystemStage::PostCompute),
+                    Grid2::<Obstacle>::bounce_off_obstacles.in_set(SystemStage::PostApply),
                 ),
             );
     }
@@ -113,11 +113,12 @@ impl Grid2<Obstacle> {
     /// Bounce simulated objects off obstacles.
     pub fn bounce_off_obstacles(
         obstacles: Res<Self>,
-        mut query: Query<(&mut Transform, &mut Velocity)>,
+        mut query: Query<(&mut Transform, &mut Velocity, &mut Acceleration)>,
     ) {
-        for (mut transform, mut velocity) in query.iter_mut() {
+        for (mut transform, mut velocity, mut acceleration) in query.iter_mut() {
             if obstacles[obstacles.to_rowcol(transform.translation.xy())] != Obstacle::Empty {
-                velocity.0 *= -0.5;
+                velocity.0 *= -1.0;
+                acceleration.0 = velocity.0;
                 transform.translation += velocity.0.extend(0.);
             }
         }
