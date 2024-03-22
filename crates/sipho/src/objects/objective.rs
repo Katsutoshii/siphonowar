@@ -1,7 +1,11 @@
 use std::time::Duration;
 
 use crate::prelude::*;
-use bevy::{prelude::*, text::Text2dBounds};
+use bevy::{
+    prelude::*,
+    text::Text2dBounds,
+    utils::{Entry, HashMap},
+};
 use rand::Rng;
 
 use super::CarriedBy;
@@ -15,14 +19,13 @@ impl Plugin for ObjectivePlugin {
             .register_type::<Objective>()
             .add_systems(
                 FixedUpdate,
-                (
-                    Objectives::update
-                        .in_set(SystemStage::PostCompute)
-                        .after(NavigationGrid2::update_waypoints),
-                    ObjectiveDebugger::update
-                        .in_set(SystemStage::PostCompute)
-                        .after(Objectives::update),
-                ),
+                ((
+                    Objectives::update_waypoints,
+                    Objectives::update,
+                    ObjectiveDebugger::update,
+                )
+                    .chain()
+                    .in_set(SystemStage::PostApply),),
             );
     }
 }
@@ -233,7 +236,6 @@ impl Objectives {
     // Start attacking
     pub fn start_attacking(&mut self, entity: Entity) {
         if let Some(objective) = self.last().try_attacking(entity) {
-            info!("Start attacking!");
             self.push(objective);
         }
     }
@@ -248,7 +250,7 @@ impl Objectives {
             &mut Acceleration,
         )>,
         others: Query<(&GlobalTransform, Option<&Velocity>), Without<CarriedBy>>,
-        configs: Res<Configs>,
+        configs: Res<ObjectConfigs>,
         grid_spec: Res<GridSpec>,
         navigation_grid: Res<NavigationGrid2>,
         obstacles_grid: Res<Grid2<Obstacle>>,
@@ -258,7 +260,7 @@ impl Objectives {
             if *object == Object::Food {
                 continue;
             }
-            let config = configs.objects.get(object).unwrap();
+            let config = configs.get(object).unwrap();
             let obstacles_acceleration = obstacles_grid
                 .obstacles_acceleration(transform.translation().xy(), *velocity)
                 * config.obstacle_acceleration;
@@ -286,6 +288,58 @@ impl Objectives {
             self.0.pop();
         }
         ResolvedObjective::None
+    }
+
+    /// Also create new ones for moved waypoints.
+    pub fn update_waypoints(
+        all_objectives: Query<(Entity, &Objectives), Without<Waypoint>>,
+        transforms: Query<&GlobalTransform>,
+        mut grid: ResMut<NavigationGrid2>,
+        obstacles: Res<Grid2<Obstacle>>,
+        spec: Res<GridSpec>,
+        mut event_writer: EventWriter<NavigationCostEvent>,
+    ) {
+        // All active destinations to their current sources.
+        let mut destinations: HashMap<RowCol, Vec<RowCol>> = HashMap::new();
+        for (entity, objectives) in all_objectives.iter() {
+            if let Some(followed_entity) = objectives.last().get_followed_entity() {
+                let source_rowcol = if let Ok(source_transform) = transforms.get(entity) {
+                    spec.to_rowcol(source_transform.translation().xy())
+                } else {
+                    continue;
+                };
+                if let Ok(destination_transform) = transforms.get(followed_entity) {
+                    let destination_rowcol =
+                        spec.to_rowcol(destination_transform.translation().xy());
+                    let value = match destinations.entry(destination_rowcol) {
+                        Entry::Occupied(o) => o.into_mut(),
+                        Entry::Vacant(v) => v.insert(Vec::with_capacity(1)),
+                    };
+                    value.push(source_rowcol)
+                }
+            }
+        }
+
+        // Populate any cells that haven't been computed yet.
+        for (&destination, sources) in &destinations {
+            grid.navigate_to_destination(
+                destination,
+                sources,
+                &obstacles,
+                &spec,
+                &mut event_writer,
+            );
+        }
+
+        // Remove old cells where there is no objective leading to that destination.
+        let rowcols_to_remove: Vec<RowCol> = grid
+            .keys()
+            .filter(|&destination| !destinations.contains_key(destination))
+            .copied()
+            .collect();
+        for rowcol in rowcols_to_remove {
+            grid.remove(&rowcol);
+        }
     }
 }
 
@@ -378,7 +432,7 @@ impl ResolvedObjective {
         let target_cell = grid_spec.to_rowcol(target_position);
         if let Some(nav) = navigation_grid.get(&target_cell) {
             let target_cell_position = nav.grid.to_world_position(target_cell);
-            let flow_acceleration = nav.grid.flow_acceleration5(position, config);
+            let flow_acceleration = nav.grid.flow_acceleration5(position) * config.nav_flow_factor;
             flow_acceleration
                 + config.objective.slow_force(
                     velocity,

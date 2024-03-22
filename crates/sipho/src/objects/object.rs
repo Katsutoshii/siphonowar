@@ -91,12 +91,12 @@ impl Object {
     pub fn update_acceleration(
         mut query: Query<UpdateAccelerationQueryData>,
         others: Query<(&Self, &Velocity)>,
-        configs: Res<Configs>,
+        configs: Res<ObjectConfigs>,
     ) {
         query.par_iter_mut().for_each(|mut object| {
             let mut seaparation_acceleration = Acceleration::ZERO;
             let mut alignment_acceleration = Acceleration::ZERO;
-            let config = &configs.objects[object.object];
+            let config = configs.get(object.object).unwrap();
             for neighbor in object.neighbors.iter() {
                 let (other_object, other_velocity) = others.get(neighbor.entity).unwrap();
                 let interaction = &config.interactions[other_object];
@@ -133,12 +133,12 @@ impl Object {
     pub fn update_objective(
         mut query: Query<UpdateObjectiveQueryData>,
         others: Query<UpdateObjectiveNeighborQueryData>,
-        configs: Res<Configs>,
+        configs: Res<ObjectConfigs>,
         mut damage_events: EventWriter<DamageEvent>,
         mut carry_events: EventWriter<CarryEvent>,
     ) {
         for mut object in &mut query {
-            let config = &configs.objects[object.object];
+            let config = configs.get(object.object).unwrap();
             let mut nearest_neighbor: Option<NearestNeighbor> = None;
             for neighbor in object.neighbors.iter() {
                 let other = others.get(neighbor.entity).unwrap();

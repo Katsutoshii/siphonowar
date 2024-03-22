@@ -12,9 +12,8 @@ impl Plugin for CarryPlugin {
         app.add_event::<CarryEvent>().add_systems(
             FixedUpdate,
             (CarryEvent::update, CarriedBy::update)
-                .in_set(SystemStage::PostCompute)
-                .after(Objectives::update)
-                .chain(),
+                .chain()
+                .in_set(SystemStage::PostCompute),
         );
     }
 }

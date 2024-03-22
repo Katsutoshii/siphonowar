@@ -15,7 +15,9 @@ use super::{
 pub struct FogPlugin;
 impl Plugin for FogPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(ShaderPlanePlugin::<FogShaderMaterial>::default())
+        app.register_type::<FogConfig>()
+            .insert_resource(FogConfig::default())
+            .add_plugins(ShaderPlanePlugin::<FogShaderMaterial>::default())
             .add_plugins(Grid2Plugin::<TeamVisibility>::default())
             .add_event::<VisibilityUpdateEvent>()
             .add_systems(
@@ -27,6 +29,23 @@ impl Plugin for FogPlugin {
                     FogShaderMaterial::update.after(Grid2::<TeamVisibility>::update),
                 ),
             );
+    }
+}
+
+#[derive(Resource, Reflect)]
+#[reflect(Resource)]
+pub struct FogConfig {
+    pub player_team: Team,
+    pub visibility_radius: u16,
+    pub fog_radius: u16,
+}
+impl Default for FogConfig {
+    fn default() -> Self {
+        Self {
+            player_team: Team::Blue,
+            visibility_radius: 5,
+            fog_radius: 6,
+        }
     }
 }
 
@@ -63,7 +82,7 @@ impl Grid2<TeamVisibility> {
     pub fn update_visibility(
         mut query: Query<(&GridEntity, &mut Visibility)>,
         grid: ResMut<Self>,
-        configs: Res<Configs>,
+        configs: Res<FogConfig>,
     ) {
         for (grid_entity, mut visibility) in &mut query {
             if let Some(cell) = grid_entity.cell {
@@ -74,7 +93,7 @@ impl Grid2<TeamVisibility> {
 
     pub fn update(
         mut grid: ResMut<Self>,
-        configs: Res<Configs>,
+        config: Res<FogConfig>,
         teams: Query<&Team>,
         mut grid_events: EventReader<EntityGridEvent>,
         mut visibility_events: EventWriter<VisibilityUpdateEvent>,
@@ -92,12 +111,12 @@ impl Grid2<TeamVisibility> {
             if let Some(prev_cell) = prev_cell {
                 updates
                     .removals
-                    .extend(grid.remove_visibility(prev_cell, team, &configs))
+                    .extend(grid.remove_visibility(prev_cell, team, &config))
             }
             if let Some(cell) = cell {
                 updates
                     .additions
-                    .extend(grid.add_visibility(cell, team, &configs));
+                    .extend(grid.add_visibility(cell, team, &config));
             }
         }
 
@@ -108,15 +127,15 @@ impl Grid2<TeamVisibility> {
         &mut self,
         rowcol: RowCol,
         team: Team,
-        configs: &Configs,
+        config: &FogConfig,
     ) -> Vec<VisibilityUpdate> {
         let mut updates = Vec::default();
-        let radius = configs.visibility_radius;
+        let radius = config.visibility_radius;
         for other_rowcol in self.get_in_radius_discrete(rowcol, radius) {
             if let Some(grid_visibility) = self.get_mut(other_rowcol) {
                 if grid_visibility.get(team) > 0 {
                     *grid_visibility.get_mut(team) -= 1;
-                    if team == configs.player_team && grid_visibility.get(team) == 0 {
+                    if team == config.player_team && grid_visibility.get(team) == 0 {
                         updates.push(VisibilityUpdate {
                             team,
                             rowcol: other_rowcol,
@@ -142,15 +161,15 @@ impl Grid2<TeamVisibility> {
         &mut self,
         cell: RowCol,
         team: Team,
-        configs: &Configs,
+        config: &FogConfig,
     ) -> Vec<VisibilityUpdate> {
         let mut updates = Vec::default();
-        let radius = configs.visibility_radius;
+        let radius = config.visibility_radius;
         for other_rowcol in self.get_in_radius_discrete(cell, radius) {
             if let Some(grid_visibility) = self.get_mut(other_rowcol) {
                 *grid_visibility.get_mut(team) += 1;
-                if team == configs.player_team
-                    && GridSpec::in_radius(cell, other_rowcol, configs.fog_radius)
+                if team == config.player_team
+                    && GridSpec::in_radius(cell, other_rowcol, config.fog_radius)
                 {
                     updates.push(VisibilityUpdate {
                         team,

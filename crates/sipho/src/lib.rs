@@ -1,8 +1,5 @@
 use bevy::prelude::*;
 
-pub mod config;
-pub mod grid;
-pub mod inputs;
 pub mod objects;
 pub mod scene;
 pub mod selector;
@@ -13,18 +10,12 @@ pub mod prelude {
     pub use sipho_vfx::prelude::*;
 
     pub use crate::{
-        config::Configs,
-        grid::{
-            CreateWaypointEvent, EntityGridEvent, EntitySet, Grid2, Grid2Plugin, GridEntity,
-            NavigationGrid2, Obstacle,
-        },
-        inputs::{ControlAction, ControlEvent},
         objects::{
             DamageEvent, Health, InteractionConfigs, Object, ObjectCommands, ObjectConfig,
             ObjectConfigs, ObjectSpec, Objective, ObjectiveConfig, ObjectiveDebugger, Objectives,
         },
         selector::Selected,
-        waypoint::Waypoint,
+        waypoint::{Waypoint, WaypointAssets},
         SiphonowarPlugin,
     };
 }
@@ -41,10 +32,7 @@ impl Plugin for SiphonowarPlugin {
                     ..default()
                 })
                 .set(window::custom_plugin()),
-            config::ConfigPlugin,
             CorePlugin,
-            inputs::InputActionPlugin,
-            grid::GridPlugin,
             objects::ObjectsPlugin,
             scene::LoadableScenePlugin,
             selector::SelectorPlugin,

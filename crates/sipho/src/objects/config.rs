@@ -4,9 +4,21 @@ use bevy::utils::HashMap;
 use crate::prelude::*;
 use crate::{objects::objective::ObjectiveConfig, physics::PhysicsMaterialType};
 
-#[derive(Resource, Clone, Default, Deref, DerefMut, Reflect)]
-#[reflect(Resource)]
-pub struct TestInteractionConfigs(pub HashMap<PhysicsMaterialType, PhysicsMaterial>);
+pub struct ObjectConfigPlugin;
+impl Plugin for ObjectConfigPlugin {
+    fn build(&self, app: &mut App) {
+        app.register_type::<Vec2>()
+            .register_type::<ObjectiveConfig>()
+            .register_type::<InteractionConfig>()
+            .register_type::<HashMap<PhysicsMaterialType, InteractionConfig>>()
+            .register_type::<HashMap<Object, ObjectConfig>>()
+            .register_type::<HashMap<Object, InteractionConfig>>()
+            .register_type::<ObjectConfig>()
+            .register_type::<ObjectConfigs>()
+            .register_type::<InteractionConfigs>()
+            .insert_resource(ObjectConfigs::default());
+    }
+}
 
 #[derive(Resource, Clone, Default, Deref, DerefMut, Reflect, Debug)]
 #[reflect(Resource)]

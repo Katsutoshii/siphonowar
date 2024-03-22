@@ -18,10 +18,7 @@ impl Plugin for NavigationPlugin {
                 FixedUpdate,
                 (
                     NavigationGrid2::resize_on_change,
-                    NavigationGrid2::create_waypoints
-                        .in_set(SystemStage::PostApply)
-                        .after(Waypoint::update),
-                    NavigationGrid2::update_waypoints.in_set(SystemStage::PreCompute), // .before(NavigationGrid2::create_waypoints),
+                    NavigationGrid2::create_waypoints.in_set(SystemStage::PostApply),
                 ),
             );
     }
@@ -52,7 +49,7 @@ impl SparseFlowGrid2 {
     }
 
     /// Adds the amount of acceleration needed to bring the velocity to the underlying flow value.
-    pub fn flow_acceleration5(&self, position: Vec2, config: &ObjectConfig) -> Acceleration {
+    pub fn flow_acceleration5(&self, position: Vec2) -> Acceleration {
         let mut total_acceleration = Acceleration::ZERO;
 
         let rowcol = self.to_rowcol(position);
@@ -71,7 +68,7 @@ impl SparseFlowGrid2 {
         // What do we need to add to velocity to get total_acccel?
         // v + x = ta
         // x = ta - v
-        Acceleration(config.nav_flow_factor * total_acceleration.normalize_or_zero())
+        Acceleration(total_acceleration.normalize_or_zero())
     }
 }
 
@@ -174,6 +171,34 @@ impl NavigationGrid2 {
         }
     }
 
+    pub fn navigate_to_destination(
+        &mut self,
+        destination: RowCol,
+        sources: &[RowCol],
+        obstacles: &Grid2<Obstacle>,
+        spec: &GridSpec,
+        event_writer: &mut EventWriter<NavigationCostEvent>,
+    ) {
+        if let Some(nav) = self.get_mut(&destination) {
+            for &source in sources {
+                if nav.grid.get(source).is_none() {
+                    nav.add_waypoint_rowcols(destination, &[source], obstacles, event_writer)
+                }
+            }
+        } else {
+            self.insert(
+                destination,
+                NavigationGrid2Entry {
+                    a_star_runner: AStarRunner::new(destination),
+                    grid: SparseFlowGrid2(SparseGrid2 {
+                        spec: spec.clone(),
+                        ..default()
+                    }),
+                },
+            );
+        }
+    }
+
     pub fn create_waypoint(
         &mut self,
         event: &CreateWaypointEvent,
@@ -205,74 +230,6 @@ impl NavigationGrid2 {
     ) {
         for event in event_reader.read() {
             nav_grid.create_waypoint(event, &spec, &obstacles, &mut event_writer);
-        }
-    }
-
-    /// Also create new ones for moved waypoints.
-    pub fn update_waypoints(
-        all_objectives: Query<(Entity, &Objectives), Without<Waypoint>>,
-        transforms: Query<&GlobalTransform>,
-        mut grid: ResMut<Self>,
-        obstacles: Res<Grid2<Obstacle>>,
-        spec: Res<GridSpec>,
-        mut event_writer: EventWriter<NavigationCostEvent>,
-    ) {
-        // All active destinations to their current sources.
-        let mut destinations: HashMap<RowCol, Vec<RowCol>> = HashMap::new();
-        for (entity, objectives) in all_objectives.iter() {
-            if let Some(followed_entity) = objectives.last().get_followed_entity() {
-                let source_rowcol = if let Ok(source_transform) = transforms.get(entity) {
-                    spec.to_rowcol(source_transform.translation().xy())
-                } else {
-                    continue;
-                };
-                if let Ok(destination_transform) = transforms.get(followed_entity) {
-                    let destination_rowcol =
-                        spec.to_rowcol(destination_transform.translation().xy());
-                    let value = match destinations.entry(destination_rowcol) {
-                        Entry::Occupied(o) => o.into_mut(),
-                        Entry::Vacant(v) => v.insert(Vec::with_capacity(1)),
-                    };
-                    value.push(source_rowcol)
-                }
-            }
-        }
-
-        // Populate any cells that haven't been computed yet.
-        for (&destination, sources) in &destinations {
-            if let Some(nav) = grid.get_mut(&destination) {
-                for &source in sources {
-                    if nav.grid.get(source).is_none() {
-                        nav.add_waypoint_rowcols(
-                            destination,
-                            &[source],
-                            &obstacles,
-                            &mut event_writer,
-                        )
-                    }
-                }
-            } else {
-                grid.insert(
-                    destination,
-                    NavigationGrid2Entry {
-                        a_star_runner: AStarRunner::new(destination),
-                        grid: SparseFlowGrid2(SparseGrid2 {
-                            spec: spec.clone(),
-                            ..default()
-                        }),
-                    },
-                );
-            }
-        }
-
-        // Remove old cells where there is no objective leading to that destination.
-        let rowcols_to_remove: Vec<RowCol> = grid
-            .keys()
-            .filter(|&destination| !destinations.contains_key(destination))
-            .copied()
-            .collect();
-        for rowcol in rowcols_to_remove {
-            grid.remove(&rowcol);
         }
     }
 }

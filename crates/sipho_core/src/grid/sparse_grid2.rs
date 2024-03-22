@@ -2,8 +2,6 @@ use crate::prelude::*;
 use bevy::{prelude::*, utils::HashMap};
 use std::ops::{Index, IndexMut};
 
-use super::GridSpec;
-
 /// 2D Grid containing arbitrary data.
 #[derive(Clone, Default, Debug, Deref, DerefMut)]
 pub struct SparseGrid2<T: Sized + Default + Clone> {

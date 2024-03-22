@@ -17,6 +17,7 @@ impl SystemStage {
         (
             Self::Spawn,
             Self::PreCompute,
+            Self::FindNeighbors,
             Self::Compute,
             Self::PostCompute,
             Self::Apply,

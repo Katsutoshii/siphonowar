@@ -39,11 +39,12 @@ pub fn update(
     )>,
     others: Query<(&Object, &Team, &GlobalTransform)>,
     grid: Res<Grid2<EntitySet>>,
-    configs: Res<Configs>,
+    configs: Res<ObjectConfigs>,
 ) {
     query.par_iter_mut().for_each(
         |(entity, mut enemy_neighbors, mut allied_neighbors, object, team, transform)| {
-            let config = &configs.objects[object];
+            let config = configs.get(object).unwrap();
+            // test
             let position = transform.translation().xy();
             let other_entities = grid.get_entities_in_radius(position, config.neighbor_radius);
 

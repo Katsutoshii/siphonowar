@@ -2,6 +2,28 @@ use std::ops::Index;
 
 use bevy::prelude::*;
 
+pub struct TeamPlugin;
+impl Plugin for TeamPlugin {
+    fn build(&self, app: &mut App) {
+        app.register_type::<Team>()
+            .register_type::<TeamConfig>()
+            .insert_resource(TeamConfig::default());
+    }
+}
+
+#[derive(Resource, Reflect)]
+#[reflect(Resource)]
+pub struct TeamConfig {
+    pub player_team: Team,
+}
+impl Default for TeamConfig {
+    fn default() -> Self {
+        Self {
+            player_team: Team::Blue,
+        }
+    }
+}
+
 /// Enum to specify the team of the given object.
 #[derive(Component, Default, Debug, PartialEq, Eq, Reflect, Clone, Copy, Hash, clap::ValueEnum)]
 #[reflect(Component)]

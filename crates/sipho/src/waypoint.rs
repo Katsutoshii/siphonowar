@@ -1,6 +1,6 @@
 use std::f32::consts::PI;
 
-use crate::{grid::CreateWaypointEvent, prelude::*};
+use crate::prelude::*;
 use bevy::{prelude::*, sprite::MaterialMesh2dBundle, utils::hashbrown::HashSet};
 
 /// Plugin to add a waypoint system where the player can click to create a waypoint.

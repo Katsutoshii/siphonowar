@@ -1,41 +1,6 @@
 use crate::prelude::*;
 use bevy::prelude::*;
 
-use self::{
-    carry::CarryPlugin, damage::DamagePlugin, neighbors::NeighborsPlugin, object::ObjectPlugin,
-    objective::ObjectivePlugin, plankton::PlanktonPlugin, zooid_head::ZooidHeadPlugin,
-    zooid_worker::ZooidWorkerPlugin,
-};
-pub use self::{
-    carry::{CarriedBy, CarryEvent},
-    commands::{ObjectCommands, ObjectSpec},
-    config::{
-        InteractionConfig, InteractionConfigs, ObjectConfig, ObjectConfigs, TestInteractionConfigs,
-    },
-    damage::{DamageEvent, Health},
-    object::Object,
-    objective::{Objective, ObjectiveConfig, ObjectiveDebugger, Objectives},
-};
-
-/// Plugin for running zooids simulation.
-pub struct ObjectsPlugin;
-impl Plugin for ObjectsPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_plugins((
-            CarryPlugin,
-            NeighborsPlugin,
-            ObjectivePlugin,
-            ZooidHeadPlugin,
-            ZooidWorkerPlugin,
-            PlanktonPlugin,
-            ObjectPlugin,
-            DamagePlugin,
-        ))
-        .init_resource::<ObjectAssets>()
-        .configure_sets(FixedUpdate, SystemStage::get_config());
-    }
-}
-
 mod carry;
 mod commands;
 mod config;
@@ -46,6 +11,35 @@ mod objective;
 mod plankton;
 mod zooid_head;
 mod zooid_worker;
+
+pub use {
+    carry::{CarriedBy, CarryEvent},
+    commands::{ObjectCommands, ObjectSpec},
+    config::{InteractionConfig, InteractionConfigs, ObjectConfig, ObjectConfigs},
+    damage::{DamageEvent, Health},
+    object::Object,
+    objective::{Objective, ObjectiveConfig, ObjectiveDebugger, Objectives},
+};
+
+/// Plugin for running zooids simulation.
+pub struct ObjectsPlugin;
+impl Plugin for ObjectsPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_plugins((
+            config::ObjectConfigPlugin,
+            carry::CarryPlugin,
+            neighbors::NeighborsPlugin,
+            objective::ObjectivePlugin,
+            zooid_head::ZooidHeadPlugin,
+            zooid_worker::ZooidWorkerPlugin,
+            plankton::PlanktonPlugin,
+            object::ObjectPlugin,
+            damage::DamagePlugin,
+        ))
+        .init_resource::<ObjectAssets>()
+        .configure_sets(FixedUpdate, SystemStage::get_config());
+    }
+}
 
 /// Handles to common zooid assets.
 #[derive(Resource)]

@@ -3,16 +3,7 @@ use bevy::{prelude::*, utils::HashMap};
 use derive_more::{Add, AddAssign, Sub, SubAssign};
 use std::ops::Mul;
 
-/// Trait to invert a transform.
-pub trait InverseTransform {
-    fn inverse(&self) -> Self;
-}
-impl InverseTransform for Transform {
-    fn inverse(&self) -> Self {
-        Transform::from_translation(-1. * self.translation).with_scale(self.scale.recip())
-    }
-}
-/// Plugin to add a waypoint system where the player can click to create a waypoint.
+/// Plugin for basic 2d physics.
 pub struct PhysicsPlugin;
 impl Plugin for PhysicsPlugin {
     fn build(&self, app: &mut App) {

@@ -55,14 +55,14 @@ impl ObjectBundle {
 pub struct ObjectCommands<'w, 's> {
     assets: ResMut<'w, ObjectAssets>,
     commands: Commands<'w, 's>,
-    configs: Res<'w, Configs>,
+    configs: Res<'w, ObjectConfigs>,
     parents: Query<'w, 's, &'static Children, Without<Parent>>,
     #[allow(clippy::type_complexity)]
     children: Query<'w, 's, &'static Object, With<Parent>>,
 }
 impl ObjectCommands<'_, '_> {
     pub fn spawn(&mut self, spec: ObjectSpec) {
-        let config = &self.configs.objects[&spec.object];
+        let config = &self.configs[&spec.object];
         let team_material = self.assets.get_team_material(spec.team);
         let background = self.background_bundle(
             team_material.clone(),

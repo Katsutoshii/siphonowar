@@ -56,7 +56,7 @@ impl Selector {
         >,
         grid: Res<Grid2<EntitySet>>,
         assets: Res<SelectorAssets>,
-        configs: Res<Configs>,
+        config: Res<TeamConfig>,
         mut events: EventReader<ControlEvent>,
     ) {
         for control in events.read() {
@@ -97,7 +97,7 @@ impl Selector {
                         let (_object, transform, team, mut selected, mesh) =
                             objects.get_mut(entity).unwrap();
                         if aabb.contains(transform.translation().xy()) {
-                            if selected.is_selected() || *team != configs.player_team {
+                            if selected.is_selected() || *team != config.player_team {
                                 continue;
                             }
                             let child_entity = commands

@@ -27,7 +27,7 @@ pub struct ZooidHead;
 impl ZooidHead {
     pub fn spawn(
         mut commands: ObjectCommands,
-        configs: Res<Configs>,
+        config: Res<TeamConfig>,
         mut control_events: EventReader<ControlEvent>,
     ) {
         for control_event in control_events.read() {
@@ -35,7 +35,7 @@ impl ZooidHead {
                 commands.spawn(ObjectSpec {
                     object: Object::Head,
                     position: control_event.position,
-                    team: configs.player_team,
+                    team: config.player_team,
                     ..default()
                 });
             }
@@ -46,10 +46,10 @@ impl ZooidHead {
     pub fn spawn_zooids(
         query: Query<(&Self, Entity, &GlobalTransform, &Velocity, &Team)>,
         mut commands: ObjectCommands,
-        configs: Res<Configs>,
+        configs: Res<ObjectConfigs>,
         mut control_events: EventReader<ControlEvent>,
     ) {
-        let config = configs.objects.get(&Object::Worker).unwrap();
+        let config = configs.get(&Object::Worker).unwrap();
         for control_event in control_events.read() {
             if control_event.is_pressed(ControlAction::SpawnZooid) {
                 for (_head, head_id, transform, velocity, team) in &query {
