@@ -82,7 +82,7 @@ impl Objective {
     pub fn resolve(
         &mut self,
         transform: &GlobalTransform,
-        query: &Query<(&GlobalTransform, Option<&Velocity>), Without<CarriedBy>>,
+        query: &Query<(&GlobalTransform, Option<&Velocity>)>,
         time: &Time,
         config: &ObjectiveConfig,
     ) -> ResolvedObjective {
@@ -204,7 +204,7 @@ impl Objectives {
             &Velocity,
             &mut Acceleration,
         )>,
-        others: Query<(&GlobalTransform, Option<&Velocity>), Without<CarriedBy>>,
+        others: Query<(&GlobalTransform, Option<&Velocity>)>,
         configs: Res<ObjectConfigs>,
         grid_spec: Res<GridSpec>,
         navigation_grid: Res<NavigationGrid2>,
@@ -231,7 +231,7 @@ impl Objectives {
     pub fn resolve(
         &mut self,
         transform: &GlobalTransform,
-        query: &Query<(&GlobalTransform, Option<&Velocity>), Without<CarriedBy>>,
+        query: &Query<(&GlobalTransform, Option<&Velocity>)>,
         time: &Time,
         config: &ObjectiveConfig,
     ) -> ResolvedObjective {
