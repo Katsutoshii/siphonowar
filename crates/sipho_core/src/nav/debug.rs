@@ -5,14 +5,8 @@ use bevy::{
     sprite::Material2d,
 };
 
-use super::{
-    navigation::NavigationCostEvent,
-    shader_plane::{ShaderPlaneAssets, ShaderPlanePlugin},
-    ShaderPlaneMaterial,
-};
-
-pub struct NavigationVisualizerPlugin;
-impl Plugin for NavigationVisualizerPlugin {
+pub struct NavigationDebugPlugin;
+impl Plugin for NavigationDebugPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(ShaderPlanePlugin::<NavigationShaderMaterial>::default())
             .add_systems(

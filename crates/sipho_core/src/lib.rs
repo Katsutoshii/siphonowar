@@ -7,6 +7,7 @@ pub mod cursor;
 pub mod grid;
 pub mod inputs;
 pub mod meshes;
+pub mod nav;
 pub mod physics;
 pub mod raycast;
 pub mod stages;
@@ -20,12 +21,13 @@ pub mod prelude {
         camera::{CameraController, CameraMoveEvent, MainCamera},
         cursor::{Cursor, CursorAssets},
         grid::{
-            CreateWaypointEvent, EntityGridEvent, EntitySet, Grid2, Grid2Plugin, GridEntity,
-            GridSize, GridSpec, NavigationCostEvent, NavigationGrid2, Obstacle, RowCol,
-            RowColDistance, SparseGrid2,
+            EntityGridEvent, EntitySet, Grid2, Grid2Plugin, GridEntity, GridSize, GridSpec,
+            Obstacle, RowCol, RowColDistance, ShaderPlaneAssets, ShaderPlaneMaterial,
+            ShaderPlanePlugin, SparseGrid2,
         },
         inputs::{ControlAction, ControlEvent},
         meshes,
+        nav::{CreateWaypointEvent, NavigationCostEvent, NavigationGrid2, SparseFlowGrid2},
         physics::{
             self, Acceleration, PhysicsBundle, PhysicsMaterial, PhysicsMaterialType, Velocity,
         },
@@ -35,6 +37,7 @@ pub mod prelude {
         window::{self, ScalableWindow},
         zindex, CorePlugin,
     };
+    pub use bevy::prelude::*;
 }
 
 pub struct CorePlugin;
@@ -42,6 +45,7 @@ impl Plugin for CorePlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((
             team::TeamPlugin,
+            nav::NavigationPlugin,
             inputs::InputActionPlugin,
             grid::GridPlugin,
             physics::PhysicsPlugin,

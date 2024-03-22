@@ -2,7 +2,6 @@ use bevy::prelude::*;
 use bevy::utils::HashMap;
 
 use crate::prelude::*;
-use crate::{objects::objective::ObjectiveConfig, physics::PhysicsMaterialType};
 
 pub struct ObjectConfigPlugin;
 impl Plugin for ObjectConfigPlugin {

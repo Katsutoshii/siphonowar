@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use crate::prelude::*;
+use crate::{objects::CarriedBy, prelude::*};
 use bevy::{
     prelude::*,
     text::Text2dBounds,
@@ -8,27 +8,8 @@ use bevy::{
 };
 use rand::Rng;
 
-use super::CarriedBy;
+use super::dash_attacker::DashAttack;
 
-pub struct ObjectivePlugin;
-impl Plugin for ObjectivePlugin {
-    fn build(&self, app: &mut App) {
-        app.register_type::<ObjectiveConfig>()
-            .register_type::<Objectives>()
-            .register_type::<Vec<Objective>>()
-            .register_type::<Objective>()
-            .add_systems(
-                FixedUpdate,
-                ((
-                    Objectives::update_waypoints,
-                    Objectives::update,
-                    ObjectiveDebugger::update,
-                )
-                    .chain()
-                    .in_set(SystemStage::PostApply),),
-            );
-    }
-}
 #[derive(Debug, Clone, Reflect)]
 pub struct ObjectiveConfig {
     pub repell_radius: f32,
@@ -73,15 +54,8 @@ impl ObjectiveConfig {
     }
 }
 
-#[derive(Debug, Clone)]
-// Entity will attack nearest enemy in surrounding grid
-pub struct AttackEntity {
-    pub entity: Entity,
-    pub frame: u16,
-    pub cooldown: Timer,
-}
-
 /// Represents the objective of the owning entity.
+/// This delegates the actual logic per objective type to the corresponding component of each variant.
 #[derive(Component, Default, Debug, Clone, PartialEq, Reflect)]
 #[reflect(Component)]
 pub enum Objective {
@@ -90,37 +64,16 @@ pub enum Objective {
     None,
     /// Entity wants to follow the transform of another entity.
     FollowEntity(Entity),
-    /// Attack Entity
-    AttackEntity {
-        entity: Entity,
-        frame: u16,
-        cooldown: Timer,
-    },
+    /// Dash attack entity
+    DashAttack(Entity),
 }
 impl Objective {
     /// Given an objective, get the next one (if there should be a next one, else None).
     pub fn try_attacking(&self, entity: Entity) -> Option<Self> {
         match self {
-            Self::None | Self::FollowEntity(_) => Some(Self::AttackEntity {
-                entity,
-                frame: 0,
-                cooldown: Timer::from_seconds(
-                    Self::attack_delay().as_secs_f32(),
-                    TimerMode::Repeating,
-                ),
-            }),
+            Self::None | Self::FollowEntity(_) => Some(Self::DashAttack(entity)),
             Self::AttackEntity { .. } => None,
         }
-    }
-
-    /// Gets a random attack delay.
-    pub fn attack_delay() -> Duration {
-        Duration::from_millis(rand::thread_rng().gen_range(0..100))
-    }
-
-    /// Gets a random attack cooldown.
-    pub fn attack_cooldown() -> Duration {
-        Duration::from_millis(rand::thread_rng().gen_range(500..1000))
     }
 
     /// Resolves an objective.
@@ -192,6 +145,7 @@ impl Objective {
         }
     }
 }
+
 /// Represents the objectives of the owning entity.
 /// The stack always has Objective::None at the bottom.
 #[derive(Component, Debug, Clone, Reflect)]
@@ -203,6 +157,25 @@ impl Default for Objectives {
     }
 }
 impl Objectives {
+    pub fn update_components(query: Query<(&Objectives, Option<&mut DashAttack>)>) {
+        for (objectives, mut dash_attack) in query.iter_mut() {
+            match objectives.last() {
+                &Objective::FollowEntity(entity) => {}
+                &Objective::DashAttack(entity) => {
+                    dash_attack = DashAttack {
+                        entity,
+                        frame: 0,
+                        cooldown: Timer::from_seconds(
+                            Self::attack_delay().as_secs_f32(),
+                            TimerMode::Repeating,
+                        ),
+                    }
+                }
+                &Objective::None => {}
+            }
+        }
+    }
+
     /// Construct an objective with default to None (idle).
     pub fn new(objective: Objective) -> Self {
         Self(vec![Objective::None, objective])
@@ -447,56 +420,6 @@ impl ResolvedObjective {
             //     target_cell
             // );
             Acceleration::ZERO
-        }
-    }
-}
-
-#[derive(Component)]
-#[component(storage = "SparseSet")]
-pub struct ObjectiveDebugger;
-impl ObjectiveDebugger {
-    #[allow(dead_code)]
-    pub fn bundle(self) -> impl Bundle {
-        info!("ObjectiveDebugger::bundle");
-        (
-            Text2dBundle {
-                text: Text {
-                    sections: vec![TextSection::new(
-                        "Objective",
-                        TextStyle {
-                            font_size: 18.0,
-                            ..default()
-                        },
-                    )],
-                    justify: JustifyText::Center,
-                    ..default()
-                },
-                text_2d_bounds: Text2dBounds {
-                    // Wrap text in the rectangle
-                    size: Vec2::new(1., 1.),
-                },
-                // ensure the text is drawn on top of the box
-                transform: Transform::from_translation(Vec3::Z).with_scale(Vec3::new(0.1, 0.1, 1.)),
-                ..default()
-            },
-            self,
-        )
-    }
-
-    #[allow(dead_code)]
-    pub fn update(
-        mut query: Query<(&mut Text, &Parent), With<Self>>,
-        objectives: Query<&Objective, Without<Self>>,
-    ) {
-        for (mut text, parent) in query.iter_mut() {
-            let objective = objectives.get(parent.get()).unwrap();
-            *text = Text::from_sections(vec![TextSection::new(
-                format!("{:?}", objective),
-                TextStyle {
-                    font_size: 18.0,
-                    ..default()
-                },
-            )]);
         }
     }
 }

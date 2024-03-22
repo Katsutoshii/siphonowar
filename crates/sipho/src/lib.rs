@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 
+pub mod objectives;
 pub mod objects;
 pub mod scene;
 pub mod selector;
@@ -10,9 +11,10 @@ pub mod prelude {
     pub use sipho_vfx::prelude::*;
 
     pub use crate::{
+        objectives::{Objective, ObjectiveConfig, ObjectiveDebugger, Objectives},
         objects::{
             DamageEvent, Health, InteractionConfigs, Object, ObjectCommands, ObjectConfig,
-            ObjectConfigs, ObjectSpec, Objective, ObjectiveConfig, ObjectiveDebugger, Objectives,
+            ObjectConfigs, ObjectSpec,
         },
         selector::Selected,
         waypoint::{Waypoint, WaypointAssets},
@@ -33,6 +35,7 @@ impl Plugin for SiphonowarPlugin {
                 })
                 .set(window::custom_plugin()),
             CorePlugin,
+            objectives::ObjectivePlugin,
             objects::ObjectsPlugin,
             scene::LoadableScenePlugin,
             selector::SelectorPlugin,

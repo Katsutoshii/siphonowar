@@ -8,8 +8,8 @@ use bevy::{
 use super::{AStarRunner, SparseGrid2};
 
 /// Plugin for flow-based navigation.
-pub struct NavigationPlugin;
-impl Plugin for NavigationPlugin {
+pub struct NavigationGridPlugin;
+impl Plugin for NavigationGridPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<NavigationCostEvent>()
             .add_event::<CreateWaypointEvent>()
