@@ -1,9 +1,4 @@
-use bevy::prelude::*;
-
-pub mod prelude {
-    pub use sipho::prelude::*;
-}
-use prelude::*;
+use sipho::prelude::*;
 
 #[cfg(feature = "debug")]
 mod debug;

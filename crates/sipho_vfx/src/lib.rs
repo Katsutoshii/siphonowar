@@ -1,6 +1,6 @@
 pub mod fireworks;
-use bevy::prelude::*;
 use fireworks::FireworkPlugin;
+use sipho_core::prelude::*;
 
 pub mod prelude {
     pub use crate::{

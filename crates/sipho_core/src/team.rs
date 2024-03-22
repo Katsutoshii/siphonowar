@@ -1,6 +1,5 @@
+use crate::prelude::*;
 use std::ops::Index;
-
-use bevy::prelude::*;
 
 pub struct TeamPlugin;
 impl Plugin for TeamPlugin {

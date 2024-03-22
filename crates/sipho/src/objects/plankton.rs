@@ -1,8 +1,4 @@
-use bevy::prelude::*;
-
-use crate::{objects::ObjectSpec, prelude::*};
-
-use super::ObjectCommands;
+use crate::prelude::*;
 
 pub struct PlanktonPlugin;
 impl Plugin for PlanktonPlugin {

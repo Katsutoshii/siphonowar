@@ -1,6 +1,5 @@
+use crate::prelude::*;
 use std::mem::swap;
-
-use bevy::prelude::*;
 
 /// Axis-aligned bounding box in 2d.
 #[derive(Default, PartialEq, Debug, Clone)]

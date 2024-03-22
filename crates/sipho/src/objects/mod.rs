@@ -1,5 +1,4 @@
 use crate::prelude::*;
-use bevy::prelude::*;
 
 mod carry;
 mod commands;
@@ -7,7 +6,6 @@ mod config;
 mod damage;
 mod neighbors;
 mod object;
-mod objective;
 mod plankton;
 mod zooid_head;
 mod zooid_worker;
@@ -18,7 +16,6 @@ pub use {
     config::{InteractionConfig, InteractionConfigs, ObjectConfig, ObjectConfigs},
     damage::{DamageEvent, Health},
     object::Object,
-    objective::{Objective, ObjectiveConfig, ObjectiveDebugger, Objectives},
 };
 
 /// Plugin for running zooids simulation.
@@ -29,7 +26,6 @@ impl Plugin for ObjectsPlugin {
             config::ObjectConfigPlugin,
             carry::CarryPlugin,
             neighbors::NeighborsPlugin,
-            objective::ObjectivePlugin,
             zooid_head::ZooidHeadPlugin,
             zooid_worker::ZooidWorkerPlugin,
             plankton::PlanktonPlugin,

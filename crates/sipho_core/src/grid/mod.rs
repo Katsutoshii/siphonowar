@@ -1,5 +1,4 @@
 use crate::prelude::*;
-use bevy::prelude::*;
 
 pub mod entity;
 pub mod fog;

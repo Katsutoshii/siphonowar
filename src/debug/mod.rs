@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use sipho::prelude::*;
 
 pub mod console;
 

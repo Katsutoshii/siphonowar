@@ -1,14 +1,12 @@
+use crate::prelude::*;
+use bevy::utils::{Entry, HashMap};
+use rand::Rng;
 use std::time::Duration;
 
-use crate::prelude::*;
-use bevy::{
-    prelude::*,
-    text::Text2dBounds,
-    utils::{Entry, HashMap},
-};
-use rand::Rng;
+pub mod config;
+pub mod debug;
 
-use super::CarriedBy;
+pub use {config::ObjectiveConfig, debug::ObjectiveDebugger};
 
 pub struct ObjectivePlugin;
 impl Plugin for ObjectivePlugin {
@@ -27,49 +25,6 @@ impl Plugin for ObjectivePlugin {
                     .chain()
                     .in_set(SystemStage::PostApply),),
             );
-    }
-}
-#[derive(Debug, Clone, Reflect)]
-pub struct ObjectiveConfig {
-    pub repell_radius: f32,
-    pub slow_factor: f32,
-    pub attack_radius: f32,
-}
-impl Default for ObjectiveConfig {
-    fn default() -> Self {
-        Self {
-            repell_radius: 1.0,
-            slow_factor: 0.0,
-            attack_radius: 32.0,
-        }
-    }
-}
-impl ObjectiveConfig {
-    /// Apply a slowing force against current velocity when near the goal.
-    /// Also, undo some of the acceleration force when near the goal.
-    pub fn slow_force(
-        &self,
-        velocity: Velocity,
-        position: Vec2,
-        target_position: Vec2,
-        flow_acceleration: Acceleration,
-    ) -> Acceleration {
-        let position_delta = target_position - position;
-        let dist_squared = position_delta.length_squared();
-        let radius = self.repell_radius;
-        let radius_squared = radius * radius;
-
-        //  When within radius, this is negative
-        let radius_diff = (dist_squared - radius_squared) / radius_squared;
-        Acceleration(
-            self.slow_factor
-                * if dist_squared < radius_squared {
-                    -1.0 * velocity.0
-                } else {
-                    Vec2::ZERO
-                }
-                + flow_acceleration.0 * radius_diff.clamp(-1., 0.),
-        )
     }
 }
 
@@ -447,56 +402,6 @@ impl ResolvedObjective {
             //     target_cell
             // );
             Acceleration::ZERO
-        }
-    }
-}
-
-#[derive(Component)]
-#[component(storage = "SparseSet")]
-pub struct ObjectiveDebugger;
-impl ObjectiveDebugger {
-    #[allow(dead_code)]
-    pub fn bundle(self) -> impl Bundle {
-        info!("ObjectiveDebugger::bundle");
-        (
-            Text2dBundle {
-                text: Text {
-                    sections: vec![TextSection::new(
-                        "Objective",
-                        TextStyle {
-                            font_size: 18.0,
-                            ..default()
-                        },
-                    )],
-                    justify: JustifyText::Center,
-                    ..default()
-                },
-                text_2d_bounds: Text2dBounds {
-                    // Wrap text in the rectangle
-                    size: Vec2::new(1., 1.),
-                },
-                // ensure the text is drawn on top of the box
-                transform: Transform::from_translation(Vec3::Z).with_scale(Vec3::new(0.1, 0.1, 1.)),
-                ..default()
-            },
-            self,
-        )
-    }
-
-    #[allow(dead_code)]
-    pub fn update(
-        mut query: Query<(&mut Text, &Parent), With<Self>>,
-        objectives: Query<&Objective, Without<Self>>,
-    ) {
-        for (mut text, parent) in query.iter_mut() {
-            let objective = objectives.get(parent.get()).unwrap();
-            *text = Text::from_sections(vec![TextSection::new(
-                format!("{:?}", objective),
-                TextStyle {
-                    font_size: 18.0,
-                    ..default()
-                },
-            )]);
         }
     }
 }

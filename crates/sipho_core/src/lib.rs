@@ -1,6 +1,4 @@
 /// Core libraries used by Siphonowar.
-use bevy::prelude::*;
-
 pub mod aabb;
 pub mod camera;
 pub mod cursor;
@@ -40,6 +38,8 @@ pub mod prelude {
     };
     pub use bevy::prelude::*;
 }
+
+use prelude::*;
 
 pub struct CorePlugin;
 impl Plugin for CorePlugin {

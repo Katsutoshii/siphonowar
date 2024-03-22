@@ -1,8 +1,5 @@
-use bevy::prelude::*;
-use bevy::utils::HashMap;
-
 use crate::prelude::*;
-use crate::{objects::objective::ObjectiveConfig, physics::PhysicsMaterialType};
+use bevy::utils::HashMap;
 
 pub struct ObjectConfigPlugin;
 impl Plugin for ObjectConfigPlugin {

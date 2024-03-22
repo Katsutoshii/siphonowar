@@ -124,9 +124,7 @@ impl Grid2<EntitySet> {
 
 #[cfg(test)]
 mod tests {
-    use crate::grid::{entity::EntitySet, Grid2, GridSpec};
-
-    use bevy::prelude::*;
+    use crate::prelude::*;
 
     #[test]
     fn test_update() {
