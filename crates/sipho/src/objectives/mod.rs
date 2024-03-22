@@ -2,7 +2,7 @@
 /// We maintain a stack of objectives for each object.
 /// Each frame, we check the current object and try to resolve it to the corresponding behavior components.
 use crate::prelude::*;
-use bevy::ecs::query::QueryData;
+use bevy::ecs::query::{QueryData, QueryEntityError};
 
 pub mod config;
 pub mod dash_attacker;
@@ -54,65 +54,68 @@ pub enum Objective {
     AttackEntity(Entity),
 }
 impl Objective {
+    /// When this objective is added, remove existing components.
+    pub fn try_add_components(
+        &self,
+        components: &mut ObjectivesQueryDataItem,
+        targets: &Query<(&GlobalTransform, &Velocity)>,
+        commands: &mut Commands,
+    ) -> Result<(), QueryEntityError> {
+        let mut commands = commands.entity(components.entity);
+        commands.remove::<(DashAttacker, Navigator)>();
+        match self {
+            Self::None => {}
+            Self::FollowEntity(entity) => {
+                let (transform, _velocity) = targets.get(*entity)?;
+                commands.insert(Navigator {
+                    target: transform.translation().xy(),
+                    slow_factor: 1.0,
+                });
+            }
+            Self::AttackEntity(entity) => {
+                let (transform, velocity) = targets.get(*entity)?;
+                let target_position = transform.translation().xy() + velocity.0;
+                commands.insert((
+                    Navigator {
+                        target: transform.translation().xy(),
+                        slow_factor: 1.0,
+                    },
+                    DashAttacker {
+                        target: target_position,
+                        ..default()
+                    },
+                ));
+            }
+        };
+        Ok(())
+    }
+
+    /// When objective is unchanged, update the values in the components.
     pub fn try_update_components(
         &self,
         components: &mut ObjectivesQueryDataItem,
-        transforms: &Query<&GlobalTransform>,
-        commands: &mut Commands,
-    ) -> bool {
+        targets: &Query<(&GlobalTransform, &Velocity)>,
+    ) -> Result<(), QueryEntityError> {
         match self {
-            Self::None => {
-                if components.dash_attacker.is_some() {
-                    commands.entity(components.entity).remove::<DashAttacker>();
-                }
-                if components.navigator.is_some() {
-                    commands.entity(components.entity).remove::<Navigator>();
-                }
-                true
-            }
+            Self::None => {}
             Self::FollowEntity(entity) => {
-                if let Ok(transform) = transforms.get(*entity) {
-                    if components.dash_attacker.is_some() {
-                        commands.entity(components.entity).remove::<DashAttacker>();
-                    }
-                    if let Some(ref mut navigator) = components.navigator {
-                        navigator.target = transform.translation().xy();
-                    } else {
-                        commands.entity(components.entity).insert(Navigator {
-                            target: transform.translation().xy(),
-                            slow_factor: 1.0,
-                        });
-                    }
-                    true
-                } else {
-                    false
+                let (transform, _velocity) = targets.get(*entity)?;
+                if let Some(ref mut navigator) = components.navigator {
+                    navigator.target = transform.translation().xy();
                 }
             }
             Self::AttackEntity(entity) => {
-                if let Ok(transform) = transforms.get(*entity) {
-                    if let Some(ref mut navigator) = components.navigator {
-                        navigator.target = transform.translation().xy();
-                    } else {
-                        commands.entity(components.entity).insert(Navigator {
-                            target: transform.translation().xy(),
-                            slow_factor: 1.0,
-                        });
-                    }
-
-                    if let Some(ref mut dash_attacker) = components.dash_attacker {
-                        dash_attacker.target = transform.translation().xy();
-                    } else {
-                        commands.entity(components.entity).insert(DashAttacker {
-                            target: transform.translation().xy(),
-                            ..default()
-                        });
-                    }
-                    true
-                } else {
-                    false
+                let (transform, velocity) = targets.get(*entity)?;
+                let target_position = transform.translation().xy() + velocity.0;
+                if let Some(ref mut navigator) = components.navigator {
+                    navigator.target = target_position;
+                }
+                if let Some(ref mut dash_attacker) = components.dash_attacker {
+                    dash_attacker.target = target_position;
                 }
             }
-        }
+        };
+        Ok(())
     }
 
     /// Given an objective, get the next one (if there should be a next one, else None).
@@ -144,16 +147,22 @@ impl Default for Objectives {
 impl Objectives {
     pub fn update_components(
         mut query: Query<(&mut Objectives, ObjectivesQueryData)>,
-        transforms: Query<&GlobalTransform>,
+        targets: Query<(&GlobalTransform, &Velocity)>,
         mut commands: Commands,
     ) {
         for (mut objectives, mut components) in query.iter_mut() {
             loop {
-                if objectives.last().try_update_components(
-                    &mut components,
-                    &transforms,
-                    &mut commands,
-                ) {
+                let result = if objectives.is_changed() {
+                    objectives
+                        .last()
+                        .try_add_components(&mut components, &targets, &mut commands)
+                } else {
+                    objectives
+                        .last()
+                        .try_update_components(&mut components, &targets)
+                };
+
+                if result.is_ok() {
                     break;
                 } else {
                     objectives.pop();
@@ -197,13 +206,6 @@ impl Objectives {
             self.0.pop()
         } else {
             None
-        }
-    }
-
-    // Start attacking
-    pub fn start_attacking(&mut self, entity: Entity) {
-        if let Some(objective) = self.last().try_attacking(entity) {
-            self.push(objective);
         }
     }
 }

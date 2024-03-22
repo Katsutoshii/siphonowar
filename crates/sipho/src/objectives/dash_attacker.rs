@@ -42,12 +42,12 @@ impl Default for DashAttacker {
 impl DashAttacker {
     /// Gets a random attack delay.
     pub fn attack_delay() -> Duration {
-        Duration::from_millis(rand::thread_rng().gen_range(0..100))
+        Duration::from_millis(rand::thread_rng().gen_range(20..100))
     }
 
     /// Gets a random attack cooldown.
     pub fn attack_cooldown() -> Duration {
-        Duration::from_millis(rand::thread_rng().gen_range(500..1000))
+        Duration::from_millis(rand::thread_rng().gen_range(500..800))
     }
 
     /// Gets the atack duration
@@ -55,11 +55,15 @@ impl DashAttacker {
         Duration::from_millis(30)
     }
 
-    pub fn next_state(&mut self) {
-        self.state = match self.state {
+    pub fn next_state(&mut self, in_radius: bool) -> DashAttackerState {
+        if !in_radius {
+            self.timer.set_duration(Self::attack_delay());
+            return DashAttackerState::Init;
+        }
+        match self.state {
             DashAttackerState::Attacking => {
                 self.timer.set_duration(Self::attack_cooldown());
-                DashAttackerState::Attacking
+                DashAttackerState::Cooldown
             }
             DashAttackerState::Init | DashAttackerState::Cooldown => {
                 self.timer.set_duration(Self::attack_duration());
@@ -68,6 +72,7 @@ impl DashAttacker {
         }
     }
 
+    /// Check cooldown timers and accelerate when in state Attacking.
     pub fn update(
         mut query: Query<(
             &Object,
@@ -83,14 +88,17 @@ impl DashAttacker {
 
             attacker.timer.tick(time.delta());
 
+            let delta = attacker.target - transform.translation().xy();
+
             if attacker.timer.finished() {
                 attacker.timer.reset();
-                attacker.next_state();
+                let distance_squared = delta.length_squared();
+                let in_radius = distance_squared < config.attack_radius * config.attack_radius;
+                attacker.state = attacker.next_state(in_radius);
             }
 
             if attacker.state == DashAttackerState::Attacking {
-                let delta = attacker.target - transform.translation().xy();
-                *acceleration += Acceleration(delta.normalize() * config.attack_velocity)
+                *acceleration += Acceleration(delta.normalize_or_zero() * config.attack_velocity)
             }
         }
     }
