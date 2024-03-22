@@ -21,8 +21,8 @@ pub mod prelude {
         grid::{GridSize, GridSpec, RowCol, RowColDistance},
         meshes,
         physics::{
-            self, Acceleration, PhysicsBundle, PhysicsMaterial, PhysicsMaterialType, PhysicsPlugin,
-            Velocity,
+            self, Acceleration, InverseTransform, PhysicsBundle, PhysicsMaterial,
+            PhysicsMaterialType, PhysicsPlugin, Velocity,
         },
         raycast::{RaycastCommands, RaycastEvent, RaycastTarget},
         stages::SystemStage,

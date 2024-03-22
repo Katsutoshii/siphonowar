@@ -1,6 +1,6 @@
 use crate::prelude::*;
 use bevy::prelude::*;
-use bevy::utils::{Entry, HashMap, HashSet};
+use bevy::utils::{Entry, HashMap};
 
 use super::Object;
 use super::{ObjectCommands, ObjectSpec, Team};
@@ -75,19 +75,17 @@ impl ZooidHead {
     /// System to despawn all zooids.
     pub fn despawn_zooids(
         mut objects: Query<(Entity, &GridEntity, &Object, &mut Objectives)>,
-        mut commands: Commands,
+        mut commands: ObjectCommands,
         mut grid: ResMut<Grid2<EntitySet>>,
         keyboard_input: Res<ButtonInput<KeyCode>>,
     ) {
         if !keyboard_input.just_pressed(KeyCode::KeyD) {
             return;
         }
-        let mut entities = HashSet::<Entity>::new();
         for (entity, grid_entity, object, _) in &mut objects {
             grid.remove(entity, grid_entity);
             if let Object::Worker = object {
-                commands.entity(entity).despawn_recursive();
-                entities.insert(entity);
+                commands.despawn(entity);
             }
         }
     }

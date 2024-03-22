@@ -3,6 +3,15 @@ use bevy::{prelude::*, utils::HashMap};
 use derive_more::{Add, AddAssign, Sub, SubAssign};
 use std::ops::Mul;
 
+/// Trait to invert a transform.
+pub trait InverseTransform {
+    fn inverse(&self) -> Self;
+}
+impl InverseTransform for Transform {
+    fn inverse(&self) -> Self {
+        Transform::from_translation(-1. * self.translation).with_scale(self.scale.recip())
+    }
+}
 /// Plugin to add a waypoint system where the player can click to create a waypoint.
 pub struct PhysicsPlugin;
 impl Plugin for PhysicsPlugin {
@@ -11,7 +20,10 @@ impl Plugin for PhysicsPlugin {
             .register_type::<HashMap<PhysicsMaterialType, PhysicsMaterial>>()
             .register_type::<PhysicsMaterial>()
             .register_type::<PhysicsMaterials>()
-            .add_systems(FixedUpdate, update.in_set(SystemStage::Apply));
+            .add_systems(
+                FixedUpdate,
+                (update_children, update).chain().in_set(SystemStage::Apply),
+            );
     }
 }
 
@@ -91,9 +103,35 @@ pub fn update(
         velocity.0 *= overflow.clamp(1.0, 10.0);
         velocity.0 = velocity.lerp(prev_velocity.0, material.velocity_smoothing);
 
-        transform.translation = (transform.translation.xy() + velocity.0).extend(0.);
+        transform.translation =
+            (transform.translation.xy() + velocity.0).extend(transform.translation.z);
 
-        acceleration.0 = Vec2::ZERO;
+        *acceleration = Acceleration::ZERO;
+    }
+}
+
+// For simulated objects that are parented, apply child forces on the parent.
+// Update child velocity so it can be read elsewhere.
+pub fn update_children(
+    mut parents_query: Query<(&Velocity, &mut Acceleration, &Children), Without<Parent>>,
+    mut children_query: Query<(&mut Velocity, &mut Acceleration), With<Parent>>,
+) {
+    for (velocity, mut acceleration, children) in parents_query.iter_mut() {
+        // Sum all child accelerations.
+        let mut children_acceleration = Acceleration::ZERO;
+        let mut num_children = 0;
+        for &child in children.iter() {
+            if let Ok((mut child_velocity, mut child_acceleration)) = children_query.get_mut(child)
+            {
+                num_children += 1;
+                children_acceleration += *child_acceleration;
+                *child_velocity = *velocity;
+                *child_acceleration = Acceleration::ZERO;
+            }
+        }
+        if num_children > 0 {
+            *acceleration += children_acceleration * (num_children as f32).recip();
+        }
     }
 }
 

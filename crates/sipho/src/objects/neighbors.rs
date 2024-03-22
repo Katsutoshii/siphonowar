@@ -1,7 +1,6 @@
 use crate::prelude::*;
 use bevy::prelude::*;
 
-/// Plugin for running zooids simulation.
 pub struct NeighborsPlugin;
 impl Plugin for NeighborsPlugin {
     fn build(&self, app: &mut App) {
@@ -57,25 +56,28 @@ pub fn update(
                 if entity == other_entity {
                     continue;
                 }
-                let (other_object, other_team, other_transform) = others.get(other_entity).unwrap();
-                let other_position = other_transform.translation().xy();
+                if let Ok((other_object, other_team, other_transform)) = others.get(other_entity) {
+                    let other_position = other_transform.translation().xy();
 
-                let delta = other_position - position;
-                let distance_squared = delta.length_squared();
-                if distance_squared > config.neighbor_radius * config.neighbor_radius {
-                    continue;
-                }
+                    let delta = other_position - position;
+                    let distance_squared = delta.length_squared();
+                    if distance_squared > config.neighbor_radius * config.neighbor_radius {
+                        continue;
+                    }
 
-                let neighbor = Neighbor {
-                    entity: other_entity,
-                    object: *other_object,
-                    delta,
-                    distance_squared,
-                };
-                if team == other_team {
-                    allied_neighbors.push(neighbor)
+                    let neighbor = Neighbor {
+                        entity: other_entity,
+                        object: *other_object,
+                        delta,
+                        distance_squared,
+                    };
+                    if team == other_team {
+                        allied_neighbors.push(neighbor)
+                    } else {
+                        enemy_neighbors.push(neighbor)
+                    }
                 } else {
-                    enemy_neighbors.push(neighbor)
+                    warn!("Missing entity! {:?}", other_entity);
                 }
             }
         },

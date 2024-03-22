@@ -354,6 +354,9 @@ impl ResolvedObjective {
             Self::None => {
                 let idle_slow_threshold = config.idle_speed;
                 let velocity_squared = velocity.length_squared();
+                if velocity_squared == 0. {
+                    return Acceleration::ZERO;
+                }
                 let slow_magnitude =
                     (velocity_squared - idle_slow_threshold).max(0.) / velocity_squared;
                 let slow_vector = -velocity.0 * slow_magnitude;
@@ -389,21 +392,6 @@ impl ResolvedObjective {
             //     "Missing target_cell. This is okay if it's only for one frame. {:?}",
             //     target_cell
             // );
-            Acceleration::ZERO
-        }
-    }
-
-    /// Accelerates towards an object when close.
-    pub fn accelerate_to_dropoff(
-        position: Vec2,
-        target_position: Vec2,
-        config: &ObjectConfig,
-    ) -> Acceleration {
-        let delta = target_position - position;
-        let radius_squared = config.neighbor_radius * config.neighbor_radius;
-        if delta.length_squared() < radius_squared {
-            Acceleration(delta.normalize_or_zero() * 2.)
-        } else {
             Acceleration::ZERO
         }
     }

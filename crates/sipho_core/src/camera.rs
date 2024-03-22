@@ -43,6 +43,12 @@ impl MainCamera {
                         hdr: true, // 1. HDR is required for bloom
                         ..default()
                     },
+                    projection: OrthographicProjection {
+                        far: 1000.,
+                        near: -1000.,
+                        scale: 1.0,
+                        ..default()
+                    },
                     tonemapping: Tonemapping::TonyMcMapface, // 2. Using a tonemapper that desaturates to white is recommended
                     ..default()
                 },

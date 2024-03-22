@@ -7,7 +7,7 @@ use self::{
     zooid_worker::ZooidWorkerPlugin,
 };
 pub use self::{
-    carry::{CarriedBy, Carrier},
+    carry::{CarriedBy, CarryEvent},
     commands::{ObjectCommands, ObjectSpec},
     config::{
         InteractionConfig, InteractionConfigs, ObjectConfig, ObjectConfigs, TestInteractionConfigs,

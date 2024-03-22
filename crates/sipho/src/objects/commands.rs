@@ -20,23 +20,50 @@ pub struct ObjectSpec {
     pub objectives: Objectives,
 }
 
+#[derive(Bundle, Default)]
+pub struct ObjectBundle {
+    pub object: Object,
+    pub team: Team,
+    pub physics: PhysicsBundle,
+    pub objectives: Objectives,
+    pub material_mesh: MaterialMesh2dBundle<ColorMaterial>,
+    pub selected: Selected,
+    pub health: Health,
+    pub neighbors: NeighborsBundle,
+    pub name: Name,
+}
+impl ObjectBundle {
+    pub fn new(config: &ObjectConfig, spec: ObjectSpec) -> Self {
+        Self {
+            object: spec.object,
+            team: spec.team,
+            objectives: spec.objectives,
+            physics: PhysicsBundle {
+                material: config.physics_material,
+                velocity: spec
+                    .velocity
+                    .unwrap_or(Velocity(Vec2::ONE) * config.spawn_velocity),
+                ..default()
+            },
+            ..default()
+        }
+    }
+}
+
 /// System param to allow spawning effects.
 #[derive(SystemParam)]
 pub struct ObjectCommands<'w, 's> {
     assets: ResMut<'w, ObjectAssets>,
     commands: Commands<'w, 's>,
     configs: Res<'w, Configs>,
-    event_writer: EventWriter<'w, CreateWaypointEvent>,
+    parents: Query<'w, 's, &'static Children, Without<Parent>>,
+    #[allow(clippy::type_complexity)]
+    children: Query<'w, 's, &'static Object, With<Parent>>,
 }
 impl ObjectCommands<'_, '_> {
     pub fn spawn(&mut self, spec: ObjectSpec) {
         let config = &self.configs.objects[&spec.object];
         let team_material = self.assets.get_team_material(spec.team);
-        let velocity = if let Some(velocity) = spec.velocity {
-            velocity
-        } else {
-            Velocity(Vec2::ONE) * config.spawn_velocity
-        };
         let background = self.background_bundle(
             team_material.clone(),
             match spec.object {
@@ -50,99 +77,75 @@ impl ObjectCommands<'_, '_> {
                     .spawn((
                         ZooidWorker::default(),
                         NearestZooidHead::default(),
-                        Object::Worker,
-                        spec.team,
-                        PhysicsBundle {
-                            material: config.physics_material,
-                            velocity,
-                            ..default()
+                        ObjectBundle {
+                            material_mesh: MaterialMesh2dBundle::<ColorMaterial> {
+                                mesh: self.assets.mesh.clone().into(),
+                                transform: Transform::default()
+                                    .with_scale(Vec2::splat(10.0).extend(1.))
+                                    .with_translation(spec.position.extend(spec.zindex)),
+                                material: team_material.primary,
+                                ..default()
+                            },
+                            health: Health::new(3),
+                            name: Name::new("Zooid"),
+                            ..ObjectBundle::new(config, spec)
                         },
-                        spec.objectives,
-                        MaterialMesh2dBundle::<ColorMaterial> {
-                            mesh: self.assets.mesh.clone().into(),
-                            transform: Transform::default()
-                                .with_scale(Vec2::splat(10.0).extend(1.))
-                                .with_translation(spec.position.extend(spec.zindex)),
-                            material: team_material.primary,
-                            ..default()
-                        },
-                        Selected::default(),
-                        Health::new(3),
-                        NeighborsBundle::default(),
-                        Name::new("Zooid"),
                     ))
                     .with_children(|parent| {
                         parent.spawn(background);
                     });
             }
             Object::Head => {
+                let position = spec.position;
                 let mut entity_commands = self.commands.spawn((
                     ZooidHead,
-                    Object::Head,
-                    spec.team,
-                    MaterialMesh2dBundle::<ColorMaterial> {
-                        mesh: self.assets.mesh.clone().into(),
-                        transform: Transform::default()
-                            .with_scale(Vec2::splat(20.0).extend(1.))
-                            .with_translation(spec.position.extend(zindex::ZOOID_HEAD)),
-                        material: team_material.primary,
-                        ..default()
+                    ObjectBundle {
+                        material_mesh: MaterialMesh2dBundle::<ColorMaterial> {
+                            mesh: self.assets.mesh.clone().into(),
+                            transform: Transform::default()
+                                .with_scale(Vec2::splat(20.0).extend(1.))
+                                .with_translation(position.extend(zindex::ZOOID_HEAD)),
+                            material: team_material.primary,
+                            ..default()
+                        },
+                        health: Health::new(3),
+                        name: Name::new("ZooidHead"),
+                        ..ObjectBundle::new(config, spec)
                     },
-                    PhysicsBundle {
-                        material: config.physics_material,
-                        velocity,
-                        ..default()
-                    },
-                    spec.objectives,
-                    Selected::default(),
-                    Health::new(6),
-                    NeighborsBundle::default(),
-                    Name::new("ZooidHead"),
                 ));
                 entity_commands.with_children(|parent| {
                     parent.spawn(background);
                 });
                 let entity = entity_commands.id();
                 entity_commands.insert(Objectives::new(Objective::FollowEntity(entity)));
-                self.event_writer.send(CreateWaypointEvent {
-                    destination: spec.position,
-                    sources: vec![spec.position],
-                });
             }
             Object::Plankton => {
                 self.commands
                     .spawn((
                         Plankton,
-                        Object::Plankton,
-                        Team::None,
-                        MaterialMesh2dBundle::<ColorMaterial> {
-                            mesh: self.assets.mesh.clone().into(),
-                            transform: Transform::default()
-                                .with_scale(Vec2::splat(10.0).extend(1.))
-                                .with_translation(spec.position.extend(zindex::PLANKTON)),
-                            material: team_material.primary,
-                            ..default()
+                        ObjectBundle {
+                            team: Team::None,
+                            material_mesh: MaterialMesh2dBundle::<ColorMaterial> {
+                                mesh: self.assets.mesh.clone().into(),
+                                transform: Transform::default()
+                                    .with_scale(Vec2::splat(10.0).extend(1.))
+                                    .with_translation(spec.position.extend(zindex::PLANKTON)),
+                                material: team_material.primary,
+                                ..default()
+                            },
+                            health: Health::new(1),
+                            name: Name::new("Plankton"),
+                            ..ObjectBundle::new(config, spec)
                         },
-                        PhysicsBundle {
-                            material: config.physics_material,
-                            velocity,
-                            ..default()
-                        },
-                        spec.objectives,
-                        Health::new(1),
-                        Selected::default(),
-                        NeighborsBundle::default(),
-                        Name::new("Plankton"),
                     ))
                     .with_children(|parent| {
                         parent.spawn(background);
                     });
             }
             Object::Food => {
-                self.commands.spawn((
-                    Object::Food,
-                    Team::None,
-                    MaterialMesh2dBundle::<ColorMaterial> {
+                self.commands.spawn(ObjectBundle {
+                    team: Team::None,
+                    material_mesh: MaterialMesh2dBundle::<ColorMaterial> {
                         mesh: self.assets.mesh.clone().into(),
                         transform: Transform::default()
                             .with_scale(Vec2::splat(10.0).extend(1.))
@@ -150,20 +153,25 @@ impl ObjectCommands<'_, '_> {
                         material: team_material.secondary,
                         ..default()
                     },
-                    PhysicsBundle {
-                        material: config.physics_material,
-                        velocity: Velocity::ZERO,
-                        ..default()
-                    },
-                    spec.objectives,
-                    Health::new(1),
-                    Selected::default(),
-                    NeighborsBundle::default(),
-                    Name::new("Food"),
-                ));
+                    health: Health::new(1),
+                    name: Name::new("Food"),
+                    ..ObjectBundle::new(config, spec)
+                });
             }
         }
     }
+
+    pub fn despawn(&mut self, entity: Entity) {
+        if let Ok(children) = self.parents.get(entity) {
+            for &child in children {
+                if self.children.get(child).is_ok() {
+                    self.commands.entity(child).remove_parent_in_place();
+                }
+            }
+        }
+        self.commands.entity(entity).despawn_recursive();
+    }
+
     pub fn background_bundle(&self, team_material: TeamMaterials, zindex: f32) -> impl Bundle {
         (
             ObjectBackground,
@@ -179,6 +187,7 @@ impl ObjectCommands<'_, '_> {
                 material: team_material.background,
                 ..default()
             },
+            Name::new("ObjectBackground"),
         )
     }
 }

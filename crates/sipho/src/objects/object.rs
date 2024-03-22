@@ -1,7 +1,7 @@
 use std::f32::consts::PI;
 
 use super::{
-    carry::{CarriedBy, Carrier, CarryEvent},
+    carry::{CarriedBy, CarryEvent},
     neighbors::{AlliedNeighbors, EnemyNeighbors},
     DamageEvent, InteractionConfig, ObjectSpec,
 };
@@ -42,7 +42,6 @@ struct NearestNeighbor {
     pub entity: Entity,
     pub object: Object,
     pub velocity: Velocity,
-    pub carrier: Option<Carrier>,
     pub carried_by: Option<CarriedBy>,
 }
 trait NearestNeighborExtension {
@@ -65,7 +64,7 @@ pub struct UpdateAccelerationQueryData {
     object: &'static Object,
     velocity: &'static Velocity,
     acceleration: &'static mut Acceleration,
-    carrier: Option<&'static Carrier>,
+    parent: Option<&'static Parent>,
     neighbors: &'static AlliedNeighbors,
 }
 
@@ -75,7 +74,7 @@ pub struct UpdateObjectiveQueryData {
     entity: Entity,
     object: &'static Object,
     objectives: &'static mut Objectives,
-    carrier: Option<&'static Carrier>,
+    parent: Option<&'static Parent>,
     health: &'static Health,
     neighbors: &'static EnemyNeighbors,
 }
@@ -84,7 +83,7 @@ pub struct UpdateObjectiveQueryData {
 pub struct UpdateObjectiveNeighborQueryData {
     object: &'static Object,
     velocity: &'static Velocity,
-    carrier: Option<&'static Carrier>,
+    parent: Option<&'static Parent>,
     carried_by: Option<&'static CarriedBy>,
 }
 
@@ -104,7 +103,7 @@ impl Object {
                 let radius_squared = config.neighbor_radius * config.neighbor_radius;
 
                 // Don't apply neighbor forces when carrying items.
-                if object.carrier.is_none() {
+                if object.parent.is_none() {
                     seaparation_acceleration += Self::separation_acceleration(
                         -neighbor.delta,
                         neighbor.distance_squared,
@@ -150,7 +149,6 @@ impl Object {
                         entity: neighbor.entity,
                         velocity: *other.velocity,
                         object: *other.object,
-                        carrier: other.carrier.copied(),
                         carried_by: other.carried_by.cloned(),
                     });
                 }
@@ -173,21 +171,21 @@ impl Object {
                 // An object should only attack a neighbor if that neighbor is not being carried.
                 if object.object.can_attack()
                     && neighbor.object.can_be_attacked()
-                    && object.carrier.is_none()
+                    && object.parent.is_none()
                     && neighbor.carried_by.is_none()
                 {
                     object.objectives.start_attacking(neighbor.entity)
                 }
                 let interaction = &config.interactions[&neighbor.object];
                 if config.is_colliding(neighbor.distance_squared) {
-                    // If we can carry
-                    if object.object.can_be_carried()
-                        && neighbor.object.can_carry()
-                        && neighbor.carrier.is_none()
+                    // If we can carry the neighboring object.
+                    if neighbor.object.can_be_carried()
+                        && object.object.can_carry()
+                        && object.parent.is_none()
                     {
                         carry_events.send(CarryEvent {
-                            carrier: neighbor.entity,
-                            carried: object.entity,
+                            carrier: object.entity,
+                            carried: neighbor.entity,
                         });
                     }
                     // If we can be damaged this frame.
@@ -242,7 +240,6 @@ impl Object {
     /// System for objects dying.
     pub fn death(
         mut objects: Query<(Entity, &Self, &GridEntity, &Health, &GlobalTransform, &Team)>,
-        mut commands: Commands,
         mut object_commands: ObjectCommands,
         mut effect_commands: EffectCommands,
         mut grid: ResMut<Grid2<EntitySet>>,
@@ -250,7 +247,7 @@ impl Object {
         for (entity, object, grid_entity, health, &transform, team) in &mut objects {
             if health.health <= 0 {
                 grid.remove(entity, grid_entity);
-                commands.entity(entity).despawn_recursive();
+                object_commands.despawn(entity);
                 effect_commands.make_fireworks(FireworkSpec {
                     size: VfxSize::Medium,
                     transform: transform.into(),
@@ -317,14 +314,19 @@ impl Object {
 pub struct ObjectBackground;
 impl ObjectBackground {
     pub fn update(
-        mut query: Query<(&mut Transform, &Parent), With<Self>>,
+        mut query: Query<(Entity, &mut Transform, Option<&Parent>), With<Self>>,
         parent_velocities: Query<&Velocity, With<Children>>,
+        mut commands: Commands,
     ) {
-        for (mut transform, parent) in &mut query {
-            let parent_velocity = parent_velocities
-                .get(parent.get())
-                .expect("Invalid parent.");
-            transform.translation = -0.1 * parent_velocity.extend(0.);
+        for (entity, mut transform, parent) in &mut query {
+            if let Some(parent) = parent {
+                if let Ok(parent_velocity) = parent_velocities.get(parent.get()) {
+                    transform.translation = -0.1 * parent_velocity.extend(0.);
+                }
+            } else {
+                info!("No parent, despawn background! {:?}", entity);
+                commands.entity(entity).despawn_recursive();
+            }
         }
     }
 }
