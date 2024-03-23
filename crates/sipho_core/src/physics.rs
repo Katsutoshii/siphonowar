@@ -11,6 +11,8 @@ impl Plugin for PhysicsPlugin {
             .register_type::<HashMap<PhysicsMaterialType, PhysicsMaterial>>()
             .register_type::<PhysicsMaterial>()
             .register_type::<PhysicsMaterials>()
+            .register_type::<Velocity>()
+            .register_type::<Acceleration>()
             .add_systems(
                 FixedUpdate,
                 (update_children, update)
@@ -35,6 +37,7 @@ impl Plugin for PhysicsPlugin {
     Sub,
     SubAssign,
     PartialEq,
+    Reflect,
 )]
 pub struct Velocity(pub Vec2);
 impl Velocity {
@@ -62,6 +65,7 @@ impl Mul<f32> for Velocity {
     Sub,
     SubAssign,
     PartialEq,
+    Reflect,
 )]
 pub struct Acceleration(pub Vec2);
 impl Acceleration {
