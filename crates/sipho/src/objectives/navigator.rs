@@ -42,7 +42,7 @@ impl Navigator {
 
         // Populate the grid.
         for (&destination, sources) in destinations.iter() {
-            grid.navigate_to_destination(destination, sources, &obstacles, &spec, &mut event_writer)
+            grid.compute_flow(destination, sources, &obstacles, &spec, &mut event_writer)
         }
 
         // Remove old cells where there is no objective leading to that destination.
