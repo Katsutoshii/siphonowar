@@ -9,7 +9,10 @@ impl Plugin for WaypointPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<WaypointAssets>().add_systems(
             FixedUpdate,
-            ((Waypoint::cleanup, Waypoint::update).in_set(SystemStage::PostApply),),
+            (
+                Waypoint::cleanup.in_set(SystemStage::Despawn),
+                Waypoint::update.in_set(SystemStage::Spawn),
+            ),
         );
     }
 }
