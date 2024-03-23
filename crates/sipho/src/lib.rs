@@ -1,8 +1,7 @@
 pub mod objectives;
 pub mod objects;
 pub mod scene;
-pub mod selector;
-pub mod waypoint;
+pub mod ui;
 
 pub mod prelude {
     pub use sipho_core::prelude::*;
@@ -14,8 +13,7 @@ pub mod prelude {
             CarriedBy, CarryEvent, DamageEvent, Health, InteractionConfigs, Object, ObjectCommands,
             ObjectConfig, ObjectConfigs, ObjectSpec,
         },
-        selector::Selected,
-        waypoint::{Waypoint, WaypointAssets},
+        ui::{Selected, Waypoint},
         SiphonowarPlugin,
     };
 }
@@ -36,8 +34,7 @@ impl Plugin for SiphonowarPlugin {
             objects::ObjectsPlugin,
             objectives::ObjectivePlugin,
             scene::LoadableScenePlugin,
-            selector::SelectorPlugin,
-            waypoint::WaypointPlugin,
+            ui::UiPlugin,
             sipho_vfx::VfxPlugin,
         ));
     }

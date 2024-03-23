@@ -13,7 +13,10 @@ impl Plugin for PhysicsPlugin {
             .register_type::<PhysicsMaterials>()
             .add_systems(
                 FixedUpdate,
-                (update_children, update).chain().in_set(SystemStage::Apply),
+                (update_children, update)
+                    .chain()
+                    .in_set(SystemStage::Apply)
+                    .in_set(GameStateSet::Running),
             );
     }
 }

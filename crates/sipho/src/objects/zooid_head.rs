@@ -10,11 +10,11 @@ impl Plugin for ZooidHeadPlugin {
         app.add_systems(
             FixedUpdate,
             (
-                ZooidHead::spawn.in_set(SystemStage::Spawn),
-                ZooidHead::spawn_zooids.in_set(SystemStage::Spawn),
+                (ZooidHead::spawn, ZooidHead::spawn_zooids).in_set(SystemStage::Spawn),
                 ZooidHead::despawn_zooids.in_set(SystemStage::Despawn),
                 NearestZooidHead::update.in_set(SystemStage::PreCompute),
-            ),
+            )
+                .in_set(GameStateSet::Running),
         );
     }
 }

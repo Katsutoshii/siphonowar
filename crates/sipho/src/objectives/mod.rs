@@ -24,7 +24,8 @@ impl Plugin for ObjectivePlugin {
                 FixedUpdate,
                 (Objectives::update_components, ObjectiveDebugger::update)
                     .chain()
-                    .in_set(SystemStage::PostApply),
+                    .in_set(SystemStage::PostApply)
+                    .in_set(GameStateSet::Running),
             )
             .add_plugins((
                 navigator::NavigatorPlugin,

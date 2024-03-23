@@ -30,11 +30,9 @@ impl Plugin for InputActionPlugin {
             .add_event::<InputEvent>()
             .add_systems(
                 Update,
-                (
-                    InputEvent::update.in_set(SystemStage::Spawn),
-                    ControlEvent::update.after(InputEvent::update),
-                    pan_camera.after(ControlEvent::update),
-                ),
+                (InputEvent::update, ControlEvent::update, pan_camera)
+                    .chain()
+                    .in_set(SystemStage::Input),
             );
     }
 }
@@ -51,6 +49,7 @@ pub enum InputAction {
     SpawnBlue,
     SpawnPlankton,
     SpawnFood,
+    PauseMenu,
 }
 
 /// Specifies input mapping.
@@ -215,6 +214,8 @@ pub enum ControlAction {
     SpawnBlue,
     SpawnPlankton,
     SpawnFood,
+
+    PauseMenu,
 }
 impl From<(RaycastTarget, InputAction)> for ControlAction {
     fn from(value: (RaycastTarget, InputAction)) -> Self {
@@ -231,6 +232,7 @@ impl From<(RaycastTarget, InputAction)> for ControlAction {
             (RaycastTarget::WorldGrid, InputAction::SpawnBlue) => Self::SpawnBlue,
             (RaycastTarget::WorldGrid, InputAction::SpawnPlankton) => Self::SpawnPlankton,
             (RaycastTarget::WorldGrid, InputAction::SpawnFood) => Self::SpawnFood,
+            (_, InputAction::PauseMenu) => Self::PauseMenu,
             (RaycastTarget::None, _) => Self::None,
             _ => Self::None,
         }

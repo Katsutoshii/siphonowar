@@ -5,14 +5,10 @@ impl Plugin for DamagePlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<DamageEvent>().add_systems(
             FixedUpdate,
-            (
-                Health::update
-                    .in_set(SystemStage::Compute)
-                    .after(Object::update_objective),
-                DamageEvent::update
-                    .in_set(SystemStage::Compute)
-                    .after(Health::update),
-            ),
+            (Health::update, DamageEvent::update)
+                .in_set(SystemStage::Compute)
+                .in_set(GameStateSet::Running)
+                .after(Object::update_objective),
         );
     }
 }

@@ -16,11 +16,15 @@ impl Plugin for ObjectPlugin {
         app.register_type::<Object>().add_systems(
             FixedUpdate,
             (
-                Object::update_acceleration.in_set(SystemStage::Compute),
-                Object::update_objective.in_set(SystemStage::Compute),
+                (
+                    Object::update_acceleration,
+                    Object::update_objective,
+                    ObjectBackground::update,
+                )
+                    .in_set(SystemStage::Compute),
                 Object::death.in_set(SystemStage::Despawn),
-                ObjectBackground::update.in_set(SystemStage::Compute),
-            ),
+            )
+                .in_set(GameStateSet::Running),
         );
     }
 }

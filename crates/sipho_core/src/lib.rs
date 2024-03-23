@@ -6,10 +6,11 @@ pub mod grid;
 pub mod inputs;
 pub mod meshes;
 pub mod nav;
+pub mod pause;
 pub mod physics;
 pub mod raycast;
 pub mod shader_plane;
-pub mod stages;
+pub mod system_sets;
 pub mod team;
 pub mod window;
 pub mod zindex;
@@ -26,12 +27,13 @@ pub mod prelude {
         inputs::{ControlAction, ControlEvent},
         meshes,
         nav::{NavigationCostEvent, NavigationGrid2, SparseFlowGrid2},
+        pause::PausedState,
         physics::{
             self, Acceleration, PhysicsBundle, PhysicsMaterial, PhysicsMaterialType, Velocity,
         },
         raycast::{RaycastCommands, RaycastEvent, RaycastTarget},
         shader_plane::{ShaderPlaneAssets, ShaderPlaneMaterial, ShaderPlanePlugin},
-        stages::SystemStage,
+        system_sets::{GameStateSet, SystemStage},
         team::{Team, TeamConfig, TeamMaterials},
         window::{self, ScalableWindow},
         zindex, CorePlugin,
@@ -45,6 +47,8 @@ pub struct CorePlugin;
 impl Plugin for CorePlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((
+            pause::PausePlugin,
+            system_sets::SystemSetPlugin,
             team::TeamPlugin,
             inputs::InputActionPlugin,
             grid::GridPlugin,

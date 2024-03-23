@@ -12,7 +12,8 @@ impl Plugin for WaypointPlugin {
             (
                 Waypoint::cleanup.in_set(SystemStage::Despawn),
                 Waypoint::update.in_set(SystemStage::Spawn),
-            ),
+            )
+                .in_set(GameStateSet::Running),
         );
     }
 }

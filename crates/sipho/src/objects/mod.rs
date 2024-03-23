@@ -32,8 +32,7 @@ impl Plugin for ObjectsPlugin {
             object::ObjectPlugin,
             damage::DamagePlugin,
         ))
-        .init_resource::<ObjectAssets>()
-        .configure_sets(FixedUpdate, SystemStage::get_config());
+        .init_resource::<ObjectAssets>();
     }
 }
 

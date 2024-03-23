@@ -9,7 +9,9 @@ impl Plugin for DashAttackerPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<DashAttacker>().add_systems(
             FixedUpdate,
-            DashAttacker::update.in_set(SystemStage::PostApply),
+            DashAttacker::update
+                .in_set(SystemStage::PostApply)
+                .in_set(GameStateSet::Running),
         );
     }
 }

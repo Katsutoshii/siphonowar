@@ -37,7 +37,9 @@ impl Plugin for GridPlugin {
             ))
             .add_systems(
                 FixedUpdate,
-                GridEntity::update.in_set(SystemStage::PostApply),
+                GridEntity::update
+                    .in_set(SystemStage::PostApply)
+                    .in_set(GameStateSet::Running),
             );
     }
 }

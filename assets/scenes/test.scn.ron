@@ -41,7 +41,8 @@
         Minus: SpawnRed,
         Equal: SpawnBlue,
         KeyF: SpawnPlankton,
-        KeyG: SpawnFood
+        KeyG: SpawnFood,
+        Escape: PauseMenu
       },
       mouse: {
         Left: Primary,

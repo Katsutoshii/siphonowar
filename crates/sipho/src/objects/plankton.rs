@@ -3,7 +3,12 @@ use crate::prelude::*;
 pub struct PlanktonPlugin;
 impl Plugin for PlanktonPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(FixedUpdate, (Plankton::spawn.in_set(SystemStage::Spawn),));
+        app.add_systems(
+            FixedUpdate,
+            (Plankton::spawn
+                .in_set(SystemStage::Spawn)
+                .in_set(GameStateSet::Running),),
+        );
     }
 }
 

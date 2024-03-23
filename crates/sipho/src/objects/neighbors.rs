@@ -3,7 +3,12 @@ use crate::prelude::*;
 pub struct NeighborsPlugin;
 impl Plugin for NeighborsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(FixedUpdate, (update.in_set(SystemStage::FindNeighbors),));
+        app.add_systems(
+            FixedUpdate,
+            (update
+                .in_set(SystemStage::FindNeighbors)
+                .in_set(GameStateSet::Running),),
+        );
     }
 }
 

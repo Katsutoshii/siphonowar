@@ -12,7 +12,9 @@ impl<T: Sized + Default + Clone + Sync + Send + 'static> Plugin for Grid2Plugin<
     fn build(&self, app: &mut App) {
         app.insert_resource(Grid2::<T>::default()).add_systems(
             FixedUpdate,
-            Grid2::<T>::resize_on_change.in_set(SystemStage::PreCompute),
+            Grid2::<T>::resize_on_change
+                .in_set(SystemStage::PreCompute)
+                .in_set(GameStateSet::Running),
         );
     }
 }
