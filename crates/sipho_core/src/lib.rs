@@ -25,7 +25,7 @@ pub mod prelude {
         },
         inputs::{ControlAction, ControlEvent},
         meshes,
-        nav::{CreateWaypointEvent, NavigationCostEvent, NavigationGrid2, SparseFlowGrid2},
+        nav::{NavigationCostEvent, NavigationGrid2, SparseFlowGrid2},
         physics::{
             self, Acceleration, PhysicsBundle, PhysicsMaterial, PhysicsMaterialType, Velocity,
         },

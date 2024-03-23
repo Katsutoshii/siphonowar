@@ -2,6 +2,7 @@ use std::f32::consts::PI;
 
 use crate::prelude::*;
 use bevy::{prelude::*, sprite::MaterialMesh2dBundle, utils::hashbrown::HashSet};
+use sipho_core::nav::CreateWaypointEvent;
 
 /// Plugin to add a waypoint system where the player can click to create a waypoint.
 pub struct WaypointPlugin;
@@ -9,12 +10,7 @@ impl Plugin for WaypointPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<WaypointAssets>().add_systems(
             FixedUpdate,
-            (
-                Waypoint::update.in_set(SystemStage::PostApply),
-                Waypoint::cleanup
-                    .in_set(SystemStage::PostApply)
-                    .after(Waypoint::update),
-            ),
+            ((Waypoint::update, Waypoint::cleanup).in_set(SystemStage::PostApply),),
         );
     }
 }
@@ -52,6 +48,7 @@ impl Waypoint {
             let mut followed_entities = HashSet::new();
             for objectives in all_objectives.iter() {
                 if let Some(entity) = objectives.last().get_followed_entity() {
+                    info!("Cleanup waypoint!");
                     followed_entities.insert(entity);
                 }
             }
@@ -80,20 +77,20 @@ impl Waypoint {
                 Waypoint::default().bundle(&assets, control.position.extend(zindex::WAYPOINT));
             let entity = commands.spawn(waypoint_bundle).id();
 
-            let mut sources = Vec::new();
+            // let mut sources = Vec::new();
             for (selected, mut objectives, transform) in selection.iter_mut() {
                 if selected.is_selected() {
                     objectives.clear();
                     objectives.push(Objective::FollowEntity(entity));
-                    sources.push(transform.translation().xy());
+                    // sources.push(transform.translation().xy());
                 }
             }
-            if !sources.is_empty() {
-                event_writer.send(CreateWaypointEvent {
-                    sources,
-                    destination: control.position,
-                });
-            }
+            // if !sources.is_empty() {
+            //     event_writer.send(CreateWaypointEvent {
+            //         sources,
+            //         destination: control.position,
+            //     });
+            // }
         }
     }
 

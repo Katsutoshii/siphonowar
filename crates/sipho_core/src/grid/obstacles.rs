@@ -121,8 +121,9 @@ impl Grid2<Obstacle> {
         )>,
     ) {
         for (global_transform, mut transform, mut velocity, mut acceleration) in query.iter_mut() {
-            *acceleration +=
+            let obstacle_acceleration =
                 obstacles.acceleration(global_transform.translation().xy(), *velocity) * 3.;
+            *acceleration += obstacle_acceleration;
 
             if obstacles[obstacles.to_rowcol(transform.translation.xy())] != Obstacle::Empty {
                 velocity.0 *= -1.0;

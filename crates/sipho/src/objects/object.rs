@@ -67,6 +67,7 @@ pub struct UpdateAccelerationQueryData {
     parent: Option<&'static Parent>,
     objectives: &'static Objectives,
     neighbors: &'static AlliedNeighbors,
+    carried_by: Option<&'static CarriedBy>,
 }
 
 #[derive(QueryData)]
@@ -129,7 +130,7 @@ impl Object {
             }
 
             // When idle, slow down.
-            if *object.objectives.last() == Objective::None {
+            if *object.objectives.last() == Objective::None && object.carried_by.is_none() {
                 let idle_slow_threshold = config.idle_speed;
                 let velocity_squared = object.velocity.length_squared();
                 if velocity_squared > 0. {

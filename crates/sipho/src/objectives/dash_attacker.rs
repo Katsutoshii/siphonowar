@@ -98,7 +98,7 @@ impl DashAttacker {
             }
 
             if attacker.state == DashAttackerState::Attacking {
-                *acceleration += Acceleration(delta.normalize_or_zero() * config.attack_velocity)
+                *acceleration += Acceleration(delta.normalize_or_zero() * config.attack_velocity);
             }
         }
     }
