@@ -12,38 +12,10 @@ impl Plugin for DebugPlugin {
         use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
         app.add_plugins((
-            WorldInspectorPlugin::default(),
+            WorldInspectorPlugin::default().run_if(in_state(PausedState::Paused)),
             console::CustomConsolePlugin,
             // FrameTimeDiagnosticsPlugin,
             LogDiagnosticsPlugin::default(),
-        ))
-        .add_systems(Startup, Self::startup);
-    }
-}
-impl DebugPlugin {
-    fn startup(mut commands: Commands) {
-        commands.spawn((TextBundle::from_section(
-            [
-                "  Controls:",
-                "    Create your spawner: 'x'",
-                "    Move camera: move mouse to border",
-                "    Move waypoint: right click",
-                "    Spawn zooids: 'z'",
-                "    Despawn zooids: 'd'",
-                "    Save scene: 's'",
-                "    Open editor: 'e'",
-                "    Spawn food: 'f'",
-                "    -",
-            ]
-            .join("\n"),
-            TextStyle {
-                font_size: 18.0,
-                ..default()
-            },
-        )
-        .with_style(Style {
-            align_self: AlignSelf::FlexEnd,
-            ..default()
-        }),));
+        ));
     }
 }

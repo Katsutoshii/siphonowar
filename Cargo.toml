@@ -25,6 +25,9 @@ members = [
   "crates/*",
 ]
 
+[workspace.lints.clippy]
+type_complexity = "allow"
+
 [features]
 debug = ["dep:bevy-inspector-egui"]
 default = ["debug"]
