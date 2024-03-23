@@ -22,13 +22,18 @@ pub struct Neighbor {
 
 #[derive(Component, Deref, DerefMut, Default)]
 pub struct EnemyNeighbors(pub Vec<Neighbor>);
+
 #[derive(Component, Deref, DerefMut, Default)]
 pub struct AlliedNeighbors(pub Vec<Neighbor>);
+
+#[derive(Component, Deref, DerefMut, Default)]
+pub struct CollidingNeighbors(pub Vec<Neighbor>);
 
 #[derive(Bundle, Default)]
 pub struct NeighborsBundle {
     allies: AlliedNeighbors,
     enemies: EnemyNeighbors,
+    collisions: CollidingNeighbors,
     grid_entity: GridEntity,
 }
 
@@ -37,6 +42,7 @@ pub fn update(
         Entity,
         &mut EnemyNeighbors,
         &mut AlliedNeighbors,
+        &mut CollidingNeighbors,
         &Object,
         &Team,
         &GlobalTransform,
@@ -46,7 +52,15 @@ pub fn update(
     configs: Res<ObjectConfigs>,
 ) {
     query.par_iter_mut().for_each(
-        |(entity, mut enemy_neighbors, mut allied_neighbors, object, team, transform)| {
+        |(
+            entity,
+            mut enemy_neighbors,
+            mut allied_neighbors,
+            mut colliding_neighbors,
+            object,
+            team,
+            transform,
+        )| {
             let config = configs.get(object).unwrap();
             // test
             let position = transform.translation().xy();
@@ -56,6 +70,8 @@ pub fn update(
             enemy_neighbors.reserve_exact(other_entities.len());
             allied_neighbors.clear();
             allied_neighbors.reserve_exact(other_entities.len());
+            colliding_neighbors.clear();
+            colliding_neighbors.reserve_exact(other_entities.len());
 
             for other_entity in other_entities {
                 if entity == other_entity {
@@ -63,7 +79,6 @@ pub fn update(
                 }
                 if let Ok((other_object, other_team, other_transform)) = others.get(other_entity) {
                     let other_position = other_transform.translation().xy();
-
                     let delta = other_position - position;
                     let distance_squared = delta.length_squared();
                     if distance_squared > config.neighbor_radius * config.neighbor_radius {
@@ -77,9 +92,15 @@ pub fn update(
                         distance_squared,
                     };
                     if team == other_team {
-                        allied_neighbors.push(neighbor)
+                        allied_neighbors.push(neighbor);
                     } else {
-                        enemy_neighbors.push(neighbor)
+                        enemy_neighbors.push(neighbor);
+                        let other_config = configs.get(other_object).unwrap();
+                        if distance_squared
+                            < config.hit_radius.powi(2) + other_config.hit_radius.powi(2)
+                        {
+                            colliding_neighbors.push(neighbor);
+                        }
                     }
                 } else {
                     warn!("Missing entity! {:?}", other_entity);

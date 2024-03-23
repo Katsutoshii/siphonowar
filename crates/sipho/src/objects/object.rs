@@ -2,10 +2,13 @@ use std::f32::consts::PI;
 
 use super::{
     carry::{CarriedBy, CarryEvent},
-    neighbors::{AlliedNeighbors, EnemyNeighbors},
+    neighbors::{AlliedNeighbors, CollidingNeighbors, EnemyNeighbors},
     DamageEvent, InteractionConfig, ObjectSpec,
 };
-use crate::prelude::*;
+use crate::{
+    objectives::{dash_attacker::DashAttackerState, DashAttacker},
+    prelude::*,
+};
 use bevy::{ecs::query::QueryData, prelude::*};
 use sipho_vfx::fireworks::EffectCommands;
 
@@ -19,6 +22,7 @@ impl Plugin for ObjectPlugin {
                 (
                     Object::update_acceleration,
                     Object::update_objective,
+                    Object::update_collisions,
                     ObjectBackground::update,
                 )
                     .in_set(SystemStage::Compute),
@@ -38,27 +42,6 @@ pub enum Object {
     Head,
     Plankton,
     Food,
-}
-
-#[derive(Clone)]
-struct NearestNeighbor {
-    pub distance_squared: f32,
-    pub entity: Entity,
-    pub object: Object,
-    pub velocity: Velocity,
-    pub carried_by: Option<CarriedBy>,
-}
-trait NearestNeighborExtension {
-    fn distance_squared(&self) -> f32;
-}
-impl NearestNeighborExtension for Option<NearestNeighbor> {
-    fn distance_squared(&self) -> f32 {
-        if let Some(nearest_neighbor) = self {
-            nearest_neighbor.distance_squared
-        } else {
-            f32::INFINITY
-        }
-    }
 }
 
 #[derive(QueryData)]
@@ -154,76 +137,81 @@ impl Object {
     pub fn update_objective(
         mut query: Query<UpdateObjectiveQueryData>,
         others: Query<UpdateObjectiveNeighborQueryData>,
+    ) {
+        for mut object in &mut query {
+            let nearest = object
+                .neighbors
+                .iter()
+                .min_by_key(|neighbor| bevy::utils::FloatOrd(neighbor.distance_squared));
+
+            if let Some(neighbor) = nearest {
+                let other = others.get(neighbor.entity).unwrap();
+                // An object should only attack a neighbor if that neighbor is not being carried.
+                if object.object.can_attack()
+                    && neighbor.object.can_be_attacked()
+                    && object.parent.is_none()
+                    && other.carried_by.is_none()
+                {
+                    if let Some(objective) = object.objectives.last().try_attacking(neighbor.entity)
+                    {
+                        info!("Attack!");
+                        object.objectives.push(objective);
+                    }
+                }
+            }
+        }
+    }
+
+    pub fn update_collisions(
+        mut objects: Query<(
+            Entity,
+            &Object,
+            &CollidingNeighbors,
+            &Health,
+            Option<&Parent>,
+        )>,
+        others: Query<(&Object, Option<&DashAttacker>, &Velocity)>,
         configs: Res<ObjectConfigs>,
         mut damage_events: EventWriter<DamageEvent>,
         mut carry_events: EventWriter<CarryEvent>,
     ) {
-        for mut object in &mut query {
-            let config = configs.get(object.object).unwrap();
-            let mut nearest_neighbor: Option<NearestNeighbor> = None;
-            for neighbor in object.neighbors.iter() {
-                let other = others.get(neighbor.entity).unwrap();
+        for (entity, object, collisions, health, parent) in objects.iter_mut() {
+            let config = configs.get(object).unwrap();
+            for neighbor in collisions.iter() {
+                let (other_object, other_attacker, other_velocity) =
+                    others.get(neighbor.entity).unwrap();
+                let interaction = config.interactions.get(other_object).unwrap();
 
-                if neighbor.distance_squared < nearest_neighbor.distance_squared() {
-                    nearest_neighbor = Some(NearestNeighbor {
-                        distance_squared: neighbor.distance_squared,
-                        entity: neighbor.entity,
-                        velocity: *other.velocity,
-                        object: *other.object,
-                        carried_by: other.carried_by.cloned(),
+                if let Some(attacker) = other_attacker {
+                    if attacker.state == DashAttackerState::Attacking && health.damageable() {
+                        damage_events.send(DamageEvent {
+                            damager: neighbor.entity,
+                            damaged: entity,
+                            amount: interaction.damage_amount,
+                            velocity: *other_velocity,
+                        });
+                    }
+                }
+
+                if object.can_carry() && neighbor.object.can_be_carried() && parent.is_none() {
+                    carry_events.send(CarryEvent {
+                        carrier: entity,
+                        carried: neighbor.entity,
                     });
                 }
 
                 // Food specific behavior.
                 let radius_squared = config.neighbor_radius * config.neighbor_radius;
-                if *object.object == Object::Food
+                if *object == Object::Food
                     && neighbor.object == Object::Head
                     && neighbor.distance_squared < radius_squared * 0.1
                 {
                     damage_events.send(DamageEvent {
                         damager: neighbor.entity,
-                        damaged: object.entity,
+                        damaged: entity,
                         amount: 1,
                         velocity: Velocity::ZERO,
                     });
-                }
-            }
-            if let Some(neighbor) = nearest_neighbor {
-                // An object should only attack a neighbor if that neighbor is not being carried.
-                if object.object.can_attack()
-                    && neighbor.object.can_be_attacked()
-                    && object.parent.is_none()
-                    && neighbor.carried_by.is_none()
-                {
-                    if let Some(objective) = object.objectives.last().try_attacking(neighbor.entity)
-                    {
-                        object.objectives.push(objective);
-                    }
-                }
-                let interaction = &config.interactions[&neighbor.object];
-                if config.is_colliding(neighbor.distance_squared) {
-                    // If we can carry the neighboring object.
-                    if neighbor.object.can_be_carried()
-                        && object.object.can_carry()
-                        && object.parent.is_none()
-                    {
-                        carry_events.send(CarryEvent {
-                            carrier: object.entity,
-                            carried: neighbor.entity,
-                        });
-                    }
-                    // If we can be damaged this frame.
-                    else if interaction.damage_amount > 0
-                        && config.is_damage_velocity(neighbor.velocity.length_squared())
-                        && object.health.damageable()
-                    {
-                        damage_events.send(DamageEvent {
-                            damager: neighbor.entity,
-                            damaged: object.entity,
-                            amount: interaction.damage_amount,
-                            velocity: neighbor.velocity,
-                        });
-                    }
                 }
             }
         }

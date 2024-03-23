@@ -52,9 +52,9 @@ impl DashAttacker {
         Duration::from_millis(rand::thread_rng().gen_range(500..800))
     }
 
-    /// Gets the atack duration
+    /// Gets the attack duration.
     pub fn attack_duration() -> Duration {
-        Duration::from_millis(30)
+        Duration::from_millis(140)
     }
 
     pub fn next_state(&mut self, in_radius: bool) -> DashAttackerState {

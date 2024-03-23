@@ -76,7 +76,7 @@ impl DamageEvent {
                     team,
                     transform: transform.into(),
                 });
-                *acceleration += Acceleration(event.velocity.0 * 2.);
+                *acceleration += Acceleration(event.velocity.0 * 5.);
             }
         }
     }

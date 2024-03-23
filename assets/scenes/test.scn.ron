@@ -69,8 +69,8 @@
           neighbor_radius: 128.0,
           obstacle_acceleration: 6.,
           nav_flow_factor: 1.0,
-          attack_velocity: 30.,
-          attack_radius: 128.0,
+          attack_velocity: 16.,
+          attack_radius: 64.0,
           spawn_velocity: 10.0,
           objective: ObjectiveConfig(
             repell_radius: 32.0,
