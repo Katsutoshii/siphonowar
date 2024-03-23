@@ -30,7 +30,7 @@ impl GridEntity {
 }
 
 /// Communicates updates to the grid to other systems.
-#[derive(Event)]
+#[derive(Event, Debug)]
 pub struct EntityGridEvent {
     pub entity: Entity,
     pub prev_cell: Option<RowCol>,
