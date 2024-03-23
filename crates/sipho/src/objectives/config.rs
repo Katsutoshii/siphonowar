@@ -4,14 +4,12 @@ use crate::prelude::*;
 pub struct ObjectiveConfig {
     pub repell_radius: f32,
     pub slow_factor: f32,
-    pub attack_radius: f32,
 }
 impl Default for ObjectiveConfig {
     fn default() -> Self {
         Self {
             repell_radius: 1.0,
             slow_factor: 0.0,
-            attack_radius: 32.0,
         }
     }
 }

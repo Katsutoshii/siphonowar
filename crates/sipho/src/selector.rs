@@ -63,7 +63,6 @@ impl Selector {
             if control.action != ControlAction::Select {
                 continue;
             }
-            dbg!(control);
             let (mut selector, mut transform, mut visibility) = query.single_mut();
 
             match control.state {

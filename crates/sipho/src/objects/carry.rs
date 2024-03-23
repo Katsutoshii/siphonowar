@@ -58,12 +58,12 @@ impl CarryEvent {
                     .set_parent_in_place(event.carried);
             };
             let mut carrier = query.get_mut(event.carrier).unwrap();
-            carrier.objectives.clear();
 
             if let Some(NearestZooidHead {
                 entity: Some(entity),
             }) = carrier.nearest_head
             {
+                carrier.objectives.clear();
                 carrier.objectives.push(Objective::FollowEntity(*entity));
             }
         }

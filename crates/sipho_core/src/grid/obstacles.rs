@@ -96,7 +96,7 @@ impl Grid2<Obstacle> {
     /// Compute acceleration due to neighboring obstacles.
     /// For each neighboring obstacle, if the object is moving towards the obstacle
     /// we apply a force away from the obstacle.
-    pub fn obstacles_acceleration(&self, position: Vec2, velocity: Velocity) -> Acceleration {
+    pub fn acceleration(&self, position: Vec2, velocity: Velocity) -> Acceleration {
         let (row, col) = self.to_rowcol(position);
         if self.is_boundary((row, col)) {
             return Acceleration::ZERO;
@@ -113,12 +113,20 @@ impl Grid2<Obstacle> {
     /// Bounce simulated objects off obstacles.
     pub fn bounce_off_obstacles(
         obstacles: Res<Self>,
-        mut query: Query<(&mut Transform, &mut Velocity, &mut Acceleration)>,
+        mut query: Query<(
+            &GlobalTransform,
+            &mut Transform,
+            &mut Velocity,
+            &mut Acceleration,
+        )>,
     ) {
-        for (mut transform, mut velocity, mut acceleration) in query.iter_mut() {
+        for (global_transform, mut transform, mut velocity, mut acceleration) in query.iter_mut() {
+            let obstacle_acceleration =
+                obstacles.acceleration(global_transform.translation().xy(), *velocity) * 3.;
+            *acceleration += obstacle_acceleration;
+
             if obstacles[obstacles.to_rowcol(transform.translation.xy())] != Obstacle::Empty {
                 velocity.0 *= -1.0;
-                acceleration.0 = velocity.0;
                 transform.translation += velocity.0.extend(0.);
             }
         }

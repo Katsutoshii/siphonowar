@@ -1,6 +1,6 @@
 /// Sparse grid flow for path finding.
 use crate::prelude::*;
-use bevy::utils::{Entry, HashMap};
+use bevy::utils::HashMap;
 
 pub mod astar;
 pub mod debug;
@@ -12,13 +12,12 @@ pub struct NavigationPlugin;
 impl Plugin for NavigationPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<NavigationCostEvent>()
-            .add_event::<CreateWaypointEvent>()
             .insert_resource(NavigationGrid2::default())
             .add_systems(
                 FixedUpdate,
                 (
                     NavigationGrid2::resize_on_change,
-                    NavigationGrid2::create_waypoints.in_set(SystemStage::PostApply),
+                    // NavigationGrid2::create_waypoints.in_set(SystemStage::PostApply),
                 ),
             )
             .add_plugins(NavigationVisualizerPlugin);
@@ -79,7 +78,7 @@ pub struct NavigationGrid2Entry {
 }
 impl NavigationGrid2Entry {
     /// Add a waypoint given rowcols.
-    pub fn add_waypoint_rowcols(
+    pub fn compute_flow(
         &mut self,
         destination: RowCol,
         sources: &[RowCol],
@@ -128,26 +127,6 @@ impl NavigationGrid2Entry {
             event_writer.send(NavigationCostEvent { rowcol, cost });
         }
     }
-
-    /// Add a waypoint.
-    /// Create flows from all points to the waypoint.
-    pub fn add_waypoint(
-        &mut self,
-        event: &CreateWaypointEvent,
-        obstacles: &Grid2<Obstacle>,
-        event_writer: &mut EventWriter<NavigationCostEvent>,
-    ) {
-        let mut sources: Vec<RowCol> = Vec::with_capacity(event.sources.len());
-        for &source in &event.sources {
-            let rowcol = self.grid.spec.to_rowcol(source);
-            for neighbor_rowcol in self.grid.get_in_radius_discrete(rowcol, 2) {
-                sources.push(neighbor_rowcol);
-            }
-        }
-
-        let destination = self.grid.to_rowcol(event.destination);
-        self.add_waypoint_rowcols(destination, &sources, obstacles, event_writer);
-    }
 }
 
 /// Mapping from goal RowCol to a sparse flow grid with accelerations towards that RowCol.
@@ -172,7 +151,8 @@ impl NavigationGrid2 {
         }
     }
 
-    pub fn navigate_to_destination(
+    /// Compute navigation for from all sources to the destination.
+    pub fn compute_flow(
         &mut self,
         destination: RowCol,
         sources: &[RowCol],
@@ -181,10 +161,13 @@ impl NavigationGrid2 {
         event_writer: &mut EventWriter<NavigationCostEvent>,
     ) {
         if let Some(nav) = self.get_mut(&destination) {
-            for &source in sources {
-                if nav.grid.get(source).is_none() {
-                    nav.add_waypoint_rowcols(destination, &[source], obstacles, event_writer)
-                }
+            let sources: Vec<RowCol> = sources
+                .iter()
+                .copied()
+                .filter(|source| nav.grid.get(*source).is_none())
+                .collect();
+            if !sources.is_empty() {
+                nav.compute_flow(destination, &sources, obstacles, event_writer)
             }
         } else {
             self.insert(
@@ -199,45 +182,4 @@ impl NavigationGrid2 {
             );
         }
     }
-
-    pub fn create_waypoint(
-        &mut self,
-        event: &CreateWaypointEvent,
-        spec: &GridSpec,
-        obstacles: &Grid2<Obstacle>,
-        event_writer: &mut EventWriter<NavigationCostEvent>,
-    ) {
-        let destination = spec.to_rowcol(event.destination);
-        let nav = match self.entry(destination) {
-            Entry::Occupied(o) => o.into_mut(),
-            Entry::Vacant(v) => v.insert(NavigationGrid2Entry {
-                a_star_runner: AStarRunner::new(destination),
-                grid: SparseFlowGrid2(SparseGrid2 {
-                    spec: spec.clone(),
-                    ..default()
-                }),
-            }),
-        };
-        nav.add_waypoint(event, obstacles, event_writer);
-    }
-
-    /// Consumes CreateWaypointEvent events and populates the navigation grid.
-    pub fn create_waypoints(
-        mut nav_grid: ResMut<Self>,
-        mut event_reader: EventReader<CreateWaypointEvent>,
-        mut event_writer: EventWriter<NavigationCostEvent>,
-        spec: Res<GridSpec>,
-        obstacles: Res<Grid2<Obstacle>>,
-    ) {
-        for event in event_reader.read() {
-            nav_grid.create_waypoint(event, &spec, &obstacles, &mut event_writer);
-        }
-    }
-}
-
-/// Event to request waypoint creation.
-#[derive(Event, Clone, Debug)]
-pub struct CreateWaypointEvent {
-    pub destination: Vec2,
-    pub sources: Vec<Vec2>,
 }

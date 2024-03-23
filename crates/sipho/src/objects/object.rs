@@ -65,7 +65,9 @@ pub struct UpdateAccelerationQueryData {
     velocity: &'static Velocity,
     acceleration: &'static mut Acceleration,
     parent: Option<&'static Parent>,
+    objectives: &'static Objectives,
     neighbors: &'static AlliedNeighbors,
+    carried_by: Option<&'static CarriedBy>,
 }
 
 #[derive(QueryData)]
@@ -97,6 +99,7 @@ impl Object {
             let mut seaparation_acceleration = Acceleration::ZERO;
             let mut alignment_acceleration = Acceleration::ZERO;
             let config = configs.get(object.object).unwrap();
+
             for neighbor in object.neighbors.iter() {
                 let (other_object, other_velocity) = others.get(neighbor.entity).unwrap();
                 let interaction = &config.interactions[other_object];
@@ -119,11 +122,25 @@ impl Object {
                     );
                 }
             }
+
             if !object.neighbors.is_empty() {
                 *object.acceleration += alignment_acceleration
                     * (1.0 / (object.neighbors.len() as f32))
                     + seaparation_acceleration;
             }
+
+            // When idle, slow down.
+            if *object.objectives.last() == Objective::None && object.carried_by.is_none() {
+                let idle_slow_threshold = config.idle_speed;
+                let velocity_squared = object.velocity.length_squared();
+                if velocity_squared > 0. {
+                    let slow_magnitude =
+                        (velocity_squared - idle_slow_threshold).max(0.) / velocity_squared;
+                    *object.acceleration += Acceleration(-object.velocity.0 * slow_magnitude)
+                }
+            }
+
+            // When moving slow, spin around to create some extra movement.
             let spin_amount = (config.idle_speed * 2. - object.velocity.length_squared()).max(0.);
             let turn_vector = Mat2::from_angle(PI / 8.) * object.velocity.0 * spin_amount;
             *object.acceleration += Acceleration(turn_vector);
@@ -174,7 +191,10 @@ impl Object {
                     && object.parent.is_none()
                     && neighbor.carried_by.is_none()
                 {
-                    object.objectives.start_attacking(neighbor.entity)
+                    if let Some(objective) = object.objectives.last().try_attacking(neighbor.entity)
+                    {
+                        object.objectives.push(objective);
+                    }
                 }
                 let interaction = &config.interactions[&neighbor.object];
                 if config.is_colliding(neighbor.distance_squared) {
