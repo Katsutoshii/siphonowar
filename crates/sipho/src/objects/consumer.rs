@@ -5,8 +5,13 @@ use super::neighbors::CollidingNeighbors;
 pub struct ConsumerPlugin;
 impl Plugin for ConsumerPlugin {
     fn build(&self, app: &mut App) {
-        app.register_type::<Consumer>()
-            .add_systems(FixedUpdate, Consumer::update);
+        app.register_type::<Consumer>().add_systems(
+            FixedUpdate,
+            Consumer::update
+                .in_set(SystemStage::Compute)
+                .in_set(GameStateSet::Running)
+                .before(DamageEvent::update),
+        );
     }
 }
 
@@ -23,6 +28,7 @@ impl Consumer {
         for (entity, mut consumer, colliders) in query.iter_mut() {
             for neighbor in colliders.iter() {
                 if neighbor.object == Object::Food {
+                    info!("eat food");
                     consumer.consumed += 1;
                     damage_events.send(DamageEvent {
                         damager: entity,

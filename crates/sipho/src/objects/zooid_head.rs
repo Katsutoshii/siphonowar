@@ -43,29 +43,42 @@ impl ZooidHead {
 
     /// System to spawn zooids on Z key.
     pub fn spawn_zooids(
-        query: Query<(&Self, Entity, &GlobalTransform, &Velocity, &Team)>,
+        mut query: Query<(
+            &Self,
+            Entity,
+            &GlobalTransform,
+            &Velocity,
+            &Team,
+            &Selected,
+            &mut Consumer,
+        )>,
         mut commands: ObjectCommands,
         configs: Res<ObjectConfigs>,
         mut control_events: EventReader<ControlEvent>,
     ) {
         let config = configs.get(&Object::Worker).unwrap();
         for control_event in control_events.read() {
-            if control_event.is_pressed(ControlAction::SpawnZooid) {
-                for (_head, head_id, transform, velocity, team) in &query {
-                    let num_zooids = 1;
-                    for i in 1..=num_zooids {
-                        let zindex = zindex::ZOOIDS_MIN
-                            + (i as f32) * 0.00001 * (zindex::ZOOIDS_MAX - zindex::ZOOIDS_MIN);
-                        let velocity: Vec2 = Vec2::Y * config.spawn_velocity + velocity.0;
-                        commands.spawn(ObjectSpec {
-                            position: transform.translation().xy() + velocity,
-                            velocity: Some(Velocity(velocity)),
-                            team: *team,
-                            zindex,
-                            objectives: Objectives::new(Objective::FollowEntity(head_id)),
-                            ..default()
-                        });
-                    }
+            if !control_event.is_pressed(ControlAction::SpawnZooid) {
+                continue;
+            }
+            for (_head, head_id, transform, velocity, team, selected, mut consumer) in
+                query.iter_mut()
+            {
+                if !selected.is_selected() {
+                    continue;
+                }
+                if consumer.consumed > 0 {
+                    consumer.consumed -= 1;
+                    let zindex = zindex::ZOOIDS_MIN + zindex::ZOOIDS_MAX - zindex::ZOOIDS_MIN;
+                    let velocity: Vec2 = Vec2::Y * config.spawn_velocity + velocity.0;
+                    commands.spawn(ObjectSpec {
+                        position: transform.translation().xy() + velocity,
+                        velocity: Some(Velocity(velocity)),
+                        team: *team,
+                        zindex,
+                        objectives: Objectives::new(Objective::FollowEntity(head_id)),
+                        ..default()
+                    });
                 }
             }
         }
