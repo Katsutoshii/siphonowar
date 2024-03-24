@@ -11,7 +11,6 @@ impl Plugin for ZooidHeadPlugin {
             FixedUpdate,
             (
                 (ZooidHead::spawn, ZooidHead::spawn_zooids).in_set(SystemStage::Spawn),
-                ZooidHead::despawn_zooids.in_set(SystemStage::Despawn),
                 NearestZooidHead::update.in_set(SystemStage::PreCompute),
             )
                 .in_set(GameStateSet::Running),
@@ -80,24 +79,6 @@ impl ZooidHead {
                         ..default()
                     });
                 }
-            }
-        }
-    }
-
-    /// System to despawn all zooids.
-    pub fn despawn_zooids(
-        mut objects: Query<(Entity, &GridEntity, &Object, &mut Objectives)>,
-        mut commands: ObjectCommands,
-        mut grid: ResMut<Grid2<EntitySet>>,
-        keyboard_input: Res<ButtonInput<KeyCode>>,
-    ) {
-        if !keyboard_input.just_pressed(KeyCode::KeyD) {
-            return;
-        }
-        for (entity, grid_entity, object, _) in &mut objects {
-            grid.remove(entity, grid_entity);
-            if let Object::Worker = object {
-                commands.despawn(entity);
             }
         }
     }
