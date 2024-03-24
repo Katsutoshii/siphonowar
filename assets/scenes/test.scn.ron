@@ -78,6 +78,7 @@
           ),
           hit_radius: 12.0,
           death_speed: 5.,
+          health: 3,
           idle_speed: 0.5,
           interactions: InteractionConfigs(
             {
@@ -130,6 +131,7 @@
           ),
           hit_radius: 24.0,
           death_speed: 5.,
+          health: 4,
           idle_speed: 0.5,
           interactions: InteractionConfigs(
             {
@@ -182,6 +184,7 @@
           ),
           hit_radius: 12.0,
           death_speed: 5.,
+          health: 1,
           idle_speed: 0.5,
           interactions: InteractionConfigs({
             Worker: InteractionConfig(
@@ -232,6 +235,7 @@
           ),
           hit_radius: 12.0,
           death_speed: 5.,
+          health: 1,
           idle_speed: 0.5,
           interactions: InteractionConfigs({
             Worker: InteractionConfig(

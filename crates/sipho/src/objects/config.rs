@@ -59,6 +59,7 @@ pub struct ObjectConfig {
     pub spawn_velocity: f32,
     pub objective: ObjectiveConfig,
     pub hit_radius: f32,
+    pub health: i32,
     pub death_speed: f32,
     pub idle_speed: f32,
     // Interactions
@@ -76,6 +77,7 @@ impl Default for ObjectConfig {
             spawn_velocity: 2.0,
             objective: ObjectiveConfig::default(),
             hit_radius: 10.0,
+            health: 1,
             death_speed: 9.0,
             idle_speed: 0.5,
             interactions: InteractionConfigs({

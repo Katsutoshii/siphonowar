@@ -13,7 +13,7 @@ mod zooid_worker;
 
 pub use {
     carry::{CarriedBy, CarryEvent},
-    commands::{ObjectCommands, ObjectSpec},
+    commands::{ObjectBundle, ObjectCommands, ObjectSpec},
     config::{InteractionConfig, InteractionConfigs, ObjectConfig, ObjectConfigs},
     consumer::Consumer,
     damage::{DamageEvent, Health},

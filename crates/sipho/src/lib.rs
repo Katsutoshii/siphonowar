@@ -11,7 +11,7 @@ pub mod prelude {
         objectives::{Objective, ObjectiveConfig, ObjectiveDebugger, Objectives},
         objects::{
             CarriedBy, CarryEvent, Consumer, DamageEvent, Health, InteractionConfigs, Object,
-            ObjectCommands, ObjectConfig, ObjectConfigs, ObjectSpec,
+            ObjectBundle, ObjectCommands, ObjectConfig, ObjectConfigs, ObjectSpec,
         },
         ui::{Selected, Waypoint},
         SiphonowarPlugin,

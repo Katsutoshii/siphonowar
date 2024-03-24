@@ -45,6 +45,7 @@ impl ObjectBundle {
                     .unwrap_or(Velocity(Vec2::ONE) * config.spawn_velocity),
                 ..default()
             },
+            health: Health::new(config.health),
             ..default()
         }
     }
@@ -86,7 +87,6 @@ impl ObjectCommands<'_, '_> {
                                 material: team_material.primary,
                                 ..default()
                             },
-                            health: Health::new(3),
                             name: Name::new("Zooid"),
                             ..ObjectBundle::new(config, spec)
                         },
@@ -109,7 +109,6 @@ impl ObjectCommands<'_, '_> {
                             material: team_material.primary,
                             ..default()
                         },
-                        health: Health::new(3),
                         name: Name::new("ZooidHead"),
                         ..ObjectBundle::new(config, spec)
                     },
@@ -134,7 +133,6 @@ impl ObjectCommands<'_, '_> {
                                 material: team_material.primary,
                                 ..default()
                             },
-                            health: Health::new(1),
                             name: Name::new("Plankton"),
                             ..ObjectBundle::new(config, spec)
                         },
@@ -154,7 +152,6 @@ impl ObjectCommands<'_, '_> {
                         material: team_material.secondary,
                         ..default()
                     },
-                    health: Health::new(1),
                     name: Name::new("Food"),
                     ..ObjectBundle::new(config, spec)
                 });
