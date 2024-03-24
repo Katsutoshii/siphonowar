@@ -11,8 +11,6 @@ impl ScalableWindow for Window {
         Vec2 {
             x: self.width(),
             y: self.height(),
-            // x: self.physical_width() as f32 * self.scale_factor(),
-            // y: self.physical_height() as f32 * self.scale_factor(),
         }
     }
 }
@@ -40,16 +38,3 @@ pub fn custom_plugin() -> WindowPlugin {
         ..default()
     }
 }
-
-// pub fn resize_window(mut query: Query<&mut Window, With<PrimaryWindow>>) {
-//     if configs.is_changed() {
-//         let mut window = query.single_mut();
-//         let scale_factor = window.scale_factor();
-//         if configs.window_size != Vec2::ZERO {
-//             window.resolution.set_physical_resolution(
-//                 (configs.window_size.x * scale_factor) as u32,
-//                 (configs.window_size.y * scale_factor) as u32,
-//             );
-//         }
-//     }
-// }
