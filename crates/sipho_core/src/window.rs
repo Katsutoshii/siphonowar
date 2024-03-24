@@ -23,7 +23,7 @@ pub fn custom_plugin() -> WindowPlugin {
                 visible: true,
                 ..default()
             },
-            title: "Bevy Zooids".into(),
+            title: "Siphonowar".into(),
             present_mode: PresentMode::AutoVsync,
             // Tells wasm not to override default event handling, like F5, Ctrl+R etc.
             prevent_default_event_handling: false,

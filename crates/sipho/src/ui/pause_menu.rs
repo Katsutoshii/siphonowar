@@ -114,7 +114,7 @@ impl PauseMenu {
                         // Display the game name
                         parent.spawn(
                             TextBundle::from_section(
-                                "Siphonophore",
+                                "Siphonowar",
                                 TextStyle {
                                     font: asset_server.load("fonts/FiraSans-Bold.ttf"),
                                     font_size: 36.0,
