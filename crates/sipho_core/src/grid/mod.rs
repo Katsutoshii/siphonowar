@@ -1,3 +1,5 @@
+use bevy::transform::TransformSystem;
+
 use crate::prelude::*;
 
 pub mod entity;
@@ -36,9 +38,9 @@ impl Plugin for GridPlugin {
                 Grid2Plugin::<EntitySet>::default(),
             ))
             .add_systems(
-                FixedUpdate,
+                PostUpdate,
                 GridEntity::update
-                    .in_set(SystemStage::PostApply)
+                    .after(TransformSystem::TransformPropagate)
                     .in_set(GameStateSet::Running),
             );
     }
