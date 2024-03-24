@@ -22,7 +22,6 @@ impl GridEntity {
             if let Some(event) =
                 grid.update_entity(entity, grid_entity.cell, transform.translation().xy())
             {
-                dbg!(&event);
                 grid_entity.cell = event.cell;
                 event_writer.send(event);
             }
