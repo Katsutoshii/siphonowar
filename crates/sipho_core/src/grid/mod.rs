@@ -29,6 +29,7 @@ pub struct GridPlugin;
 impl Plugin for GridPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<GridSpec>()
+            .init_resource::<GridSpec>()
             .add_event::<EntityGridEvent>()
             .add_plugins((
                 GridVisualizerPlugin,

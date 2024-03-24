@@ -16,7 +16,7 @@ impl Plugin for MinimapPlugin {
             .add_systems(
                 FixedUpdate,
                 MinimapShaderMaterial::update
-                    .before(CameraController::update)
+                    .before(CameraController::update_screen_control)
                     .after(GridEntity::update),
             );
     }

@@ -20,7 +20,7 @@ pub mod prelude {
     pub use crate::{
         aabb::Aabb2,
         camera::{CameraController, CameraMoveEvent, MainCamera},
-        cursor::{Cursor, CursorAssets},
+        cursor::{Cursor, CursorAssets, CursorParam},
         error::Error,
         grid::{
             EntityGridEvent, EntitySet, Grid2, Grid2Plugin, GridEntity, GridSize, GridSpec,

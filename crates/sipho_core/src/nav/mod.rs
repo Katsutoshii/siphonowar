@@ -13,13 +13,7 @@ impl Plugin for NavigationPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<NavigationCostEvent>()
             .insert_resource(NavigationGrid2::default())
-            .add_systems(
-                FixedUpdate,
-                (
-                    NavigationGrid2::resize_on_change,
-                    // NavigationGrid2::create_waypoints.in_set(SystemStage::PostApply),
-                ),
-            )
+            .add_systems(FixedUpdate, (NavigationGrid2::resize_on_change,))
             .add_plugins(NavigationVisualizerPlugin);
     }
 }

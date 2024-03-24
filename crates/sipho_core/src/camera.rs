@@ -3,6 +3,7 @@ use bevy::{
         bloom::{BloomCompositeMode, BloomPrefilterSettings, BloomSettings},
         tonemapping::Tonemapping,
     },
+    input::ButtonState,
     prelude::*,
     window::PrimaryWindow,
 };
@@ -16,12 +17,14 @@ impl Plugin for CameraPlugin {
             .add_event::<CameraMoveEvent>()
             .add_systems(Startup, MainCamera::startup)
             .add_systems(
-                FixedUpdate,
+                Update,
                 (
-                    CameraController::update_bounds, //.after(window::resize_window),
-                    CameraController::update,
-                    CameraController::update_drag,
-                ),
+                    CameraController::update_bounds,
+                    CameraController::update_screen_control,
+                    CameraController::update_control,
+                )
+                    .chain()
+                    .in_set(SystemStage::Spawn),
             );
     }
 }
@@ -35,45 +38,37 @@ pub struct CameraMoveEvent {
 #[derive(Component)]
 pub struct MainCamera;
 impl MainCamera {
-    pub fn startup(mut commands: Commands, assets: Res<CursorAssets>) {
-        let camera_entity = commands
-            .spawn((
-                Camera2dBundle {
-                    camera: Camera {
-                        hdr: true, // 1. HDR is required for bloom
-                        ..default()
-                    },
-                    projection: OrthographicProjection {
-                        far: 1000.,
-                        near: -1000.,
-                        scale: 1.0,
-                        ..default()
-                    },
-                    tonemapping: Tonemapping::TonyMcMapface, // 2. Using a tonemapper that desaturates to white is recommended
+    pub fn startup(mut commands: Commands) {
+        commands.spawn((
+            Camera2dBundle {
+                camera: Camera {
+                    hdr: true, // 1. HDR is required for bloom
                     ..default()
                 },
-                BloomSettings {
-                    intensity: 0.15 * 2.0,
-                    low_frequency_boost: 0.7,
-                    low_frequency_boost_curvature: 0.95,
-                    high_pass_frequency: 1.0,
-                    prefilter_settings: BloomPrefilterSettings {
-                        threshold: 0.0,
-                        threshold_softness: 0.0,
-                    },
-                    composite_mode: BloomCompositeMode::EnergyConserving,
-                }, // 3. Enable bloom for the camera
-                CameraController::default(),
-                InheritedVisibility::default(),
-                MainCamera,
-            ))
-            .id();
-
-        let cursor_bundle = Cursor.bundle(&assets, Vec2::ZERO.extend(zindex::CURSOR));
-        let cursor_entity = commands.spawn(cursor_bundle).id();
-        commands
-            .entity(camera_entity)
-            .push_children(&[cursor_entity]);
+                projection: OrthographicProjection {
+                    far: 1000.,
+                    near: -1000.,
+                    scale: 1.0,
+                    ..default()
+                },
+                tonemapping: Tonemapping::TonyMcMapface, // 2. Using a tonemapper that desaturates to white is recommended
+                ..default()
+            },
+            BloomSettings {
+                intensity: 0.15 * 2.0,
+                low_frequency_boost: 0.7,
+                low_frequency_boost_curvature: 0.95,
+                high_pass_frequency: 1.0,
+                prefilter_settings: BloomPrefilterSettings {
+                    threshold: 0.0,
+                    threshold_softness: 0.0,
+                },
+                composite_mode: BloomCompositeMode::EnergyConserving,
+            }, // 3. Enable bloom for the camera
+            CameraController::default(),
+            InheritedVisibility::default(),
+            MainCamera,
+        ));
     }
 }
 
@@ -100,6 +95,13 @@ impl Default for CameraController {
 }
 
 impl CameraController {
+    // Set camera position.
+    pub fn set_position(&self, camera_transform: &mut Transform, position: Vec2) {
+        camera_transform.translation = position.extend(0.);
+        self.world2d_bounds
+            .clamp3(&mut camera_transform.translation)
+    }
+
     fn update_bounds(
         grid_spec: Res<GridSpec>,
         mut controller_query: Query<(&mut Self, &Camera, &GlobalTransform), With<MainCamera>>,
@@ -140,39 +142,56 @@ impl CameraController {
         Some(camera_max - camera_min)
     }
 
-    pub fn update_drag(
+    pub fn update_control(
         mut controller_query: Query<(&mut Self, &mut Transform), With<MainCamera>>,
-        cursor: Query<&GlobalTransform, (With<Cursor>, Without<MainCamera>)>,
-        mouse_input: Res<ButtonInput<MouseButton>>,
+        mut controls: EventReader<ControlEvent>,
+        cursor: CursorParam,
         mut event_writer: EventWriter<CameraMoveEvent>,
     ) {
         let (mut controller, mut camera_transform) = controller_query.single_mut();
-        let cursor = cursor.single();
-        let cursor_position = cursor.translation().xy();
-
-        // Middle mouse drag
-        if mouse_input.pressed(MouseButton::Middle) {
-            let delta = if let Some(last_drag_position) = controller.last_drag_position {
-                let delta = last_drag_position - cursor_position;
-                camera_transform.translation += delta.extend(0.);
-                delta
-            } else {
-                Vec2::ZERO
-            };
-            controller.last_drag_position = Some(cursor_position + delta);
-        } else if mouse_input.just_released(MouseButton::Middle) {
-            controller.last_drag_position = None;
+        for control in controls.read() {
+            match control {
+                ControlEvent {
+                    action: ControlAction::DragCamera,
+                    state: ButtonState::Pressed,
+                    ..
+                } => {
+                    if let Some(cursor_position) = cursor.world_position() {
+                        let delta = if let Some(last_drag_position) = controller.last_drag_position
+                        {
+                            let delta = last_drag_position - cursor_position;
+                            let new_position = camera_transform.translation.xy() + delta;
+                            controller.set_position(&mut camera_transform, new_position);
+                            delta
+                        } else {
+                            Vec2::ZERO
+                        };
+                        controller.last_drag_position = Some(cursor_position + delta);
+                    }
+                }
+                ControlEvent {
+                    action: ControlAction::DragCamera,
+                    state: ButtonState::Released,
+                    ..
+                } => {
+                    controller.last_drag_position = None;
+                }
+                ControlEvent {
+                    action: ControlAction::PanCamera,
+                    state: ButtonState::Pressed,
+                    position,
+                } => {
+                    controller.set_position(&mut camera_transform, *position);
+                    event_writer.send(CameraMoveEvent {
+                        position: camera_transform.translation.xy(),
+                    });
+                }
+                _ => {}
+            }
         }
-
-        controller
-            .world2d_bounds
-            .clamp3(&mut camera_transform.translation);
-        event_writer.send(CameraMoveEvent {
-            position: camera_transform.translation.xy(),
-        });
     }
 
-    pub fn update(
+    pub fn update_screen_control(
         time: Res<Time>,
         mut controller_query: Query<(&mut Self, &mut Transform), With<MainCamera>>,
         window_query: Query<&Window, With<PrimaryWindow>>,
@@ -207,21 +226,12 @@ impl CameraController {
             };
 
             controller.velocity += acceleration;
-            camera_transform.translation +=
-                controller.velocity.extend(0.) * dt * controller.sensitivity;
-            controller
-                .world2d_bounds
-                .clamp3(&mut camera_transform.translation);
+            let position = camera_transform.translation.xy()
+                + dt * controller.velocity * controller.sensitivity;
+            controller.set_position(&mut camera_transform, position);
             event_writer.send(CameraMoveEvent {
                 position: camera_transform.translation.xy(),
             });
         }
-    }
-
-    // Set camera position.
-    pub fn set_position(&self, camera_transform: &mut Transform, position: Vec2) {
-        camera_transform.translation = position.extend(0.);
-        self.world2d_bounds
-            .clamp3(&mut camera_transform.translation)
     }
 }

@@ -25,9 +25,9 @@ pub struct GridSpec {
 impl Default for GridSpec {
     fn default() -> Self {
         Self {
-            rows: 10,
-            cols: 10,
-            width: 10.0,
+            rows: 128,
+            cols: 128,
+            width: 64.0,
             visualize: true,
             visualize_navigation: false,
         }

@@ -29,7 +29,8 @@ impl Plugin for SiphonowarPlugin {
                     watch_for_changes_override: Some(true),
                     ..default()
                 })
-                .set(window::custom_plugin()),
+                .set(window::custom_plugin())
+                .set(ImagePlugin::default_linear()),
             CorePlugin,
             objects::ObjectsPlugin,
             objectives::ObjectivePlugin,

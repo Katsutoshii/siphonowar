@@ -18,7 +18,7 @@ pub fn custom_plugin() -> WindowPlugin {
     WindowPlugin {
         primary_window: Some(Window {
             cursor: Cursor {
-                visible: true,
+                visible: false,
                 ..default()
             },
             title: "Siphonowar".into(),

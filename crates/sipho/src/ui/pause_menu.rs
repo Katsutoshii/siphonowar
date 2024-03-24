@@ -88,12 +88,14 @@ impl PauseMenu {
         commands
             .spawn((
                 PauseMenu,
+                Name::new("Pause Menu"),
                 NodeBundle {
                     style: Style {
                         width: Val::Percent(100.0),
                         height: Val::Percent(100.0),
                         align_items: AlignItems::Center,
                         justify_content: JustifyContent::Center,
+                        position_type: PositionType::Absolute,
                         ..default()
                     },
                     visibility: Visibility::Hidden,

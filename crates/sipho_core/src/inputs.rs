@@ -30,7 +30,7 @@ impl Plugin for InputActionPlugin {
             .add_event::<InputEvent>()
             .add_systems(
                 Update,
-                (InputEvent::update, ControlEvent::update, pan_camera)
+                (InputEvent::update, ControlEvent::update)
                     .chain()
                     .in_set(SystemStage::Input),
             );
@@ -42,7 +42,7 @@ impl Plugin for InputActionPlugin {
 pub enum InputAction {
     Primary,
     Secondary,
-    PanCamera,
+    DragCamera,
     SpawnHead,
     SpawnZooid,
     SpawnRed,
@@ -121,7 +121,7 @@ impl ControlEvent {
         raycast: RaycastCommands,
         mut input_events: EventReader<InputEvent>,
         mut control_events: EventWriter<ControlEvent>,
-        cursor: Query<&GlobalTransform, With<Cursor>>,
+        cursor: CursorParam,
         grid_spec: Option<Res<GridSpec>>,
         mut timers: Local<ControlTimers>,
         time: Res<Time>,
@@ -134,7 +134,9 @@ impl ControlEvent {
         let mut raycast_event = None;
         for event in input_events.read() {
             if raycast_event.is_none() {
-                raycast_event = raycast.raycast(Cursor::ray3d(cursor.single()))
+                if let Some(ray) = cursor.ray3d() {
+                    raycast_event = raycast.raycast(ray);
+                }
             }
             if let Some(raycast_event) = &raycast_event {
                 let action = ControlAction::from((raycast_event.target, event.action));
@@ -173,7 +175,9 @@ impl ControlEvent {
             }
 
             if raycast_event.is_none() {
-                raycast_event = raycast.raycast(Cursor::ray3d(cursor.single()))
+                if let Some(ray) = cursor.ray3d() {
+                    raycast_event = raycast.raycast(ray);
+                }
             }
             timer.tick(time.delta());
             if timer.finished() {
@@ -207,6 +211,7 @@ pub enum ControlAction {
     Select,
     Move,
     PanCamera,
+    DragCamera,
 
     SpawnHead,
     SpawnZooid,
@@ -221,17 +226,16 @@ impl From<(RaycastTarget, InputAction)> for ControlAction {
     fn from(value: (RaycastTarget, InputAction)) -> Self {
         match value {
             (RaycastTarget::Minimap, InputAction::Primary) => Self::PanCamera,
-            (RaycastTarget::Minimap, InputAction::PanCamera) => Self::PanCamera,
             (RaycastTarget::Minimap, InputAction::Secondary) => Self::Move,
             (RaycastTarget::WorldGrid, InputAction::Primary) => Self::Select,
             (RaycastTarget::WorldGrid, InputAction::Secondary) => Self::Move,
-            (RaycastTarget::WorldGrid, InputAction::PanCamera) => Self::PanCamera,
             (RaycastTarget::WorldGrid, InputAction::SpawnHead) => Self::SpawnHead,
             (RaycastTarget::WorldGrid, InputAction::SpawnZooid) => Self::SpawnZooid,
             (RaycastTarget::WorldGrid, InputAction::SpawnRed) => Self::SpawnRed,
             (RaycastTarget::WorldGrid, InputAction::SpawnBlue) => Self::SpawnBlue,
             (RaycastTarget::WorldGrid, InputAction::SpawnPlankton) => Self::SpawnPlankton,
             (RaycastTarget::WorldGrid, InputAction::SpawnFood) => Self::SpawnFood,
+            (RaycastTarget::WorldGrid, InputAction::DragCamera) => Self::DragCamera,
             (_, InputAction::PauseMenu) => Self::PauseMenu,
             (RaycastTarget::None, _) => Self::None,
             _ => Self::None,
@@ -253,6 +257,14 @@ impl Default for ControlTimers {
             ControlAction::Select,
             Timer::new(Duration::from_millis(5), TimerMode::Repeating),
         );
+        timers.insert(
+            ControlAction::DragCamera,
+            Timer::new(Duration::from_millis(5), TimerMode::Repeating),
+        );
+        timers.insert(
+            ControlAction::PanCamera,
+            Timer::new(Duration::from_millis(5), TimerMode::Repeating),
+        );
         for (_action, timer) in timers.iter_mut() {
             timer.pause();
         }
@@ -268,23 +280,5 @@ impl Index<ControlAction> for ControlTimers {
 impl IndexMut<ControlAction> for ControlTimers {
     fn index_mut(&mut self, i: ControlAction) -> &mut Self::Output {
         self.get_mut(&i).unwrap()
-    }
-}
-
-pub fn pan_camera(
-    mut control_events: EventReader<ControlEvent>,
-    mut camera: Query<(&CameraController, &mut Transform), With<MainCamera>>,
-) {
-    for &ControlEvent {
-        action,
-        state: _,
-        position,
-    } in control_events.read()
-    {
-        if action != ControlAction::PanCamera {
-            continue;
-        }
-        let (controller, mut camera_transform) = camera.single_mut();
-        controller.set_position(&mut camera_transform, position);
     }
 }

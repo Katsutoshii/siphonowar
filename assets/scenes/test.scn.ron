@@ -47,7 +47,7 @@
       mouse: {
         Left: Primary,
         Right: Secondary,
-        Middle: PanCamera,
+        Middle: DragCamera,
       }
     ),
     "sipho_core::grid::obstacles::ObstaclesSpec": ([
