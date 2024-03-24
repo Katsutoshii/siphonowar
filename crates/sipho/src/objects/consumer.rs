@@ -21,6 +21,9 @@ pub struct Consumer {
     pub consumed: usize,
 }
 impl Consumer {
+    pub fn new(consumed: usize) -> Self {
+        Self { consumed }
+    }
     pub fn update(
         mut query: Query<(Entity, &mut Consumer, &CollidingNeighbors)>,
         mut damage_events: EventWriter<DamageEvent>,
@@ -28,7 +31,6 @@ impl Consumer {
         for (entity, mut consumer, colliders) in query.iter_mut() {
             for neighbor in colliders.iter() {
                 if neighbor.object == Object::Food {
-                    info!("eat food");
                     consumer.consumed += 1;
                     damage_events.send(DamageEvent {
                         damager: entity,

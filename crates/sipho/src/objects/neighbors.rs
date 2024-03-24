@@ -96,9 +96,7 @@ pub fn update(
                     } else {
                         enemy_neighbors.push(neighbor);
                         let other_config = configs.get(other_object).unwrap();
-                        if distance_squared
-                            < config.hit_radius.powi(2) + other_config.hit_radius.powi(2)
-                        {
+                        if distance_squared < config.radius.powi(2) + other_config.radius.powi(2) {
                             colliding_neighbors.push(neighbor);
                         }
                     }

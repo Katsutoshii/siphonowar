@@ -1,5 +1,9 @@
 use crate::prelude::*;
-use bevy::{ecs::system::SystemParam, prelude::*, sprite::MaterialMesh2dBundle};
+use bevy::{
+    ecs::system::SystemParam,
+    prelude::*,
+    sprite::{MaterialMesh2dBundle, Mesh2dHandle},
+};
 
 use super::{
     neighbors::NeighborsBundle,
@@ -26,7 +30,13 @@ pub struct ObjectBundle {
     pub team: Team,
     pub physics: PhysicsBundle,
     pub objectives: Objectives,
-    pub material_mesh: MaterialMesh2dBundle<ColorMaterial>,
+    pub mesh: Mesh2dHandle,
+    pub material: Handle<ColorMaterial>,
+    pub transform: Transform,
+    pub global_transform: GlobalTransform,
+    pub visibility: Visibility,
+    pub inherited_visibility: InheritedVisibility,
+    pub view_visibility: ViewVisibility,
     pub selected: Selected,
     pub health: Health,
     pub neighbors: NeighborsBundle,
@@ -79,14 +89,11 @@ impl ObjectCommands<'_, '_> {
                         ZooidWorker::default(),
                         NearestZooidHead::default(),
                         ObjectBundle {
-                            material_mesh: MaterialMesh2dBundle::<ColorMaterial> {
-                                mesh: self.assets.mesh.clone().into(),
-                                transform: Transform::default()
-                                    .with_scale(Vec2::splat(10.0).extend(1.))
-                                    .with_translation(spec.position.extend(spec.zindex)),
-                                material: team_material.primary,
-                                ..default()
-                            },
+                            mesh: self.assets.mesh.clone().into(),
+                            transform: Transform::default()
+                                .with_scale(Vec2::splat(config.radius).extend(1.))
+                                .with_translation(spec.position.extend(spec.zindex)),
+                            material: team_material.primary,
                             name: Name::new("Zooid"),
                             ..ObjectBundle::new(config, spec)
                         },
@@ -96,19 +103,15 @@ impl ObjectCommands<'_, '_> {
                     });
             }
             Object::Head => {
-                let position = spec.position;
                 let mut entity_commands = self.commands.spawn((
                     ZooidHead,
-                    Consumer::default(),
+                    Consumer::new(3),
                     ObjectBundle {
-                        material_mesh: MaterialMesh2dBundle::<ColorMaterial> {
-                            mesh: self.assets.mesh.clone().into(),
-                            transform: Transform::default()
-                                .with_scale(Vec2::splat(20.0).extend(1.))
-                                .with_translation(position.extend(zindex::ZOOID_HEAD)),
-                            material: team_material.primary,
-                            ..default()
-                        },
+                        mesh: self.assets.mesh.clone().into(),
+                        transform: Transform::default()
+                            .with_scale(Vec2::splat(config.radius).extend(1.))
+                            .with_translation(spec.position.extend(zindex::ZOOID_HEAD)),
+                        material: team_material.primary,
                         name: Name::new("ZooidHead"),
                         ..ObjectBundle::new(config, spec)
                     },
@@ -125,14 +128,11 @@ impl ObjectCommands<'_, '_> {
                         Plankton,
                         ObjectBundle {
                             team: Team::None,
-                            material_mesh: MaterialMesh2dBundle::<ColorMaterial> {
-                                mesh: self.assets.mesh.clone().into(),
-                                transform: Transform::default()
-                                    .with_scale(Vec2::splat(10.0).extend(1.))
-                                    .with_translation(spec.position.extend(zindex::PLANKTON)),
-                                material: team_material.primary,
-                                ..default()
-                            },
+                            mesh: self.assets.mesh.clone().into(),
+                            transform: Transform::default()
+                                .with_scale(Vec2::splat(config.radius).extend(1.))
+                                .with_translation(spec.position.extend(zindex::PLANKTON)),
+                            material: team_material.primary,
                             name: Name::new("Plankton"),
                             ..ObjectBundle::new(config, spec)
                         },
@@ -144,14 +144,11 @@ impl ObjectCommands<'_, '_> {
             Object::Food => {
                 self.commands.spawn(ObjectBundle {
                     team: Team::None,
-                    material_mesh: MaterialMesh2dBundle::<ColorMaterial> {
-                        mesh: self.assets.mesh.clone().into(),
-                        transform: Transform::default()
-                            .with_scale(Vec2::splat(10.0).extend(1.))
-                            .with_translation(spec.position.extend(zindex::FOOD)),
-                        material: team_material.secondary,
-                        ..default()
-                    },
+                    mesh: self.assets.mesh.clone().into(),
+                    transform: Transform::default()
+                        .with_scale(Vec2::splat(config.radius).extend(1.))
+                        .with_translation(spec.position.extend(zindex::FOOD)),
+                    material: team_material.secondary,
                     name: Name::new("Food"),
                     ..ObjectBundle::new(config, spec)
                 });

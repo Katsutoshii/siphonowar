@@ -58,7 +58,7 @@ pub struct ObjectConfig {
     pub attack_radius: f32,
     pub spawn_velocity: f32,
     pub objective: ObjectiveConfig,
-    pub hit_radius: f32,
+    pub radius: f32,
     pub health: i32,
     pub death_speed: f32,
     pub idle_speed: f32,
@@ -76,7 +76,7 @@ impl Default for ObjectConfig {
             attack_radius: 256.,
             spawn_velocity: 2.0,
             objective: ObjectiveConfig::default(),
-            hit_radius: 10.0,
+            radius: 10.0,
             health: 1,
             death_speed: 9.0,
             idle_speed: 0.5,
@@ -92,7 +92,7 @@ impl Default for ObjectConfig {
 }
 impl ObjectConfig {
     pub fn is_colliding(&self, distance_squared: f32) -> bool {
-        distance_squared < self.hit_radius * self.hit_radius
+        distance_squared < self.radius * self.radius
     }
     pub fn is_damage_velocity(&self, velocity_squared: f32) -> bool {
         velocity_squared > self.death_speed * self.death_speed
