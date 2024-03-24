@@ -2,6 +2,7 @@
 pub mod aabb;
 pub mod camera;
 pub mod cursor;
+pub mod error;
 pub mod grid;
 pub mod inputs;
 pub mod meshes;
@@ -20,6 +21,7 @@ pub mod prelude {
         aabb::Aabb2,
         camera::{CameraController, CameraMoveEvent, MainCamera},
         cursor::{Cursor, CursorAssets},
+        error::Error,
         grid::{
             EntityGridEvent, EntitySet, Grid2, Grid2Plugin, GridEntity, GridSize, GridSpec,
             Obstacle, RowCol, RowColDistance, SparseGrid2, VisibilityUpdate, VisibilityUpdateEvent,

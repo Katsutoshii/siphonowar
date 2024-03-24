@@ -3,6 +3,7 @@ use crate::prelude::*;
 mod carry;
 mod commands;
 mod config;
+mod consumer;
 mod damage;
 mod neighbors;
 mod object;
@@ -14,6 +15,7 @@ pub use {
     carry::{CarriedBy, CarryEvent},
     commands::{ObjectCommands, ObjectSpec},
     config::{InteractionConfig, InteractionConfigs, ObjectConfig, ObjectConfigs},
+    consumer::Consumer,
     damage::{DamageEvent, Health},
     object::Object,
 };
@@ -24,6 +26,7 @@ impl Plugin for ObjectsPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((
             config::ObjectConfigPlugin,
+            consumer::ConsumerPlugin,
             carry::CarryPlugin,
             neighbors::NeighborsPlugin,
             zooid_head::ZooidHeadPlugin,

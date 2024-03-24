@@ -10,8 +10,8 @@ pub mod prelude {
     pub use crate::{
         objectives::{Objective, ObjectiveConfig, ObjectiveDebugger, Objectives},
         objects::{
-            CarriedBy, CarryEvent, DamageEvent, Health, InteractionConfigs, Object, ObjectCommands,
-            ObjectConfig, ObjectConfigs, ObjectSpec,
+            CarriedBy, CarryEvent, Consumer, DamageEvent, Health, InteractionConfigs, Object,
+            ObjectCommands, ObjectConfig, ObjectConfigs, ObjectSpec,
         },
         ui::{Selected, Waypoint},
         SiphonowarPlugin,

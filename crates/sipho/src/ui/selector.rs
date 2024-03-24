@@ -68,7 +68,6 @@ impl Selector {
             match control.state {
                 ButtonState::Pressed => {
                     if *visibility == Visibility::Hidden {
-                        info!("First press");
                         // Reset other selections.
                         for (_object, _transform, _team, mut selected, _mesh) in &mut objects {
                             if let Selected::Selected { child_entity } = selected.as_ref() {

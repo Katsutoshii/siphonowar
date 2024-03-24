@@ -96,7 +96,6 @@ impl CarriedBy {
 
             carried_by.0 = valid_carriers;
             if carried_by.is_empty() {
-                info!("Delete CarriedBy");
                 commands.entity(entity).remove::<Self>();
             }
         }

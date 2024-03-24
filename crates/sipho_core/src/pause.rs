@@ -25,14 +25,8 @@ fn toggle_pause_game(
             continue;
         }
         match state.get() {
-            PausedState::Paused => {
-                info!("Unpause");
-                next_state.set(PausedState::Running)
-            }
-            PausedState::Running => {
-                info!("Pause");
-                next_state.set(PausedState::Paused)
-            }
+            PausedState::Paused => next_state.set(PausedState::Running),
+            PausedState::Running => next_state.set(PausedState::Paused),
         }
     }
 }

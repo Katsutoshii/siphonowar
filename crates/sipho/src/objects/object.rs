@@ -154,7 +154,6 @@ impl Object {
                 {
                     if let Some(objective) = object.objectives.last().try_attacking(neighbor.entity)
                     {
-                        info!("Attack!");
                         object.objectives.push(objective);
                     }
                 }
@@ -197,20 +196,6 @@ impl Object {
                     carry_events.send(CarryEvent {
                         carrier: entity,
                         carried: neighbor.entity,
-                    });
-                }
-
-                // Food specific behavior.
-                let radius_squared = config.neighbor_radius * config.neighbor_radius;
-                if *object == Object::Food
-                    && neighbor.object == Object::Head
-                    && neighbor.distance_squared < radius_squared * 0.1
-                {
-                    damage_events.send(DamageEvent {
-                        damager: neighbor.entity,
-                        damaged: entity,
-                        amount: 1,
-                        velocity: Velocity::ZERO,
                     });
                 }
             }

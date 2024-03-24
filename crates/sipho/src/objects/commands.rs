@@ -99,6 +99,7 @@ impl ObjectCommands<'_, '_> {
                 let position = spec.position;
                 let mut entity_commands = self.commands.spawn((
                     ZooidHead,
+                    Consumer::default(),
                     ObjectBundle {
                         material_mesh: MaterialMesh2dBundle::<ColorMaterial> {
                             mesh: self.assets.mesh.clone().into(),

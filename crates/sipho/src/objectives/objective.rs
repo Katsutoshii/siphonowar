@@ -2,7 +2,7 @@
 /// We maintain a stack of objectives for each object.
 /// Each frame, we check the current object and try to resolve it to the corresponding behavior components.
 use crate::prelude::*;
-use bevy::ecs::query::{QueryData, QueryEntityError};
+use bevy::ecs::query::QueryData;
 
 use super::{dash_attacker::DashAttacker, navigator::Navigator};
 
@@ -31,22 +31,22 @@ impl Objective {
     pub fn try_add_components(
         &self,
         components: &mut ObjectivesQueryDataItem,
-        targets: &Query<(&GlobalTransform, &Velocity)>,
+        targets: &Query<(&GlobalTransform, &Velocity, Option<&CarriedBy>)>,
         commands: &mut Commands,
-    ) -> Result<(), QueryEntityError> {
+    ) -> Result<(), Error> {
         let mut commands = commands.entity(components.entity);
         commands.remove::<(DashAttacker, Navigator)>();
         match self {
             Self::None => {}
             Self::FollowEntity(entity) => {
-                let (transform, _velocity) = targets.get(*entity)?;
+                let (transform, _velocity, _carried_by) = targets.get(*entity)?;
                 commands.insert(Navigator {
                     target: transform.translation().xy(),
                     slow_factor: 1.0,
                 });
             }
             Self::AttackEntity(entity) => {
-                let (transform, velocity) = targets.get(*entity)?;
+                let (transform, velocity, _) = targets.get(*entity)?;
                 let target_position = transform.translation().xy() + velocity.0;
                 commands.insert((
                     Navigator {
@@ -67,18 +67,21 @@ impl Objective {
     pub fn try_update_components(
         &self,
         components: &mut ObjectivesQueryDataItem,
-        targets: &Query<(&GlobalTransform, &Velocity)>,
-    ) -> Result<(), QueryEntityError> {
+        targets: &Query<(&GlobalTransform, &Velocity, Option<&CarriedBy>)>,
+    ) -> Result<(), Error> {
         match self {
             Self::None => {}
             Self::FollowEntity(entity) => {
-                let (transform, _velocity) = targets.get(*entity)?;
+                let (transform, _velocity, _carried_by) = targets.get(*entity)?;
                 if let Some(ref mut navigator) = components.navigator {
                     navigator.target = transform.translation().xy();
                 }
             }
             Self::AttackEntity(entity) => {
-                let (transform, velocity) = targets.get(*entity)?;
+                let (transform, velocity, carried_by) = targets.get(*entity)?;
+                if carried_by.is_some() {
+                    return Err(Error::Default);
+                }
                 let target_position = transform.translation().xy() + velocity.0;
                 if let Some(ref mut navigator) = components.navigator {
                     navigator.target = target_position;
@@ -120,7 +123,7 @@ impl Default for Objectives {
 impl Objectives {
     pub fn update_components(
         mut query: Query<(&mut Objectives, ObjectivesQueryData)>,
-        targets: Query<(&GlobalTransform, &Velocity)>,
+        targets: Query<(&GlobalTransform, &Velocity, Option<&CarriedBy>)>,
         mut commands: Commands,
     ) {
         for (mut objectives, mut components) in query.iter_mut() {
