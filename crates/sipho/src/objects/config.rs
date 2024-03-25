@@ -96,7 +96,4 @@ impl ObjectConfig {
     pub fn is_colliding(&self, distance_squared: f32) -> bool {
         distance_squared < self.radius * self.radius
     }
-    pub fn is_damage_velocity(&self, velocity_squared: f32) -> bool {
-        velocity_squared > self.death_speed * self.death_speed
-    }
 }

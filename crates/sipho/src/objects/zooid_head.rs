@@ -104,24 +104,6 @@ impl ZooidHead {
                     });
                 }
             }
-            if control_event.is_pressed(ControlAction::SpawnZooid) {
-                for (_head, head_id, transform, velocity, team, _, _) in query.iter() {
-                    let num_zooids = 1;
-                    for i in 1..=num_zooids {
-                        let zindex = zindex::ZOOIDS_MIN
-                            + (i as f32) * 0.00001 * (zindex::ZOOIDS_MAX - zindex::ZOOIDS_MIN);
-                        let velocity: Vec2 = Vec2::Y * config.spawn_velocity + velocity.0;
-                        commands.spawn(ObjectSpec {
-                            position: transform.translation().xy() + velocity,
-                            velocity: Some(Velocity(velocity)),
-                            team: *team,
-                            zindex,
-                            objectives: Objectives::new(Objective::FollowEntity(head_id)),
-                            ..default()
-                        });
-                    }
-                }
-            }
         }
     }
 }

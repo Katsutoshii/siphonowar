@@ -46,7 +46,10 @@ impl Objective {
                 });
             }
             Self::AttackEntity(entity) => {
-                let (transform, velocity, _) = targets.get(*entity)?;
+                let (transform, velocity, carried_by) = targets.get(*entity)?;
+                if carried_by.is_some() {
+                    return Err(Error::Default);
+                }
                 let target_position = transform.translation().xy() + velocity.0;
                 commands.insert((
                     Navigator {
@@ -92,14 +95,6 @@ impl Objective {
             }
         };
         Ok(())
-    }
-
-    /// Given an objective, get the next one (if there should be a next one, else None).
-    pub fn try_attacking(&self, entity: Entity) -> Option<Self> {
-        match self {
-            Self::None | Self::FollowEntity(_) => Some(Self::AttackEntity(entity)),
-            Self::AttackEntity { .. } => None,
-        }
     }
 
     /// If this objective is following an entity, return that Entity.

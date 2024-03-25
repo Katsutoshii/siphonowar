@@ -29,7 +29,7 @@ impl SpawnCommand {
     pub fn update(
         mut log: ConsoleCommand<SpawnCommand>,
         mut commands: ObjectCommands,
-        cursor: Query<&GlobalTransform, With<Cursor>>,
+        cursor: CursorParam,
     ) {
         if let Some(Ok(SpawnCommand {
             object,
@@ -38,20 +38,21 @@ impl SpawnCommand {
         })) = log.take()
         {
             reply!(log, "spawning {} {:?}", count, object);
-            let cursor_position = cursor.single().translation().xy();
-            let sqrt_count = (count as f32).sqrt() as usize;
-            for i in 0..sqrt_count {
-                for j in 0..sqrt_count {
-                    commands.spawn(ObjectSpec {
-                        object,
-                        team,
-                        position: cursor_position
-                            + Vec2 {
-                                x: (i * 40) as f32,
-                                y: (j * 40) as f32,
-                            },
-                        ..default()
-                    })
+            if let Some(cursor_position) = cursor.world_position() {
+                let sqrt_count = (count as f32).sqrt() as usize;
+                for i in 0..sqrt_count {
+                    for j in 0..sqrt_count {
+                        commands.spawn(ObjectSpec {
+                            object,
+                            team,
+                            position: cursor_position
+                                + Vec2 {
+                                    x: (i * 40) as f32,
+                                    y: (j * 40) as f32,
+                                },
+                            ..default()
+                        })
+                    }
                 }
             }
         }

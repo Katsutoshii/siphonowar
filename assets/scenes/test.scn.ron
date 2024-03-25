@@ -70,8 +70,8 @@
           neighbor_radius: 256.0,
           obstacle_acceleration: 6.,
           nav_flow_factor: 1.0,
-          attack_velocity: 16.,
-          attack_radius: 128.0,
+          attack_velocity: 20.,
+          attack_radius: 96.0,
           spawn_velocity: 10.0,
           spawn_cost: 4,
           objective: ObjectiveConfig(
@@ -80,7 +80,7 @@
           ),
           radius: 12.0,
           death_speed: 5.,
-          health: 3,
+          health: 6,
           idle_speed: 0.5,
           interactions: InteractionConfigs(
             {
@@ -98,7 +98,7 @@
                 cohesion_acceleration: 0.0,
                 alignment_factor: 0.05,
                 slow_factor: 0.1,
-                damage_amount: 0,
+                damage_amount: 1,
               ),
               Plankton: InteractionConfig(
                 separation_radius: 10.0,
@@ -106,7 +106,7 @@
                 cohesion_acceleration: 0.1,
                 alignment_factor: 0.0,
                 slow_factor: 0.0,
-                damage_amount: 0,
+                damage_amount: 1,
               ),
               Food: InteractionConfig(
                 separation_radius: 1.0,
@@ -134,7 +134,7 @@
           ),
           radius: 30.0,
           death_speed: 5.,
-          health: 4,
+          health: 10,
           idle_speed: 0.5,
           interactions: InteractionConfigs(
             {
@@ -144,7 +144,7 @@
                 cohesion_acceleration: 0.0,
                 alignment_factor: 0.1,
                 slow_factor: 0.0,
-                damage_amount: 1,
+                damage_amount: 0,
               ),
               Head: InteractionConfig(
                 separation_radius: 100.0,
@@ -197,7 +197,7 @@
               cohesion_acceleration: 0.0,
               alignment_factor: 0.0,
               slow_factor: 0.0,
-              damage_amount: 1,
+              damage_amount: 0,
             ),
             Head: InteractionConfig(
               separation_radius: 100.0,

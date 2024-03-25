@@ -22,7 +22,7 @@ impl Default for Health {
     fn default() -> Self {
         Self {
             health: 1,
-            hit_timer: Timer::from_seconds(0.05, TimerMode::Once),
+            hit_timer: Timer::from_seconds(0.2, TimerMode::Once),
         }
     }
 }
@@ -38,7 +38,7 @@ impl Health {
     }
     pub fn damage(&mut self, amount: i32) {
         self.health -= amount;
-        self.hit_timer = Timer::from_seconds(0.5, TimerMode::Once);
+        self.hit_timer = Timer::from_seconds(0.2, TimerMode::Once);
     }
     pub fn update(mut query: Query<&mut Health>, time: Res<Time>) {
         for mut health in query.iter_mut() {
@@ -61,30 +61,27 @@ impl DamageEvent {
         mut effects: EffectCommands,
     ) {
         for event in events.read() {
+            let knockback_amount = 3.;
             // Knock back the damager
             if let Ok((mut acceleration, _health, _team, _transform)) = query.get_mut(event.damager)
             {
-                *acceleration +=
-                    Acceleration(*event.velocity * if event.amount > 0 { -10. } else { -2. });
+                *acceleration += Acceleration(*event.velocity * -1. * knockback_amount);
             }
             // Reduce health and set off firework for the damaged.
-            if let Ok((mut acceleration, mut health, &team, &transform)) =
+            if let Ok((mut _acceleration, mut health, &team, &transform)) =
                 query.get_mut(event.damaged)
             {
-                health.damage(event.amount);
-                if event.amount > 0 {
-                    effects.make_fireworks(FireworkSpec {
-                        size: if event.amount > 0 {
-                            VfxSize::Small
-                        } else {
-                            VfxSize::Tiny
-                        },
-                        team,
-                        transform: transform.into(),
-                    });
-                }
-                *acceleration +=
-                    Acceleration(event.velocity.0) * if event.amount > 0 { 20. } else { 10. };
+                let size = if health.damageable() {
+                    health.damage(event.amount);
+                    VfxSize::Small
+                } else {
+                    VfxSize::Tiny
+                };
+                effects.make_fireworks(FireworkSpec {
+                    size,
+                    team,
+                    transform: transform.into(),
+                });
             }
         }
     }

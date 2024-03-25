@@ -17,6 +17,7 @@ pub use {
     config::{InteractionConfig, InteractionConfigs, ObjectConfig, ObjectConfigs},
     consumer::Consumer,
     damage::{DamageEvent, Health},
+    neighbors::CollidingNeighbors,
     object::Object,
 };
 

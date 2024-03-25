@@ -71,8 +71,13 @@ pub struct ObjectCommands<'w, 's> {
     #[allow(clippy::type_complexity)]
     children: Query<'w, 's, &'static Object, With<Parent>>,
     grid: ResMut<'w, Grid2<EntitySet>>,
+    time: Res<'w, Time>,
 }
 impl ObjectCommands<'_, '_> {
+    /// Returns random value [0, 1.)
+    fn random_offset(&self) -> f32 {
+        self.time.elapsed().as_secs_f32() / self.time.wrap_period().as_secs_f32()
+    }
     pub fn spawn(&mut self, spec: ObjectSpec) {
         let config = &self.configs[&spec.object];
         let team_material = self.assets.get_team_material(spec.team);
@@ -93,7 +98,9 @@ impl ObjectCommands<'_, '_> {
                             mesh: self.assets.mesh.clone().into(),
                             transform: Transform::default()
                                 .with_scale(Vec2::splat(config.radius).extend(1.))
-                                .with_translation(spec.position.extend(spec.zindex)),
+                                .with_translation(
+                                    spec.position.extend(spec.zindex + self.random_offset()),
+                                ),
                             material: team_material.primary,
                             name: Name::new("Zooid"),
                             ..ObjectBundle::new(config, spec)

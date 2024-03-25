@@ -3,12 +3,9 @@ use std::f32::consts::PI;
 use super::{
     carry::{CarriedBy, CarryEvent},
     neighbors::{AlliedNeighbors, CollidingNeighbors, EnemyNeighbors},
-    DamageEvent, InteractionConfig, ObjectSpec,
+    InteractionConfig, ObjectSpec,
 };
-use crate::{
-    objectives::{dash_attacker::DashAttackerState, DashAttacker},
-    prelude::*,
-};
+use crate::prelude::*;
 use bevy::{ecs::query::QueryData, prelude::*};
 use rand::random;
 use sipho_vfx::fireworks::EffectCommands;
@@ -66,7 +63,8 @@ pub struct UpdateObjectiveQueryData {
     objectives: &'static mut Objectives,
     parent: Option<&'static Parent>,
     health: &'static Health,
-    neighbors: &'static EnemyNeighbors,
+    enemy_neighbors: &'static EnemyNeighbors,
+    allied_neighbors: &'static AlliedNeighbors,
 }
 
 #[derive(QueryData)]
@@ -84,7 +82,7 @@ impl Object {
         configs: Res<ObjectConfigs>,
     ) {
         query.par_iter_mut().for_each(|mut object| {
-            let mut seaparation_acceleration = Acceleration::ZERO;
+            let mut separation_acceleration = Acceleration::ZERO;
             let mut alignment_acceleration = Acceleration::ZERO;
             let config = configs.get(object.object).unwrap();
 
@@ -95,11 +93,13 @@ impl Object {
 
                 // Don't apply neighbor forces when carrying items.
                 if object.parent.is_none() {
-                    seaparation_acceleration += Self::separation_acceleration(
+                    let separation_radius_factor = 1.;
+                    separation_acceleration += Self::separation_acceleration(
                         -neighbor.delta,
                         neighbor.distance_squared,
                         *object.velocity,
                         interaction,
+                        separation_radius_factor,
                     );
                     alignment_acceleration += Self::alignment_acceleration(
                         neighbor.distance_squared,
@@ -111,19 +111,22 @@ impl Object {
                 }
             }
             for neighbor in object.enemy_neighbors.iter() {
-                seaparation_acceleration += Self::separation_acceleration(
+                let (other_object, _other_velocity) = others.get(neighbor.entity).unwrap();
+                let separation_radius_factor = 3.;
+                separation_acceleration += Self::separation_acceleration(
                     -neighbor.delta,
                     neighbor.distance_squared,
                     *object.velocity,
-                    &config.interactions[others.get(neighbor.entity).unwrap().0],
-                ) * 0.5;
+                    &config.interactions[other_object],
+                    separation_radius_factor,
+                );
             }
 
             if !object.neighbors.is_empty() {
-                *object.acceleration += alignment_acceleration
-                    * (1.0 / (object.neighbors.len() as f32))
-                    + seaparation_acceleration;
+                *object.acceleration +=
+                    alignment_acceleration * (1.0 / (object.neighbors.len() as f32));
             }
+            *object.acceleration += separation_acceleration;
 
             // When idle, slow down.
             if *object.objectives.last() == Objective::None && object.carried_by.is_none() {
@@ -131,7 +134,7 @@ impl Object {
                 let velocity_squared = object.velocity.length_squared();
                 if velocity_squared > 0. {
                     let slow_magnitude =
-                        0.5 * (velocity_squared - idle_slow_threshold).max(0.) / velocity_squared;
+                        0.3 * (velocity_squared - idle_slow_threshold).max(0.) / velocity_squared;
                     *object.acceleration += Acceleration(-object.velocity.0 * slow_magnitude)
                 }
             }
@@ -151,7 +154,7 @@ impl Object {
     ) {
         for mut object in &mut query {
             let nearest = object
-                .neighbors
+                .enemy_neighbors
                 .iter()
                 .min_by_key(|neighbor| bevy::utils::FloatOrd(neighbor.distance_squared));
 
@@ -163,9 +166,16 @@ impl Object {
                     && object.parent.is_none()
                     && other.carried_by.is_none()
                 {
-                    if let Some(objective) = object.objectives.last().try_attacking(neighbor.entity)
+                    // If already attacking an entity but we are now closer to different entity, attack the new closest
+                    // entity.
+                    if let Objective::AttackEntity(entity) =
+                        object.objectives.bypass_change_detection().last_mut()
                     {
-                        object.objectives.push(objective);
+                        *entity = neighbor.entity;
+                    } else {
+                        object
+                            .objectives
+                            .push(Objective::AttackEntity(neighbor.entity));
                     }
                 }
             }
@@ -173,39 +183,17 @@ impl Object {
     }
 
     pub fn update_collisions(
-        mut objects: Query<(
-            Entity,
-            &Object,
-            &CollidingNeighbors,
-            &Health,
-            Option<&Parent>,
-        )>,
-        others: Query<(&Object, Option<&DashAttacker>, &Velocity)>,
-        configs: Res<ObjectConfigs>,
-        mut damage_events: EventWriter<DamageEvent>,
+        mut objects: Query<(Entity, &Object, &CollidingNeighbors, Option<&Parent>)>,
+        // others: Query<(&Object, Option<&DashAttacker>, &Velocity)>,
+        // configs: Res<ObjectConfigs>,
+        // mut damage_events: EventWriter<DamageEvent>,
         mut carry_events: EventWriter<CarryEvent>,
     ) {
-        for (entity, object, collisions, health, parent) in objects.iter_mut() {
-            let config = configs.get(object).unwrap();
+        for (entity, object, collisions, parent) in objects.iter_mut() {
+            // let config = configs.get(object).unwrap();
             for neighbor in collisions.iter() {
-                let (other_object, other_attacker, other_velocity) =
-                    others.get(neighbor.entity).unwrap();
-                let interaction = config.interactions.get(other_object).unwrap();
-
-                if let Some(attacker) = other_attacker {
-                    if attacker.state == DashAttackerState::Attacking {
-                        damage_events.send(DamageEvent {
-                            damager: neighbor.entity,
-                            damaged: entity,
-                            amount: if health.damageable() {
-                                interaction.damage_amount
-                            } else {
-                                0
-                            },
-                            velocity: *other_velocity,
-                        });
-                    }
-                }
+                // let (other_object, other_attacker, other_velocity) =
+                //     others.get(neighbor.entity).unwrap();
 
                 if object.can_carry() && neighbor.object.can_be_carried() && parent.is_none() {
                     carry_events.send(CarryEvent {
@@ -283,8 +271,9 @@ impl Object {
         distance_squared: f32,
         velocity: Velocity,
         interaction: &InteractionConfig,
+        radius_factor: f32,
     ) -> Acceleration {
-        let radius = interaction.separation_radius;
+        let radius = radius_factor * interaction.separation_radius;
         let radius_squared = radius * radius;
 
         let slow_force = interaction.slow_factor
