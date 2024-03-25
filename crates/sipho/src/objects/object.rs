@@ -112,7 +112,7 @@ impl Object {
             }
             for neighbor in object.enemy_neighbors.iter() {
                 let (other_object, _other_velocity) = others.get(neighbor.entity).unwrap();
-                let separation_radius_factor = 3.;
+                let separation_radius_factor = 2.;
                 separation_acceleration += Self::separation_acceleration(
                     -neighbor.delta,
                     neighbor.distance_squared,

@@ -1,5 +1,7 @@
 use std::time::Duration;
 
+use rand::Rng;
+
 use crate::{objects::CollidingNeighbors, prelude::*};
 
 pub struct DashAttackerPlugin;
@@ -17,9 +19,9 @@ impl Plugin for DashAttackerPlugin {
 #[derive(Reflect, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DashAttackerState {
     Init,
-    AttackWarmup,
     Attacking,
     Cooldown,
+    Stuned,
 }
 
 /// Dash attacker does a periodic dash towards the target.
@@ -35,22 +37,16 @@ impl Default for DashAttacker {
     fn default() -> Self {
         Self {
             target: Vec2::ZERO,
-            timer: Timer::new(Self::attack_delay(), TimerMode::Repeating),
+            timer: Timer::new(Self::attack_cooldown(), TimerMode::Repeating),
             state: DashAttackerState::Init,
         }
     }
 }
 impl DashAttacker {
-    /// Gets a random attack delay.
-    pub fn attack_delay() -> Duration {
-        // Duration::from_millis(rand::thread_rng().gen_range(100..200))
-        Duration::from_millis(0)
-    }
-
     /// Gets a random attack cooldown.
     pub fn attack_cooldown() -> Duration {
-        // Duration::from_millis(rand::thread_rng().gen_range(300..300))
-        Duration::from_millis(500)
+        Duration::from_millis(rand::thread_rng().gen_range(800..1600))
+        //Duration::from_millis(500)
     }
 
     /// Gets the attack duration.
@@ -60,21 +56,17 @@ impl DashAttacker {
 
     pub fn next_state(&mut self, in_radius: bool) -> DashAttackerState {
         if !in_radius {
-            self.timer.set_duration(Self::attack_delay());
+            self.timer.set_duration(Self::attack_cooldown());
             return DashAttackerState::Init;
         }
         match self.state {
-            DashAttackerState::AttackWarmup => {
-                self.timer.set_duration(Self::attack_duration());
-                DashAttackerState::Attacking
-            }
-            DashAttackerState::Attacking => {
+            DashAttackerState::Attacking | DashAttackerState::Stuned => {
                 self.timer.set_duration(Self::attack_cooldown());
                 DashAttackerState::Cooldown
             }
             DashAttackerState::Init | DashAttackerState::Cooldown => {
-                self.timer.set_duration(Self::attack_delay());
-                DashAttackerState::AttackWarmup
+                self.timer.set_duration(Self::attack_duration());
+                DashAttackerState::Attacking
             }
         }
     }
@@ -114,7 +106,6 @@ impl DashAttacker {
             if attacker.state == DashAttackerState::Attacking {
                 if let Some(collision) = collisions.first() {
                     attacker.state = attacker.next_state(true);
-
                     let interaction = config.interactions.get(&collision.object).unwrap();
                     damage_events.send(DamageEvent {
                         damager: entity,

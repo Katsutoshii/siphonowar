@@ -67,11 +67,11 @@
       {
         Worker: ObjectConfig(
           physics_material: Zooid,
-          neighbor_radius: 256.0,
+          neighbor_radius: 128.0,
           obstacle_acceleration: 6.,
           nav_flow_factor: 1.0,
           attack_velocity: 20.,
-          attack_radius: 96.0,
+          attack_radius: 128.0,
           spawn_velocity: 10.0,
           spawn_cost: 4,
           objective: ObjectiveConfig(

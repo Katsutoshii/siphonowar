@@ -17,17 +17,17 @@ fn color_gradient_from_team(team: Team) -> Gradient<Vec4> {
     match team {
         Team::Blue | Team::None => {
             let color = Color::TEAL.rgba_to_vec4();
-            color_gradient.add_key(0.0, color * 1.3);
+            color_gradient.add_key(0.0, color + Vec4::new(0.0, 0.0, 0.0, 0.5));
             color_gradient.add_key(0.1, color);
-            color_gradient.add_key(0.9, color * 0.5);
-            color_gradient.add_key(1.0, Vec4::new(0.0, 0.0, 2.0, 0.0));
+            color_gradient.add_key(0.7, color * 0.5);
+            color_gradient.add_key(1.0, Vec4::new(0.0, 0.0, 0.0, 1.0));
         }
         Team::Red => {
             let color = Color::TOMATO.rgba_to_vec4();
-            color_gradient.add_key(0.0, color * 1.3);
+            color_gradient.add_key(0.0, color + Vec4::new(0.0, 0.0, 0.0, 0.5));
             color_gradient.add_key(0.1, color);
             color_gradient.add_key(0.7, color * 0.5);
-            color_gradient.add_key(1.0, Vec4::new(2.0, 0.0, 0.0, 0.0));
+            color_gradient.add_key(1.0, Vec4::new(0.1, 0.1, 0.1, 1.0));
         }
     };
     color_gradient
@@ -37,9 +37,10 @@ pub fn firework_effect(team: Team, n: f32) -> EffectAsset {
     let color_gradient = color_gradient_from_team(team);
 
     let mut size_gradient1 = Gradient::new();
-    size_gradient1.add_key(0.0, Vec2::splat(10.0));
-    size_gradient1.add_key(0.3, Vec2::splat(7.0));
-    size_gradient1.add_key(1.0, Vec2::splat(0.0));
+    size_gradient1.add_key(0.0, Vec2::splat(5.0 * n.powf(0.25)));
+    size_gradient1.add_key(0.3, Vec2::splat(2.0));
+    size_gradient1.add_key(0.9, Vec2::splat(1.5));
+    size_gradient1.add_key(1.0, Vec2::splat(0.5));
 
     let writer = ExprWriter::new();
 
@@ -53,7 +54,8 @@ pub fn firework_effect(team: Team, n: f32) -> EffectAsset {
     let init_lifetime = SetAttributeModifier::new(Attribute::LIFETIME, lifetime);
 
     // Add drag to make particles slow down a bit after the initial explosion
-    let drag = writer.lit(5.).expr();
+    // The more particles we have, the less draw we want.
+    let drag = writer.lit(1. / n).expr();
     let update_drag = LinearDragModifier::new(drag);
 
     let init_pos = SetPositionSphereModifier {
@@ -94,9 +96,9 @@ impl FromWorld for EffectAssets {
     fn from_world(world: &mut World) -> Self {
         let mut assets = world.get_resource_mut::<Assets<EffectAsset>>().unwrap();
         Self {
-            fireworks: Team::ALL.map(|team| assets.add(firework_effect(team, 25.))),
+            fireworks: Team::ALL.map(|team| assets.add(firework_effect(team, 30.))),
             small_fireworks: Team::ALL.map(|team| assets.add(firework_effect(team, 4.))),
-            tiny_fireworks: Team::ALL.map(|team| assets.add(firework_effect(team, 2.))),
+            tiny_fireworks: Team::ALL.map(|team| assets.add(firework_effect(team, 1.))),
         }
     }
 }
