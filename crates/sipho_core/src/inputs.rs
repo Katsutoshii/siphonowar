@@ -50,6 +50,7 @@ pub enum InputAction {
     SpawnPlankton,
     SpawnFood,
     PauseMenu,
+    Fuse,
 }
 
 /// Specifies input mapping.
@@ -212,14 +213,13 @@ pub enum ControlAction {
     Move,
     PanCamera,
     DragCamera,
-
     SpawnHead,
     SpawnZooid,
     SpawnRed,
     SpawnBlue,
     SpawnPlankton,
     SpawnFood,
-
+    Fuse,
     PauseMenu,
 }
 impl From<(RaycastTarget, InputAction)> for ControlAction {
@@ -235,6 +235,7 @@ impl From<(RaycastTarget, InputAction)> for ControlAction {
             (RaycastTarget::WorldGrid, InputAction::SpawnBlue) => Self::SpawnBlue,
             (RaycastTarget::WorldGrid, InputAction::SpawnPlankton) => Self::SpawnPlankton,
             (RaycastTarget::WorldGrid, InputAction::SpawnFood) => Self::SpawnFood,
+            (RaycastTarget::WorldGrid, InputAction::Fuse) => Self::Fuse,
             (RaycastTarget::WorldGrid, InputAction::DragCamera) => Self::DragCamera,
             (_, InputAction::PauseMenu) => Self::PauseMenu,
             (RaycastTarget::None, _) => Self::None,

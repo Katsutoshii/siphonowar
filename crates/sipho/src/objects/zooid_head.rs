@@ -1,9 +1,9 @@
 use crate::prelude::*;
 use bevy::utils::{Entry, HashMap};
 
+use super::zooid_worker::ZooidWorker;
 use super::Object;
 use super::{ObjectCommands, ObjectSpec, Team};
-
 pub struct ZooidHeadPlugin;
 impl Plugin for ZooidHeadPlugin {
     fn build(&self, app: &mut App) {
@@ -26,7 +26,9 @@ impl ZooidHead {
     pub fn spawn(
         mut commands: ObjectCommands,
         config: Res<TeamConfig>,
+        obj_config: Res<ObjectConfigs>,
         mut control_events: EventReader<ControlEvent>,
+        query: Query<(&ZooidWorker, Entity, &GridEntity, &Selected)>,
     ) {
         for control_event in control_events.read() {
             if control_event.is_pressed(ControlAction::SpawnHead) {
@@ -36,6 +38,28 @@ impl ZooidHead {
                     team: config.player_team,
                     ..default()
                 });
+            }
+            if control_event.is_pressed(ControlAction::Fuse) {
+                info!("Fusing!");
+                let mut killable = vec![];
+                for (_, entity, grid_entity, selected) in query.iter() {
+                    if selected.is_selected() {
+                        killable.push((entity, grid_entity));
+                    }
+                    if killable.len() >= obj_config.get(&Object::Head).unwrap().spawn_cost as usize
+                    {
+                        commands.spawn(ObjectSpec {
+                            object: Object::Head,
+                            position: control_event.position,
+                            team: config.player_team,
+                            ..default()
+                        });
+                        for (entity, grid_entity) in killable.iter() {
+                            commands.despawn(*entity, **grid_entity);
+                        }
+                        break;
+                    }
+                }
             }
         }
     }
@@ -78,6 +102,24 @@ impl ZooidHead {
                         objectives: Objectives::new(Objective::FollowEntity(head_id)),
                         ..default()
                     });
+                }
+            }
+            if control_event.is_pressed(ControlAction::SpawnZooid) {
+                for (_head, head_id, transform, velocity, team, _, _) in query.iter() {
+                    let num_zooids = 1;
+                    for i in 1..=num_zooids {
+                        let zindex = zindex::ZOOIDS_MIN
+                            + (i as f32) * 0.00001 * (zindex::ZOOIDS_MAX - zindex::ZOOIDS_MIN);
+                        let velocity: Vec2 = Vec2::Y * config.spawn_velocity + velocity.0;
+                        commands.spawn(ObjectSpec {
+                            position: transform.translation().xy() + velocity,
+                            velocity: Some(Velocity(velocity)),
+                            team: *team,
+                            zindex,
+                            objectives: Objectives::new(Objective::FollowEntity(head_id)),
+                            ..default()
+                        });
+                    }
                 }
             }
         }

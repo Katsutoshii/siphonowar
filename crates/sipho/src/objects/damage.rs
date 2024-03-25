@@ -21,8 +21,8 @@ pub struct Health {
 impl Default for Health {
     fn default() -> Self {
         Self {
-            health: 3,
-            hit_timer: Timer::from_seconds(0.2, TimerMode::Once),
+            health: 1,
+            hit_timer: Timer::from_seconds(0.05, TimerMode::Once),
         }
     }
 }
@@ -64,19 +64,27 @@ impl DamageEvent {
             // Knock back the damager
             if let Ok((mut acceleration, _health, _team, _transform)) = query.get_mut(event.damager)
             {
-                *acceleration -= Acceleration(event.velocity.0 * 5.);
+                *acceleration +=
+                    Acceleration(*event.velocity * if event.amount > 0 { -10. } else { -2. });
             }
             // Reduce health and set off firework for the damaged.
             if let Ok((mut acceleration, mut health, &team, &transform)) =
                 query.get_mut(event.damaged)
             {
                 health.damage(event.amount);
-                effects.make_fireworks(FireworkSpec {
-                    size: VfxSize::Small,
-                    team,
-                    transform: transform.into(),
-                });
-                *acceleration += Acceleration(event.velocity.0 * 5.);
+                if event.amount > 0 {
+                    effects.make_fireworks(FireworkSpec {
+                        size: if event.amount > 0 {
+                            VfxSize::Small
+                        } else {
+                            VfxSize::Tiny
+                        },
+                        team,
+                        transform: transform.into(),
+                    });
+                }
+                *acceleration +=
+                    Acceleration(event.velocity.0) * if event.amount > 0 { 20. } else { 10. };
             }
         }
     }

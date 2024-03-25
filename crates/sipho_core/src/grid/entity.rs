@@ -7,7 +7,7 @@ pub type EntitySet = HashSet<Entity>;
 
 /// Component to track an entity in the grid.
 /// Holds its cell position so it can move/remove itself from the grid.
-#[derive(Component, Reflect, Default)]
+#[derive(Component, Reflect, Default, Copy, Clone)]
 #[reflect(Component)]
 pub struct GridEntity {
     pub cell: Option<RowCol>,

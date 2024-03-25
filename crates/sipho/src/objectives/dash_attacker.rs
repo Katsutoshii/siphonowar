@@ -19,6 +19,7 @@ impl Plugin for DashAttackerPlugin {
 #[derive(Reflect, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DashAttackerState {
     Init,
+    AttackWarmup,
     Attacking,
     Cooldown,
 }
@@ -44,17 +45,17 @@ impl Default for DashAttacker {
 impl DashAttacker {
     /// Gets a random attack delay.
     pub fn attack_delay() -> Duration {
-        Duration::from_millis(rand::thread_rng().gen_range(20..100))
+        Duration::from_millis(rand::thread_rng().gen_range(100..500))
     }
 
     /// Gets a random attack cooldown.
     pub fn attack_cooldown() -> Duration {
-        Duration::from_millis(rand::thread_rng().gen_range(500..800))
+        Duration::from_millis(rand::thread_rng().gen_range(500..1500))
     }
 
     /// Gets the attack duration.
     pub fn attack_duration() -> Duration {
-        Duration::from_millis(140)
+        Duration::from_millis(rand::thread_rng().gen_range(100..250))
     }
 
     pub fn next_state(&mut self, in_radius: bool) -> DashAttackerState {
@@ -63,13 +64,17 @@ impl DashAttacker {
             return DashAttackerState::Init;
         }
         match self.state {
+            DashAttackerState::AttackWarmup => {
+                self.timer.set_duration(Self::attack_duration());
+                DashAttackerState::Attacking
+            }
             DashAttackerState::Attacking => {
                 self.timer.set_duration(Self::attack_cooldown());
                 DashAttackerState::Cooldown
             }
             DashAttackerState::Init | DashAttackerState::Cooldown => {
-                self.timer.set_duration(Self::attack_duration());
-                DashAttackerState::Attacking
+                self.timer.set_duration(Self::attack_delay());
+                DashAttackerState::AttackWarmup
             }
         }
     }

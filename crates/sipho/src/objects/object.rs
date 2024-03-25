@@ -10,8 +10,8 @@ use crate::{
     prelude::*,
 };
 use bevy::{ecs::query::QueryData, prelude::*};
+use rand::random;
 use sipho_vfx::fireworks::EffectCommands;
-
 /// Plugin for running zooids simulation.
 pub struct ObjectPlugin;
 impl Plugin for ObjectPlugin {
@@ -54,6 +54,7 @@ pub struct UpdateAccelerationQueryData {
     parent: Option<&'static Parent>,
     objectives: &'static Objectives,
     neighbors: &'static AlliedNeighbors,
+    enemy_neighbors: &'static EnemyNeighbors,
     carried_by: Option<&'static CarriedBy>,
 }
 
@@ -109,6 +110,14 @@ impl Object {
                     );
                 }
             }
+            for neighbor in object.enemy_neighbors.iter() {
+                seaparation_acceleration += Self::separation_acceleration(
+                    -neighbor.delta,
+                    neighbor.distance_squared,
+                    *object.velocity,
+                    &config.interactions[others.get(neighbor.entity).unwrap().0],
+                ) * 0.5;
+            }
 
             if !object.neighbors.is_empty() {
                 *object.acceleration += alignment_acceleration
@@ -122,13 +131,15 @@ impl Object {
                 let velocity_squared = object.velocity.length_squared();
                 if velocity_squared > 0. {
                     let slow_magnitude =
-                        (velocity_squared - idle_slow_threshold).max(0.) / velocity_squared;
+                        0.5 * (velocity_squared - idle_slow_threshold).max(0.) / velocity_squared;
                     *object.acceleration += Acceleration(-object.velocity.0 * slow_magnitude)
                 }
             }
 
             // When moving slow, spin around to create some extra movement.
-            let spin_amount = (config.idle_speed * 2. - object.velocity.length_squared()).max(0.);
+            let spin_amount = (config.idle_speed * 2. - object.velocity.length_squared()).max(0.)
+                * random::<f32>()
+                * 10.;
             let turn_vector = Mat2::from_angle(PI / 8.) * object.velocity.0 * spin_amount;
             *object.acceleration += Acceleration(turn_vector);
         });
@@ -182,11 +193,15 @@ impl Object {
                 let interaction = config.interactions.get(other_object).unwrap();
 
                 if let Some(attacker) = other_attacker {
-                    if attacker.state == DashAttackerState::Attacking && health.damageable() {
+                    if attacker.state == DashAttackerState::Attacking {
                         damage_events.send(DamageEvent {
                             damager: neighbor.entity,
                             damaged: entity,
-                            amount: interaction.damage_amount,
+                            amount: if health.damageable() {
+                                interaction.damage_amount
+                            } else {
+                                0
+                            },
                             velocity: *other_velocity,
                         });
                     }
@@ -239,12 +254,10 @@ impl Object {
         mut objects: Query<(Entity, &Self, &GridEntity, &Health, &GlobalTransform, &Team)>,
         mut object_commands: ObjectCommands,
         mut effect_commands: EffectCommands,
-        mut grid: ResMut<Grid2<EntitySet>>,
     ) {
         for (entity, object, grid_entity, health, &transform, team) in &mut objects {
             if health.health <= 0 {
-                grid.remove(entity, grid_entity);
-                object_commands.despawn(entity);
+                object_commands.despawn(entity, *grid_entity);
                 effect_commands.make_fireworks(FireworkSpec {
                     size: VfxSize::Medium,
                     transform: transform.into(),

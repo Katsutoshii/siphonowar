@@ -70,6 +70,7 @@ pub struct ObjectCommands<'w, 's> {
     parents: Query<'w, 's, &'static Children, Without<Parent>>,
     #[allow(clippy::type_complexity)]
     children: Query<'w, 's, &'static Object, With<Parent>>,
+    grid: ResMut<'w, Grid2<EntitySet>>,
 }
 impl ObjectCommands<'_, '_> {
     pub fn spawn(&mut self, spec: ObjectSpec) {
@@ -156,7 +157,7 @@ impl ObjectCommands<'_, '_> {
         }
     }
 
-    pub fn despawn(&mut self, entity: Entity) {
+    pub fn despawn(&mut self, entity: Entity, grid_entity: GridEntity) {
         if let Ok(children) = self.parents.get(entity) {
             for &child in children {
                 if self.children.get(child).is_ok() {
@@ -164,6 +165,7 @@ impl ObjectCommands<'_, '_> {
                 }
             }
         }
+        self.grid.remove(entity, &grid_entity);
         self.commands.entity(entity).despawn_recursive();
     }
 

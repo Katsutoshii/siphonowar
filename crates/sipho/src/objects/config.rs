@@ -62,6 +62,7 @@ pub struct ObjectConfig {
     pub health: i32,
     pub death_speed: f32,
     pub idle_speed: f32,
+    pub spawn_cost: i32,
     // Interactions
     pub interactions: InteractionConfigs,
 }
@@ -80,6 +81,7 @@ impl Default for ObjectConfig {
             health: 1,
             death_speed: 9.0,
             idle_speed: 0.5,
+            spawn_cost: 4,
             interactions: InteractionConfigs({
                 let mut interactions = HashMap::new();
                 interactions.insert(Object::Worker, InteractionConfig::default());

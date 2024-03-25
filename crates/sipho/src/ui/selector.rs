@@ -92,17 +92,18 @@ impl Selector {
                     aabb.enforce_minmax();
                     // Check the grid for entities in this bounding box.
                     for entity in grid.get_entities_in_aabb(&aabb) {
-                        let (_object, transform, team, mut selected, mesh) =
-                            objects.get_mut(entity).unwrap();
-                        if aabb.contains(transform.translation().xy()) {
-                            if selected.is_selected() || *team != config.player_team {
-                                continue;
+                        if let Ok(mut_obj) = objects.get_mut(entity) {
+                            let (_object, transform, team, mut selected, mesh) = mut_obj;
+                            if aabb.contains(transform.translation().xy()) {
+                                if selected.is_selected() || *team != config.player_team {
+                                    continue;
+                                }
+                                let child_entity = commands
+                                    .spawn(Self::highlight_bundle(&assets, mesh.0.clone()))
+                                    .id();
+                                commands.entity(entity).add_child(child_entity);
+                                *selected = Selected::Selected { child_entity };
                             }
-                            let child_entity = commands
-                                .spawn(Self::highlight_bundle(&assets, mesh.0.clone()))
-                                .id();
-                            commands.entity(entity).add_child(child_entity);
-                            *selected = Selected::Selected { child_entity };
                         }
                     }
                 }

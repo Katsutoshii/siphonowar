@@ -88,13 +88,15 @@ pub fn firework_effect(team: Team, n: f32) -> EffectAsset {
 pub struct EffectAssets {
     fireworks: [Handle<EffectAsset>; Team::COUNT],
     small_fireworks: [Handle<EffectAsset>; Team::COUNT],
+    tiny_fireworks: [Handle<EffectAsset>; Team::COUNT],
 }
 impl FromWorld for EffectAssets {
     fn from_world(world: &mut World) -> Self {
         let mut assets = world.get_resource_mut::<Assets<EffectAsset>>().unwrap();
         Self {
-            fireworks: Team::ALL.map(|team| assets.add(firework_effect(team, 20.))),
-            small_fireworks: Team::ALL.map(|team| assets.add(firework_effect(team, 5.))),
+            fireworks: Team::ALL.map(|team| assets.add(firework_effect(team, 25.))),
+            small_fireworks: Team::ALL.map(|team| assets.add(firework_effect(team, 4.))),
+            tiny_fireworks: Team::ALL.map(|team| assets.add(firework_effect(team, 2.))),
         }
     }
 }
@@ -137,6 +139,7 @@ impl EffectCommands<'_, '_> {
             ScheduleDespawn(Timer::from_seconds(0.5, TimerMode::Once)),
             ParticleEffectBundle {
                 effect: ParticleEffect::new(match spec.size {
+                    VfxSize::Tiny => self.assets.tiny_fireworks[spec.team].clone(),
                     VfxSize::Small => self.assets.small_fireworks[spec.team].clone(),
                     VfxSize::Medium => self.assets.fireworks[spec.team].clone(),
                 }),

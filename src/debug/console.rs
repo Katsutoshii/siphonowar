@@ -47,8 +47,8 @@ impl SpawnCommand {
                         team,
                         position: cursor_position
                             + Vec2 {
-                                x: (i * 10) as f32,
-                                y: (j * 10) as f32,
+                                x: (i * 40) as f32,
+                                y: (j * 40) as f32,
                             },
                         ..default()
                     })
@@ -68,13 +68,13 @@ impl DespawnCommand {
     pub fn update(
         mut log: ConsoleCommand<DespawnCommand>,
         mut commands: ObjectCommands,
-        objects: Query<(Entity, &Team)>,
+        objects: Query<(Entity, &GridEntity, &Team)>,
     ) {
         if let Some(Ok(DespawnCommand { team })) = log.take() {
             reply!(log, "despawn {:?}", team);
-            for (entity, object_team) in objects.iter() {
+            for (entity, grid_entity, object_team) in objects.iter() {
                 if *object_team == team {
-                    commands.despawn(entity);
+                    commands.despawn(entity, *grid_entity);
                 }
             }
         }
