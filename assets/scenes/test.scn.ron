@@ -67,7 +67,7 @@
       {
         Worker: ObjectConfig(
           physics_material: Zooid,
-          neighbor_radius: 128.0,
+          neighbor_radius: 64.0,
           obstacle_acceleration: 6.,
           nav_flow_factor: 1.0,
           attack_velocity: 20.,

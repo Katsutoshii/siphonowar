@@ -63,11 +63,11 @@ impl ShaderPlaneMaterial for MinimapShaderMaterial {
         translation += Vec2 {
             x: viewport_size.x,
             y: -viewport_size.y,
-        } / 2.;
+        };
         translation -= Vec2 {
             x: quad_size.x,
             y: -quad_size.y,
-        } / 2.;
+        };
         translation.extend(zindex::MINIMAP)
     }
 

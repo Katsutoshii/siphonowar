@@ -7,7 +7,7 @@ use super::{
 };
 use crate::prelude::*;
 use bevy::{ecs::query::QueryData, prelude::*};
-use rand::random;
+use rand::{random, seq::IteratorRandom};
 use sipho_vfx::fireworks::EffectCommands;
 /// Plugin for running zooids simulation.
 pub struct ObjectPlugin;
@@ -140,10 +140,10 @@ impl Object {
             }
 
             // When moving slow, spin around to create some extra movement.
-            let spin_amount = (config.idle_speed * 2. - object.velocity.length_squared()).max(0.)
-                * random::<f32>()
-                * 10.;
-            let turn_vector = Mat2::from_angle(PI / 8.) * object.velocity.0 * spin_amount;
+            let spin_amount = (config.idle_speed * 2. - object.velocity.length_squared()).max(0.0)
+                * (random::<f32>());
+            let turn_vector =
+                Mat2::from_angle(PI * random::<f32>()) * object.velocity.0 * spin_amount;
             *object.acceleration += Acceleration(turn_vector);
         });
     }
@@ -153,10 +153,7 @@ impl Object {
         others: Query<UpdateObjectiveNeighborQueryData>,
     ) {
         for mut object in &mut query {
-            let nearest = object
-                .enemy_neighbors
-                .iter()
-                .min_by_key(|neighbor| bevy::utils::FloatOrd(neighbor.distance_squared));
+            let nearest = object.enemy_neighbors.iter().next();
 
             if let Some(neighbor) = nearest {
                 let other = others.get(neighbor.entity).unwrap();
