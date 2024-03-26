@@ -67,13 +67,13 @@ pub fn update(
             let other_entities = grid.get_entities_in_radius(position, config.neighbor_radius);
 
             enemy_neighbors.clear();
-            enemy_neighbors.reserve_exact(other_entities.len());
+            enemy_neighbors.reserve(other_entities.len());
             allied_neighbors.clear();
-            allied_neighbors.reserve_exact(other_entities.len());
+            allied_neighbors.reserve(other_entities.len());
             colliding_neighbors.clear();
-            colliding_neighbors.reserve_exact(other_entities.len());
+            colliding_neighbors.reserve(other_entities.len());
 
-            for other_entity in other_entities {
+            for &other_entity in other_entities.iter() {
                 if entity == other_entity {
                     continue;
                 }

@@ -6,7 +6,7 @@ use super::{
     InteractionConfig, ObjectSpec,
 };
 use crate::prelude::*;
-use bevy::{ecs::query::QueryData, prelude::*};
+use bevy::{audio::Volume, ecs::query::QueryData, prelude::*};
 use rand::{random, seq::IteratorRandom};
 use sipho_vfx::fireworks::EffectCommands;
 /// Plugin for running zooids simulation.
@@ -93,7 +93,7 @@ impl Object {
 
                 // Don't apply neighbor forces when carrying items.
                 if object.parent.is_none() {
-                    let separation_radius_factor = 1.;
+                    let separation_radius_factor = 2.;
                     separation_acceleration += Self::separation_acceleration(
                         -neighbor.delta,
                         neighbor.distance_squared,
@@ -112,7 +112,7 @@ impl Object {
             }
             for neighbor in object.enemy_neighbors.iter() {
                 let (other_object, _other_velocity) = others.get(neighbor.entity).unwrap();
-                let separation_radius_factor = 2.;
+                let separation_radius_factor = 3.;
                 separation_acceleration += Self::separation_acceleration(
                     -neighbor.delta,
                     neighbor.distance_squared,
