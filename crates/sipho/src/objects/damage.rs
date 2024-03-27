@@ -84,7 +84,7 @@ impl DamageEvent {
                 query.get_mut(event.damaged)
             {
                 let size = if health.damageable() {
-                    attacker.state = DashAttackerState::Stuned;
+                    attacker.state = DashAttackerState::Stunned;
                     attacker.timer.set_duration(Duration::from_secs(0));
                     health.damage(event.amount);
                     VfxSize::Small

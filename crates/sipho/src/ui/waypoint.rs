@@ -57,7 +57,6 @@ impl Waypoint {
             }
             for entity in waypoints.iter() {
                 if !followed_entities.contains(&entity) {
-                    info!("Cleanup waypoint!");
                     commands.entity(entity).despawn();
                 }
             }

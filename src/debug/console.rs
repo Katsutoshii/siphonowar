@@ -30,6 +30,7 @@ impl SpawnCommand {
         mut log: ConsoleCommand<SpawnCommand>,
         mut commands: ObjectCommands,
         cursor: CursorParam,
+        obstacles: ResMut<Grid2<Obstacle>>,
     ) {
         if let Some(Ok(SpawnCommand {
             object,
@@ -42,16 +43,19 @@ impl SpawnCommand {
                 let sqrt_count = (count as f32).sqrt() as usize;
                 for i in 0..sqrt_count {
                     for j in 0..sqrt_count {
-                        commands.spawn(ObjectSpec {
-                            object,
-                            team,
-                            position: cursor_position
-                                + Vec2 {
-                                    x: (i * 40) as f32,
-                                    y: (j * 40) as f32,
-                                },
-                            ..default()
-                        })
+                        let position = cursor_position
+                            + Vec2 {
+                                x: (i * 40) as f32,
+                                y: (j * 40) as f32,
+                            };
+                        if obstacles[obstacles.to_rowcol(position)] == Obstacle::Empty {
+                            commands.spawn(ObjectSpec {
+                                object,
+                                team,
+                                position,
+                                ..default()
+                            })
+                        }
                     }
                 }
             }

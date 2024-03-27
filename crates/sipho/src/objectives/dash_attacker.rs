@@ -21,7 +21,7 @@ pub enum DashAttackerState {
     Init,
     Attacking,
     Cooldown,
-    Stuned,
+    Stunned,
 }
 
 /// Dash attacker does a periodic dash towards the target.
@@ -37,7 +37,7 @@ impl Default for DashAttacker {
     fn default() -> Self {
         Self {
             target: Vec2::ZERO,
-            timer: Timer::new(Self::attack_cooldown(), TimerMode::Repeating),
+            timer: Timer::new(Self::attack_delay(), TimerMode::Repeating),
             state: DashAttackerState::Init,
         }
     }
@@ -45,8 +45,13 @@ impl Default for DashAttacker {
 impl DashAttacker {
     /// Gets a random attack cooldown.
     pub fn attack_cooldown() -> Duration {
-        Duration::from_millis(rand::thread_rng().gen_range(800..1600))
-        //Duration::from_millis(500)
+        Duration::from_millis(rand::thread_rng().gen_range(800..1000))
+        // Duration::from_millis(800)
+    }
+
+    /// Gets the attack duration.
+    pub fn attack_delay() -> Duration {
+        Duration::from_millis(150)
     }
 
     /// Gets the attack duration.
@@ -60,7 +65,7 @@ impl DashAttacker {
             return DashAttackerState::Init;
         }
         match self.state {
-            DashAttackerState::Attacking | DashAttackerState::Stuned => {
+            DashAttackerState::Attacking | DashAttackerState::Stunned => {
                 self.timer.set_duration(Self::attack_cooldown());
                 DashAttackerState::Cooldown
             }

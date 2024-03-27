@@ -6,8 +6,8 @@ use super::{
     InteractionConfig, ObjectSpec,
 };
 use crate::prelude::*;
-use bevy::{audio::Volume, ecs::query::QueryData, prelude::*};
-use rand::{random, seq::IteratorRandom};
+use bevy::{ecs::query::QueryData, prelude::*};
+use rand::Rng;
 use sipho_vfx::fireworks::EffectCommands;
 /// Plugin for running zooids simulation.
 pub struct ObjectPlugin;
@@ -140,10 +140,12 @@ impl Object {
             }
 
             // When moving slow, spin around to create some extra movement.
+            let random_factor = rand::thread_rng().gen_range(0.8..1.0);
             let spin_amount = (config.idle_speed * 2. - object.velocity.length_squared()).max(0.0)
-                * (random::<f32>());
+                * (random_factor)
+                * 2.;
             let turn_vector =
-                Mat2::from_angle(PI * random::<f32>()) * object.velocity.0 * spin_amount;
+                Mat2::from_angle(PI * random_factor / 8.) * object.velocity.0 * spin_amount;
             *object.acceleration += Acceleration(turn_vector);
         });
     }

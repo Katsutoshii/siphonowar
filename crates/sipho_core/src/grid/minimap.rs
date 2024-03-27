@@ -52,22 +52,22 @@ impl Default for MinimapShaderMaterial {
 }
 impl ShaderPlaneMaterial for MinimapShaderMaterial {
     fn scale(window: &Window, _spec: &GridSpec) -> Vec3 {
-        let quad_size = Self::quad_size(window);
+        let quad_size = Self::quad_size(window) * CAMERA_ZOOM;
         (quad_size * Vec2 { x: 1., y: -1. }).extend(1.)
     }
     fn translation(window: &Window, _spec: &GridSpec) -> Vec3 {
-        let viewport_size = window.scaled_size();
-        let quad_size = Self::quad_size(window);
+        let viewport_size = window.scaled_size() * CAMERA_ZOOM;
+        let quad_size = Self::quad_size(window) * CAMERA_ZOOM;
 
         let mut translation = Vec2::ZERO;
         translation += Vec2 {
             x: viewport_size.x,
             y: -viewport_size.y,
-        };
+        } / 2.;
         translation -= Vec2 {
             x: quad_size.x,
             y: -quad_size.y,
-        };
+        } / 2.;
         translation.extend(zindex::MINIMAP)
     }
 
