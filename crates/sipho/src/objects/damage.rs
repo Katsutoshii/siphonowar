@@ -10,7 +10,7 @@ impl Plugin for DamagePlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<DamageEvent>().add_systems(
             FixedUpdate,
-            (Health::update, DamageEvent::update)
+            (DamageEvent::update)
                 .in_set(SystemStage::Compute)
                 .in_set(GameStateSet::Running)
                 .after(Object::update_objective),
@@ -21,13 +21,13 @@ impl Plugin for DamagePlugin {
 #[derive(Component)]
 pub struct Health {
     pub health: i32,
-    pub hit_timer: Timer,
+    pub damageable: bool,
 }
 impl Default for Health {
     fn default() -> Self {
         Self {
             health: 1,
-            hit_timer: Timer::from_seconds(0.2, TimerMode::Once),
+            damageable: true,
         }
     }
 }
@@ -38,17 +38,8 @@ impl Health {
             ..default()
         }
     }
-    pub fn damageable(&self) -> bool {
-        self.hit_timer.finished()
-    }
     pub fn damage(&mut self, amount: i32) {
         self.health -= amount;
-        self.hit_timer = Timer::from_seconds(0.2, TimerMode::Once);
-    }
-    pub fn update(mut query: Query<&mut Health>, time: Res<Time>) {
-        for mut health in query.iter_mut() {
-            health.hit_timer.tick(time.delta());
-        }
     }
 }
 
@@ -83,7 +74,7 @@ impl DamageEvent {
             if let Ok((mut attacker, mut _acceleration, mut health, &team, &transform)) =
                 query.get_mut(event.damaged)
             {
-                let size = if health.damageable() {
+                let size = if health.damageable {
                     if let Some(attacker) = attacker.as_deref_mut() {
                         attacker.state = DashAttackerState::Stunned;
                         attacker.timer.set_duration(Duration::from_secs(0));
