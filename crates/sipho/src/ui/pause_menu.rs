@@ -99,6 +99,7 @@ impl PauseMenu {
                         ..default()
                     },
                     visibility: Visibility::Hidden,
+                    z_index: ZIndex::Global(10),
                     ..default()
                 },
             ))

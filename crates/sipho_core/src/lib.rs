@@ -40,6 +40,7 @@ pub mod prelude {
         window::{self, ScalableWindow},
         zindex, CorePlugin,
     };
+    pub use arrayvec::ArrayVec;
     pub use bevy::prelude::*;
 }
 

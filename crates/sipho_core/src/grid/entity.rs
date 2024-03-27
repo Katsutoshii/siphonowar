@@ -96,6 +96,7 @@ impl Grid2<EntitySet> {
         }
         other_entities
     }
+
     /// Remove an entity from the grid entirely.
     pub fn remove(&mut self, entity: Entity, grid_entity: &GridEntity) {
         if let Some(rowcol) = grid_entity.cell {

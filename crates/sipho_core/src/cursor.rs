@@ -46,6 +46,7 @@ impl Cursor {
             ImageBundle {
                 style: style.clone(),
                 image: UiImage::new(assets.cursor.clone()),
+                z_index: ZIndex::Global(i32::MAX),
                 ..default()
             },
             Cursor,

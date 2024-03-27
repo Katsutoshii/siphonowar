@@ -155,9 +155,7 @@ impl Object {
         others: Query<UpdateObjectiveNeighborQueryData>,
     ) {
         for mut object in &mut query {
-            let nearest = object.enemy_neighbors.iter().next();
-
-            if let Some(neighbor) = nearest {
+            if let Some(neighbor) = object.enemy_neighbors.first() {
                 let other = others.get(neighbor.entity).unwrap();
                 // An object should only attack a neighbor if that neighbor is not being carried.
                 if object.object.can_attack()

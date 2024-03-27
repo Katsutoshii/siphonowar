@@ -1,3 +1,5 @@
+use bevy::utils::FloatOrd;
+
 use crate::prelude::*;
 
 pub struct NeighborsPlugin;
@@ -16,18 +18,24 @@ impl Plugin for NeighborsPlugin {
 pub struct Neighbor {
     pub entity: Entity,
     pub object: Object,
+    pub team: Team,
     pub delta: Vec2,
     pub distance_squared: f32,
 }
 
-#[derive(Component, Deref, DerefMut, Default)]
-pub struct EnemyNeighbors(pub Vec<Neighbor>);
+pub const MAX_NEIGHBORS: usize = 16;
 
+/// Max neighbors: 16
 #[derive(Component, Deref, DerefMut, Default)]
-pub struct AlliedNeighbors(pub Vec<Neighbor>);
+pub struct EnemyNeighbors(pub ArrayVec<Neighbor, MAX_NEIGHBORS>);
 
+/// Max neighbors: 16
 #[derive(Component, Deref, DerefMut, Default)]
-pub struct CollidingNeighbors(pub Vec<Neighbor>);
+pub struct AlliedNeighbors(pub ArrayVec<Neighbor, MAX_NEIGHBORS>);
+
+/// Max neighbors: 16
+#[derive(Component, Deref, DerefMut, Default)]
+pub struct CollidingNeighbors(pub ArrayVec<Neighbor, MAX_NEIGHBORS>);
 
 #[derive(Bundle, Default)]
 pub struct NeighborsBundle {
@@ -62,16 +70,20 @@ pub fn update(
             transform,
         )| {
             let config = configs.get(object).unwrap();
-            // test
             let position = transform.translation().xy();
-            let other_entities = grid.get_entities_in_radius(position, config.neighbor_radius);
+            let other_entities_prefetch =
+                grid.get_entities_in_radius(position, config.neighbor_radius / 2.);
+            let other_entities = if other_entities_prefetch.len() >= MAX_NEIGHBORS {
+                other_entities_prefetch
+            } else {
+                grid.get_entities_in_radius(position, config.neighbor_radius)
+            };
 
             enemy_neighbors.clear();
-            enemy_neighbors.reserve(other_entities.len());
             allied_neighbors.clear();
-            allied_neighbors.reserve(other_entities.len());
             colliding_neighbors.clear();
-            colliding_neighbors.reserve(other_entities.len());
+
+            let mut all_neighbors: Vec<Neighbor> = Vec::with_capacity(other_entities.len());
 
             for &other_entity in other_entities.iter() {
                 if entity == other_entity {
@@ -84,24 +96,32 @@ pub fn update(
                     if distance_squared > config.neighbor_radius * config.neighbor_radius {
                         continue;
                     }
-
-                    let neighbor = Neighbor {
+                    all_neighbors.push(Neighbor {
                         entity: other_entity,
                         object: *other_object,
+                        team: *other_team,
                         delta,
                         distance_squared,
-                    };
-                    if team == other_team {
-                        allied_neighbors.push(neighbor);
-                    } else {
-                        enemy_neighbors.push(neighbor);
-                        let other_config = configs.get(other_object).unwrap();
-                        if distance_squared < config.radius.powi(2) + other_config.radius.powi(2) {
-                            colliding_neighbors.push(neighbor);
-                        }
-                    }
+                    });
                 } else {
                     warn!("Missing entity! {:?}", other_entity);
+                }
+            }
+
+            all_neighbors.sort_by_key(|neighbor| FloatOrd(neighbor.distance_squared));
+            all_neighbors.truncate(MAX_NEIGHBORS);
+
+            for neighbor in all_neighbors.into_iter() {
+                if *team == neighbor.team {
+                    allied_neighbors.push(neighbor);
+                } else {
+                    enemy_neighbors.push(neighbor);
+                    let other_config = configs.get(&neighbor.object).unwrap();
+                    if neighbor.distance_squared
+                        < config.radius.powi(2) + other_config.radius.powi(2)
+                    {
+                        colliding_neighbors.push(neighbor);
+                    }
                 }
             }
         },

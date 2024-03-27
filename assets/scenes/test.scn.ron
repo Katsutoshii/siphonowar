@@ -86,7 +86,7 @@
             {
               Worker: InteractionConfig(
                 separation_radius: 20.0,
-                separation_acceleration: 2.0,
+                separation_acceleration: 3.0,
                 cohesion_acceleration: 0.0,
                 alignment_factor: 0.5,
                 slow_factor: 0.0,
@@ -144,12 +144,12 @@
                 cohesion_acceleration: 0.0,
                 alignment_factor: 0.1,
                 slow_factor: 0.0,
-                damage_amount: 0,
+                damage_amount: 1,
               ),
               Head: InteractionConfig(
                 separation_radius: 100.0,
-                separation_acceleration: 10.5,
-                cohesion_acceleration: 0.1,
+                separation_acceleration: 2.,
+                cohesion_acceleration: 0.0,
                 alignment_factor: 0.0,
                 slow_factor: 0.0,
                 damage_amount: 0,
