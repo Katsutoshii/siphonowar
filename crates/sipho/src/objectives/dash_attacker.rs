@@ -65,11 +65,11 @@ impl DashAttacker {
             return DashAttackerState::Init;
         }
         match self.state {
-            DashAttackerState::Attacking | DashAttackerState::Stunned => {
+            DashAttackerState::Init | DashAttackerState::Attacking | DashAttackerState::Stunned => {
                 self.timer.set_duration(Self::attack_cooldown());
                 DashAttackerState::Cooldown
             }
-            DashAttackerState::Init | DashAttackerState::Cooldown => {
+            DashAttackerState::Cooldown => {
                 self.timer.set_duration(Self::attack_duration());
                 DashAttackerState::Attacking
             }
