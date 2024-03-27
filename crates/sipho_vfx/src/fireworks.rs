@@ -67,7 +67,7 @@ pub fn firework_effect(team: Team, n: f32) -> EffectAsset {
     // Give a bit of variation by randomizing the initial speed
     let init_vel = SetVelocitySphereModifier {
         center: writer.lit(Vec3::ZERO).expr(),
-        speed: (writer.rand(ScalarType::Float) * writer.lit(20.) + writer.lit(60.)).expr(),
+        speed: (writer.rand(ScalarType::Float) * writer.lit(20.) + writer.lit(90.)).expr(),
     };
 
     EffectAsset::new(n as u32, Spawner::once(n.into(), true), writer.finish())

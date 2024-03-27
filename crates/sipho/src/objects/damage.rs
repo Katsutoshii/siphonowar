@@ -52,7 +52,7 @@ impl Health {
     }
 }
 
-#[derive(Event)]
+#[derive(Event, Debug)]
 pub struct DamageEvent {
     pub damager: Entity,
     pub damaged: Entity,
@@ -62,7 +62,7 @@ pub struct DamageEvent {
 impl DamageEvent {
     pub fn update(
         mut query: Query<(
-            &mut DashAttacker,
+            Option<&mut DashAttacker>,
             &mut Acceleration,
             &mut Health,
             &Team,
@@ -84,8 +84,10 @@ impl DamageEvent {
                 query.get_mut(event.damaged)
             {
                 let size = if health.damageable() {
-                    attacker.state = DashAttackerState::Stunned;
-                    attacker.timer.set_duration(Duration::from_secs(0));
+                    if let Some(attacker) = attacker.as_deref_mut() {
+                        attacker.state = DashAttackerState::Stunned;
+                        attacker.timer.set_duration(Duration::from_secs(0));
+                    }
                     health.damage(event.amount);
                     VfxSize::Small
                 } else {
