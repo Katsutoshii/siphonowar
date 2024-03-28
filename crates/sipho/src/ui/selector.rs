@@ -154,15 +154,19 @@ pub struct SelectorAssets {
 
 impl FromWorld for SelectorAssets {
     fn from_world(world: &mut World) -> Self {
-        let mesh = {
-            let mut meshes = world.get_resource_mut::<Assets<Mesh>>().unwrap();
-            meshes.add(Mesh::from(meshes::UNIT_SQUARE))
-        };
-        let mut materials = world.get_resource_mut::<Assets<ColorMaterial>>().unwrap();
         Self {
-            mesh,
-            blue_material: materials.add(ColorMaterial::from(Color::BLUE.with_a(0.04))),
-            white_material: materials.add(ColorMaterial::from(Color::ALICE_BLUE.with_a(0.15))),
+            mesh: {
+                let mut meshes = world.get_resource_mut::<Assets<Mesh>>().unwrap();
+                meshes.add(Mesh::from(meshes::UNIT_SQUARE))
+            },
+            blue_material: {
+                let mut materials = world.get_resource_mut::<Assets<ColorMaterial>>().unwrap();
+                materials.add(ColorMaterial::from(Color::BLUE.with_a(0.04)))
+            },
+            white_material: {
+                let mut materials = world.get_resource_mut::<Assets<ColorMaterial>>().unwrap();
+                materials.add(ColorMaterial::from(Color::ALICE_BLUE.with_a(0.15)))
+            },
         }
     }
 }

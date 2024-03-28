@@ -8,17 +8,17 @@ impl Plugin for PauseMenuPlugin {
         app.add_systems(Startup, PauseMenu::setup)
             .init_state::<MenuState>()
             .add_systems(
-                OnEnter(PausedState::Paused),
+                OnEnter(GameState::Paused),
                 (PauseMenu::show, MenuState::set_paused),
             )
             .add_systems(
-                OnExit(PausedState::Paused),
+                OnExit(GameState::Paused),
                 (PauseMenu::hide, MenuState::set_disabled),
             )
             .add_systems(
                 Update,
                 (PauseMenu::button_system, PauseMenu::menu_action)
-                    .run_if(in_state(PausedState::Paused)),
+                    .run_if(in_state(GameState::Paused)),
             );
     }
 }
@@ -250,7 +250,7 @@ impl PauseMenu {
         >,
         mut app_exit_events: EventWriter<AppExit>,
         mut menu_state: ResMut<NextState<MenuState>>,
-        mut game_state: ResMut<NextState<PausedState>>,
+        mut game_state: ResMut<NextState<GameState>>,
     ) {
         for (interaction, menu_button_action) in &interaction_query {
             if *interaction == Interaction::Pressed {
@@ -259,7 +259,7 @@ impl PauseMenu {
                         app_exit_events.send(AppExit);
                     }
                     MenuButtonAction::Play => {
-                        game_state.set(PausedState::Running);
+                        game_state.set(GameState::Running);
                         menu_state.set(MenuState::Disabled);
                     }
                     MenuButtonAction::Settings => menu_state.set(MenuState::Settings),

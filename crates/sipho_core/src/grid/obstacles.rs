@@ -23,10 +23,9 @@ impl Plugin for ObstaclesPlugin {
                 (
                     Grid2::<Obstacle>::update.after(Grid2::<Obstacle>::resize_on_change),
                     ObstaclesShaderMaterial::update.after(Grid2::<Obstacle>::resize_on_change),
-                    Grid2::<Obstacle>::bounce_off_obstacles
-                        .in_set(SystemStage::PostApply)
-                        .in_set(GameStateSet::Running),
-                ),
+                    Grid2::<Obstacle>::bounce_off_obstacles.in_set(SystemStage::PostApply),
+                )
+                    .in_set(GameStateSet::Running),
             );
     }
 }

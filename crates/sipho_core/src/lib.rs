@@ -3,11 +3,11 @@ pub mod aabb;
 pub mod camera;
 pub mod cursor;
 pub mod error;
+pub mod game_state;
 pub mod grid;
 pub mod inputs;
 pub mod meshes;
 pub mod nav;
-pub mod pause;
 pub mod physics;
 pub mod raycast;
 pub mod shader_plane;
@@ -22,6 +22,7 @@ pub mod prelude {
         camera::{CameraController, CameraMoveEvent, MainCamera, CAMERA_ZOOM},
         cursor::{Cursor, CursorAssets, CursorParam},
         error::Error,
+        game_state::GameState,
         grid::{
             EntityGridEvent, EntitySet, Grid2, Grid2Plugin, GridEntity, GridSize, GridSpec,
             Obstacle, RowCol, RowColDistance, SparseGrid2, VisibilityUpdate, VisibilityUpdateEvent,
@@ -29,7 +30,6 @@ pub mod prelude {
         inputs::{ControlAction, ControlEvent},
         meshes,
         nav::{NavigationCostEvent, NavigationGrid2, SparseFlowGrid2},
-        pause::PausedState,
         physics::{
             self, Acceleration, PhysicsBundle, PhysicsMaterial, PhysicsMaterialType, Velocity,
         },
@@ -50,7 +50,7 @@ pub struct CorePlugin;
 impl Plugin for CorePlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((
-            pause::PausePlugin,
+            game_state::GameStatePlugin,
             system_sets::SystemSetPlugin,
             team::TeamPlugin,
             inputs::InputActionPlugin,

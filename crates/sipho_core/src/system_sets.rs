@@ -8,11 +8,11 @@ impl Plugin for SystemSetPlugin {
             .configure_sets(Update, SystemStage::get_config())
             .configure_sets(
                 FixedUpdate,
-                GameStateSet::Running.run_if(in_state(PausedState::Running)),
+                GameStateSet::Running.run_if(in_state(GameState::Running)),
             )
             .configure_sets(
                 Update,
-                GameStateSet::Running.run_if(in_state(PausedState::Running)),
+                GameStateSet::Running.run_if(in_state(GameState::Running)),
             );
     }
 }

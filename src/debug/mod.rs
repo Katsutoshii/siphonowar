@@ -12,7 +12,7 @@ impl Plugin for DebugPlugin {
         use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
         app.add_plugins((
-            WorldInspectorPlugin::default().run_if(in_state(PausedState::Paused)),
+            WorldInspectorPlugin::default().run_if(in_state(GameState::Paused)),
             console::CustomConsolePlugin,
             // FrameTimeDiagnosticsPlugin,
             LogDiagnosticsPlugin::default(),

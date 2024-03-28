@@ -113,19 +113,20 @@ pub struct WaypointAssets {
 }
 impl FromWorld for WaypointAssets {
     fn from_world(world: &mut World) -> Self {
-        let mesh = {
-            let mut meshes = world.get_resource_mut::<Assets<Mesh>>().unwrap();
-            meshes.add(Mesh::from(RegularPolygon {
-                circumcircle: Circle {
-                    radius: 2f32.sqrt() / 2.,
-                },
-                sides: 3,
-            }))
-        };
-        let mut materials = world.get_resource_mut::<Assets<ColorMaterial>>().unwrap();
         Self {
-            mesh,
-            blue_material: materials.add(ColorMaterial::from(Color::TURQUOISE.with_a(0.5))),
+            mesh: {
+                let mut meshes = world.get_resource_mut::<Assets<Mesh>>().unwrap();
+                meshes.add(Mesh::from(RegularPolygon {
+                    circumcircle: Circle {
+                        radius: 2f32.sqrt() / 2.,
+                    },
+                    sides: 3,
+                }))
+            },
+            blue_material: {
+                let mut materials = world.get_resource_mut::<Assets<ColorMaterial>>().unwrap();
+                materials.add(ColorMaterial::from(Color::TURQUOISE.with_a(0.5)))
+            },
         }
     }
 }

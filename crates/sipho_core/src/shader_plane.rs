@@ -1,4 +1,4 @@
-use crate::prelude::*;
+use crate::{game_state::AssetLoadState, prelude::*};
 use bevy::{
     sprite::{Material2d, Material2dPlugin, MaterialMesh2dBundle},
     window::PrimaryWindow,
@@ -117,17 +117,19 @@ pub struct ShaderPlaneAssets<M: Material2d> {
 }
 impl<M: Material2d + Default> FromWorld for ShaderPlaneAssets<M> {
     fn from_world(world: &mut World) -> Self {
-        let mesh = {
-            let mut meshes = world.get_resource_mut::<Assets<Mesh>>().unwrap();
-            meshes.add(Mesh::from(meshes::UNIT_SQUARE))
+        let result = Self {
+            mesh: {
+                let mut meshes = world.get_resource_mut::<Assets<Mesh>>().unwrap();
+                meshes.add(Mesh::from(meshes::UNIT_SQUARE))
+            },
+            shader_material: {
+                let mut materials = world.get_resource_mut::<Assets<M>>().unwrap();
+                materials.add(M::default())
+            },
         };
-        let shader_material = {
-            let mut materials = world.get_resource_mut::<Assets<M>>().unwrap();
-            materials.add(M::default())
-        };
-        Self {
-            mesh,
-            shader_material,
-        }
+        let mut load_state = world.get_resource_mut::<AssetLoadState>().unwrap();
+        // load_state.track(&result.mesh);
+        load_state.track(&result.shader_material);
+        result
     }
 }
