@@ -9,6 +9,7 @@ pub mod inputs;
 pub mod meshes;
 pub mod nav;
 pub mod physics;
+pub mod pool;
 pub mod raycast;
 pub mod shader_plane;
 pub mod system_sets;
@@ -33,6 +34,7 @@ pub mod prelude {
         physics::{
             self, Acceleration, PhysicsBundle, PhysicsMaterial, PhysicsMaterialType, Velocity,
         },
+        pool::EntityPool,
         raycast::{RaycastCommands, RaycastEvent, RaycastTarget},
         shader_plane::{ShaderPlaneAssets, ShaderPlaneMaterial, ShaderPlanePlugin},
         system_sets::{GameStateSet, SystemStage},

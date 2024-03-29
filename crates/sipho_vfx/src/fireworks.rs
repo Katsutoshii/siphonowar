@@ -8,9 +8,14 @@ impl Plugin for FireworkPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(HanabiPlugin)
             .init_resource::<EffectAssets>()
+            .init_resource::<ParticleEffectPool<{ Team::Blue as u8 }>>()
+            .init_resource::<ParticleEffectPool<{ Team::Red as u8 }>>()
+            .add_systems(OnEnter(GameState::Running), EffectCommands::startup)
             .add_systems(FixedUpdate, ScheduleDespawn::despawn);
     }
 }
+
+// pub const FIREWORK_COLOR: Color = Color::rgb(1.0, 1.0, 0.25);
 
 fn color_gradient_from_team(team: Team) -> Gradient<Vec4> {
     let mut color_gradient = Gradient::new();
@@ -89,21 +94,18 @@ pub fn firework_effect(team: Team, n: f32) -> EffectAsset {
 #[derive(Resource)]
 pub struct EffectAssets {
     fireworks: [Handle<EffectAsset>; Team::COUNT],
-    small_fireworks: [Handle<EffectAsset>; Team::COUNT],
-    tiny_fireworks: [Handle<EffectAsset>; Team::COUNT],
 }
 impl FromWorld for EffectAssets {
     fn from_world(world: &mut World) -> Self {
         let mut assets = world.get_resource_mut::<Assets<EffectAsset>>().unwrap();
         Self {
-            fireworks: Team::ALL.map(|team| assets.add(firework_effect(team, 30.))),
-            small_fireworks: Team::ALL.map(|team| assets.add(firework_effect(team, 4.))),
-            tiny_fireworks: Team::ALL.map(|team| assets.add(firework_effect(team, 1.))),
+            fireworks: Team::ALL.map(|team| assets.add(firework_effect(team, 4.))),
         }
     }
 }
 
 /// Describes a firework to create.
+#[derive(Debug)]
 pub struct FireworkSpec {
     pub team: Team,
     pub transform: Transform,
@@ -128,26 +130,59 @@ impl ScheduleDespawn {
     }
 }
 
+pub const POOL_SIZE: usize = 256;
+#[derive(Resource, Default, Deref, DerefMut)]
+pub struct ParticleEffectPool<const T: u8>(EntityPool<POOL_SIZE>);
+
 /// System param to allow spawning effects.
 #[derive(SystemParam)]
 pub struct EffectCommands<'w, 's> {
     assets: ResMut<'w, EffectAssets>,
     commands: Commands<'w, 's>,
+    blue_pool: ResMut<'w, ParticleEffectPool<{ Team::Blue as u8 }>>,
+    red_pool: ResMut<'w, ParticleEffectPool<{ Team::Red as u8 }>>,
+    effects: Query<'w, 's, (&'static mut Transform, &'static mut EffectSpawner)>,
 }
+
 impl EffectCommands<'_, '_> {
+    pub fn startup(mut commands: EffectCommands) {
+        for i in 0..POOL_SIZE {
+            commands.blue_pool[i] = commands
+                .commands
+                .spawn((
+                    Name::new("Particles"),
+                    ParticleEffectBundle {
+                        effect: ParticleEffect::new(commands.assets.fireworks[Team::Blue].clone()),
+                        ..default()
+                    },
+                ))
+                .id();
+
+            commands.red_pool[i] = commands
+                .commands
+                .spawn((
+                    Name::new("Particles"),
+                    ParticleEffectBundle {
+                        effect: ParticleEffect::new(commands.assets.fireworks[Team::Red].clone()),
+                        ..default()
+                    },
+                ))
+                .id();
+        }
+    }
     pub fn make_fireworks(&mut self, spec: FireworkSpec) {
-        self.commands.spawn((
-            Name::new("firework"),
-            ScheduleDespawn(Timer::from_seconds(0.5, TimerMode::Once)),
-            ParticleEffectBundle {
-                effect: ParticleEffect::new(match spec.size {
-                    VfxSize::Tiny => self.assets.tiny_fireworks[spec.team].clone(),
-                    VfxSize::Small => self.assets.small_fireworks[spec.team].clone(),
-                    VfxSize::Medium => self.assets.fireworks[spec.team].clone(),
-                }),
-                transform: spec.transform,
-                ..Default::default()
-            },
-        ));
+        let count = match spec.size {
+            VfxSize::Tiny | VfxSize::Small => 1,
+            VfxSize::Medium => 2,
+        };
+        for _ in 0..count {
+            let entity = match spec.team {
+                Team::None | Team::Blue => self.blue_pool.take(),
+                Team::Red => self.red_pool.take(),
+            };
+            let (mut transform, mut spawner) = self.effects.get_mut(entity).unwrap();
+            *transform = spec.transform;
+            spawner.reset();
+        }
     }
 }
