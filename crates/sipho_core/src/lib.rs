@@ -28,7 +28,7 @@ pub mod prelude {
             EntityGridEvent, EntitySet, Grid2, Grid2Plugin, GridEntity, GridSize, GridSpec,
             Obstacle, RowCol, RowColDistance, SparseGrid2, VisibilityUpdate, VisibilityUpdateEvent,
         },
-        inputs::{ControlAction, ControlEvent},
+        inputs::{ControlAction, ControlEvent, ControlMode, ControlState},
         meshes,
         nav::{NavigationCostEvent, NavigationGrid2, SparseFlowGrid2},
         physics::{

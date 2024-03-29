@@ -182,6 +182,7 @@ impl CameraController {
                     action: ControlAction::PanCamera,
                     state: ButtonState::Pressed,
                     position,
+                    ..
                 } => {
                     controller.set_position(&mut camera_transform, *position);
                     event_writer.send(CameraMoveEvent {

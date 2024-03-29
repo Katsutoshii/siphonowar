@@ -39,12 +39,7 @@ impl Waypoint {
         mut commands: Commands,
         mut input_actions: EventReader<ControlEvent>,
     ) {
-        for &ControlEvent {
-            action,
-            state: _,
-            position: _,
-        } in input_actions.read()
-        {
+        for &ControlEvent { action, .. } in input_actions.read() {
             if action != ControlAction::Move {
                 continue;
             }

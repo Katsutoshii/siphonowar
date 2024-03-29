@@ -36,6 +36,7 @@
     ),
     "sipho_core::inputs::InputConfig": InputConfig(
       keyboard: {
+        KeyA: AttackMode,
         KeyX: SpawnHead,
         KeyZ: SpawnZooid,
         Minus: SpawnRed,

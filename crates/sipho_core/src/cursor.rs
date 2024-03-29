@@ -1,4 +1,4 @@
-use crate::prelude::*;
+use crate::{inputs::ControlState, prelude::*};
 use bevy::{ecs::system::SystemParam, prelude::*, window::PrimaryWindow};
 
 /// Plugin to manage a virtual cursor.
@@ -53,14 +53,23 @@ impl Cursor {
         ));
     }
     pub fn update(
-        mut cursor: Query<&mut Style, With<Self>>,
+        mut cursor: Query<(&mut Style, &mut UiImage), With<Self>>,
         mut window: Query<&mut Window, With<PrimaryWindow>>,
+        control_state: Res<ControlState>,
+        assets: Res<CursorAssets>,
     ) {
         let window = window.single_mut();
         if let Some(cursor_pixel_position) = window.cursor_position() {
-            let mut style = cursor.single_mut();
+            let (mut style, mut image) = cursor.single_mut();
             style.left = Val::Px(cursor_pixel_position.x - 2.0);
             style.top = Val::Px(cursor_pixel_position.y - 0.0);
+
+            if control_state.is_changed() {
+                image.texture = match control_state.mode {
+                    ControlMode::Normal => assets.cursor.clone(),
+                    ControlMode::Attack => assets.attack.clone(),
+                }
+            }
         }
     }
 }

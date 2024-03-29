@@ -25,7 +25,8 @@ impl Plugin for InputActionPlugin {
             .register_type::<HashMap<MouseButton, InputAction>>()
             .register_type::<HashMap<KeyCode, InputAction>>()
             .register_type::<InputConfig>()
-            .insert_resource(InputConfig::default())
+            .init_resource::<InputConfig>()
+            .init_resource::<ControlState>()
             .add_event::<ControlEvent>()
             .add_event::<InputEvent>()
             .add_systems(
@@ -43,6 +44,7 @@ pub enum InputAction {
     Primary,
     Secondary,
     DragCamera,
+    AttackMode,
     SpawnHead,
     SpawnZooid,
     SpawnRed,
@@ -104,11 +106,33 @@ pub struct ControlActions {
 }
 impl ControlActions {}
 
+#[derive(Debug, Default, Reflect)]
+pub enum ControlMode {
+    #[default]
+    Normal,
+    Attack,
+}
+impl From<InputAction> for ControlMode {
+    fn from(action: InputAction) -> Self {
+        match action {
+            InputAction::AttackMode => ControlMode::Attack,
+            _ => ControlMode::Normal,
+        }
+    }
+}
+
+#[derive(Default, Resource, Reflect)]
+#[reflect(Resource)]
+pub struct ControlState {
+    pub mode: ControlMode,
+}
+
 /// Describes an input action and the worldspace position where it occurred.
 #[derive(Event, Debug)]
 pub struct ControlEvent {
     pub action: ControlAction,
     pub state: ButtonState,
+    pub mode: ControlMode,
     pub position: Vec2,
 }
 impl ControlEvent {
@@ -118,6 +142,7 @@ impl ControlEvent {
     pub fn is_released(&self, action: ControlAction) -> bool {
         self.action == action && self.state == ButtonState::Released
     }
+    #[allow(clippy::too_many_arguments)]
     pub fn update(
         raycast: RaycastCommands,
         mut input_events: EventReader<InputEvent>,
@@ -126,6 +151,7 @@ impl ControlEvent {
         grid_spec: Option<Res<GridSpec>>,
         mut timers: Local<ControlTimers>,
         time: Res<Time>,
+        mut state: ResMut<ControlState>,
     ) {
         let grid_spec = if let Some(grid_spec) = grid_spec {
             grid_spec
@@ -139,6 +165,7 @@ impl ControlEvent {
                     raycast_event = raycast.raycast(ray);
                 }
             }
+            state.mode = ControlMode::from(event.action);
             if let Some(raycast_event) = &raycast_event {
                 let action = ControlAction::from((raycast_event.target, event.action));
 
@@ -158,6 +185,7 @@ impl ControlEvent {
                 let event = ControlEvent {
                     action,
                     state: event.state,
+                    mode: ControlMode::Normal,
                     position: match raycast_event.target {
                         RaycastTarget::Minimap => grid_spec.local_to_world_position(
                             raycast_event.position * Vec2 { x: 1., y: -1. },
@@ -187,6 +215,7 @@ impl ControlEvent {
                     let event = ControlEvent {
                         action,
                         state: ButtonState::Pressed,
+                        mode: ControlMode::Normal,
                         position: match raycast_event.target {
                             RaycastTarget::Minimap => grid_spec.local_to_world_position(
                                 raycast_event.position * Vec2 { x: 1., y: -1. },
