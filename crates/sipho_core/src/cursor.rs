@@ -75,29 +75,36 @@ pub struct CursorAssets {
 }
 impl FromWorld for CursorAssets {
     fn from_world(world: &mut World) -> Self {
-        let mesh = {
-            let mut meshes = world.get_resource_mut::<Assets<Mesh>>().unwrap();
-            meshes.add(Mesh::from(RegularPolygon {
-                circumcircle: Circle {
-                    radius: 2f32.sqrt() / 2.,
-                },
-                sides: 3,
-            }))
+        let assets = Self {
+            mesh: {
+                let mut meshes = world.get_resource_mut::<Assets<Mesh>>().unwrap();
+                meshes.add(Mesh::from(RegularPolygon {
+                    circumcircle: Circle {
+                        radius: 2f32.sqrt() / 2.,
+                    },
+                    sides: 3,
+                }))
+            },
+            cursor: {
+                world
+                    .get_resource_mut::<AssetServer>()
+                    .unwrap()
+                    .load("textures/cursor/paper-arrow-s.png")
+            },
+            attack: {
+                world
+                    .get_resource_mut::<AssetServer>()
+                    .unwrap()
+                    .load("textures/cursor/plain-dagger-s.png")
+            },
+            blue_material: {
+                let mut materials = world.get_resource_mut::<Assets<ColorMaterial>>().unwrap();
+                materials.add(ColorMaterial::from(Color::ALICE_BLUE.with_a(0.5)))
+            },
         };
-        let (cursor, crosshair) = {
-            // let mut images = world.get_resource_mut::<Assets<Image>>().unwrap();
-            let asset_server = world.get_resource_mut::<AssetServer>().unwrap();
-            (
-                asset_server.load("textures/cursor/paper-arrow-s.png"),
-                asset_server.load("textures/cursor/plain-dagger-s.png"),
-            )
-        };
-        let mut materials = world.get_resource_mut::<Assets<ColorMaterial>>().unwrap();
-        Self {
-            mesh,
-            cursor,
-            attack: crosshair,
-            blue_material: materials.add(ColorMaterial::from(Color::ALICE_BLUE.with_a(0.5))),
-        }
+        let mut load_state = world.get_resource_mut::<AssetLoadState>().unwrap();
+        load_state.track(&assets.cursor);
+        load_state.track(&assets.attack);
+        assets
     }
 }

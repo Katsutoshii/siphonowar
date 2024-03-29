@@ -26,17 +26,20 @@ pub struct SaveEntity;
 // The initial scene file will be loaded below and not change when the scene is saved
 const SCENE_FILE_PATH: &str = "scenes/test.scn.ron";
 
-pub fn load_system(mut commands: Commands, asset_server: Res<AssetServer>) {
+pub fn load_system(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut load_state: ResMut<AssetLoadState>,
+) {
+    let scene = DynamicSceneBundle {
+        // Scenes are loaded just like any other asset.
+        scene: asset_server.load(SCENE_FILE_PATH),
+        ..default()
+    };
+    load_state.track(&scene.scene);
     // "Spawning" a scene bundle creates a new entity and spawns new instances
     // of the given scene's entities as children of that entity.
-    commands.spawn((
-        DynamicSceneBundle {
-            // Scenes are loaded just like any other asset.
-            scene: asset_server.load(SCENE_FILE_PATH),
-            ..default()
-        },
-        Name::new("DynamicScene"),
-    ));
+    commands.spawn((Name::new("DynamicScene"), scene));
 }
 
 #[derive(Event, Debug, Clone)]

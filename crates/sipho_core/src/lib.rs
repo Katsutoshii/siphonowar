@@ -22,7 +22,7 @@ pub mod prelude {
         camera::{CameraController, CameraMoveEvent, MainCamera, CAMERA_ZOOM},
         cursor::{Cursor, CursorAssets, CursorParam},
         error::Error,
-        game_state::GameState,
+        game_state::{AssetLoadState, GameState},
         grid::{
             EntityGridEvent, EntitySet, Grid2, Grid2Plugin, GridEntity, GridSize, GridSpec,
             Obstacle, RowCol, RowColDistance, SparseGrid2, VisibilityUpdate, VisibilityUpdateEvent,

@@ -30,15 +30,19 @@ impl AssetLoadState {
         self.assets.push(handle.into());
     }
     pub fn all_loaded(&self, server: &AssetServer) -> bool {
+        let mut num_loaded = 0;
+        let total_assets = self.assets.len();
         for &asset_id in self.assets.iter() {
             let load_state = server.get_load_state(asset_id);
-            dbg!(load_state);
-            if let Some(LoadState::Loaded) = load_state {
-            } else {
-                return false;
+            match load_state {
+                Some(LoadState::NotLoaded | LoadState::Loading) => {}
+                Some(LoadState::Failed | LoadState::Loaded) | None => {
+                    num_loaded += 1;
+                }
             }
         }
-        true
+        info!("Loaded {} / {}", num_loaded, total_assets);
+        num_loaded == total_assets
     }
 }
 
@@ -74,9 +78,6 @@ fn prepare_window(
     frames: Res<FrameCount>,
 ) {
     if frames.0 == 3 {
-        // At this point the gpu is ready to show the app so we can make the window visible.
-        // Alternatively, you could toggle the visibility in Startup.
-        // It will work, but it will have one white frame before it starts rendering
         window.single_mut().visible = true;
         next_state.set(GameState::Loading)
     }
@@ -87,12 +88,9 @@ fn loading_state(
     mut load_state: ResMut<AssetLoadState>,
     server: Res<AssetServer>,
 ) {
-    // if server.is_changed() {
-    //     info!("State changed!");
     if load_state.all_loaded(&server) {
         info!("Loaded!");
         next_state.set(GameState::Running);
         load_state.assets.clear();
     }
-    // }
 }
