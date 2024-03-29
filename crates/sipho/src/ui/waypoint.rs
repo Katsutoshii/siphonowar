@@ -85,8 +85,15 @@ impl Waypoint {
 
             for (selected, mut objectives) in selection.iter_mut() {
                 if selected.is_selected() {
-                    objectives.clear();
-                    objectives.push(Objective::FollowEntity(entity));
+                    match objectives.last() {
+                        Objective::AttackEntity(_) => {
+                            continue;
+                        }
+                        _ => {
+                            objectives.clear();
+                            objectives.push(Objective::FollowEntity(entity));
+                        }
+                    }
                 }
             }
         }
