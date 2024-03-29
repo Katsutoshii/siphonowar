@@ -18,7 +18,6 @@ impl Plugin for DashAttackerPlugin {
 
 #[derive(Reflect, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DashAttackerState {
-    Init,
     Attacking,
     Cooldown,
     Stunned,
@@ -38,20 +37,20 @@ impl Default for DashAttacker {
         Self {
             target: Vec2::ZERO,
             timer: Timer::new(Self::attack_delay(), TimerMode::Repeating),
-            state: DashAttackerState::Init,
+            state: DashAttackerState::Cooldown,
         }
     }
 }
 impl DashAttacker {
     /// Gets a random attack cooldown.
     pub fn attack_cooldown() -> Duration {
-        Duration::from_millis(rand::thread_rng().gen_range(800..1000))
+        Duration::from_millis(rand::thread_rng().gen_range(500..1000))
         // Duration::from_millis(800)
     }
 
     /// Gets the attack duration.
     pub fn attack_delay() -> Duration {
-        Duration::from_millis(150)
+        Duration::from_millis(rand::thread_rng().gen_range(300..1000))
     }
 
     /// Gets the attack duration.
@@ -62,10 +61,10 @@ impl DashAttacker {
     pub fn next_state(&mut self, in_radius: bool) -> DashAttackerState {
         if !in_radius {
             self.timer.set_duration(Self::attack_cooldown());
-            return DashAttackerState::Init;
+            return DashAttackerState::Cooldown;
         }
         match self.state {
-            DashAttackerState::Init | DashAttackerState::Attacking | DashAttackerState::Stunned => {
+            DashAttackerState::Attacking | DashAttackerState::Stunned => {
                 self.timer.set_duration(Self::attack_cooldown());
                 DashAttackerState::Cooldown
             }

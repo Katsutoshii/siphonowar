@@ -31,7 +31,7 @@ pub fn custom_plugin() -> WindowPlugin {
                 ..Default::default()
             },
             visible: false,
-            resizable: false,
+            resizable: true,
             mode: WindowMode::BorderlessFullscreen,
             ..default()
         }),
