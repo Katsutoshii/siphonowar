@@ -5,6 +5,7 @@ mod commands;
 mod config;
 mod consumer;
 mod damage;
+mod elastic;
 mod neighbors;
 mod object;
 mod plankton;
@@ -17,6 +18,7 @@ pub use {
     config::{InteractionConfig, InteractionConfigs, ObjectConfig, ObjectConfigs},
     consumer::Consumer,
     damage::{DamageEvent, Health},
+    elastic::ElasticPlugin,
     neighbors::CollidingNeighbors,
     object::Object,
 };
@@ -32,6 +34,7 @@ impl Plugin for ObjectsPlugin {
             neighbors::NeighborsPlugin,
             zooid_head::ZooidHeadPlugin,
             zooid_worker::ZooidWorkerPlugin,
+            elastic::ElasticPlugin,
             plankton::PlanktonPlugin,
             object::ObjectPlugin,
             damage::DamagePlugin,
