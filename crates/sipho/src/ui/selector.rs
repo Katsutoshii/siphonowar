@@ -10,9 +10,7 @@ use crate::prelude::*;
 pub enum Selected {
     #[default]
     Unselected,
-    Selected {
-        child_entity: Entity,
-    },
+    Selected,
 }
 impl Selected {
     pub fn is_selected(&self) -> bool {
@@ -29,6 +27,9 @@ impl Plugin for SelectorPlugin {
             .add_systems(FixedUpdate, Selector::update.in_set(GameStateSet::Running));
     }
 }
+#[derive(Component)]
+#[component(storage = "SparseSet")]
+pub struct Highlight;
 
 #[derive(Component, Default)]
 pub struct Selector {
@@ -44,6 +45,7 @@ impl Selector {
     pub fn update(
         mut commands: Commands,
         mut query: Query<(&mut Self, &mut Transform, &mut Visibility)>,
+        highlights: Query<Entity, With<Highlight>>,
         mut objects: Query<
             (
                 &Object,
@@ -70,10 +72,11 @@ impl Selector {
                     if *visibility == Visibility::Hidden {
                         // Reset other selections.
                         for (_object, _transform, _team, mut selected, _mesh) in &mut objects {
-                            if let Selected::Selected { child_entity } = selected.as_ref() {
-                                commands.entity(*child_entity).despawn()
-                            }
+                            if let Selected::Selected = selected.as_ref() {}
                             *selected = Selected::Unselected;
+                        }
+                        for entity in highlights.iter() {
+                            commands.entity(entity).despawn();
                         }
                         selector.aabb.min = control.position;
                         *visibility = Visibility::Visible;
@@ -102,7 +105,7 @@ impl Selector {
                                     .spawn(Self::highlight_bundle(&assets, mesh.0.clone()))
                                     .id();
                                 commands.entity(entity).add_child(child_entity);
-                                *selected = Selected::Selected { child_entity };
+                                *selected = Selected::Selected;
                             }
                         }
                     }
@@ -115,19 +118,22 @@ impl Selector {
     }
 
     fn highlight_bundle(assets: &SelectorAssets, mesh: Handle<Mesh>) -> impl Bundle {
-        MaterialMesh2dBundle::<ColorMaterial> {
-            mesh: mesh.clone().into(),
-            transform: Transform::default()
-                .with_scale(Vec2::splat(1.).extend(1.))
-                .with_translation(Vec3 {
-                    x: 0.0,
-                    y: 0.0,
-                    z: zindex::HIGHLIGHT,
-                }),
-            material: assets.white_material.clone(),
-            visibility: Visibility::Visible,
-            ..default()
-        }
+        (
+            Highlight,
+            MaterialMesh2dBundle::<ColorMaterial> {
+                mesh: mesh.clone().into(),
+                transform: Transform::default()
+                    .with_scale(Vec2::splat(1.).extend(1.))
+                    .with_translation(Vec3 {
+                        x: 0.0,
+                        y: 0.0,
+                        z: zindex::HIGHLIGHT,
+                    }),
+                material: assets.white_material.clone(),
+                visibility: Visibility::Visible,
+                ..default()
+            },
+        )
     }
 
     fn bundle(self, assets: &SelectorAssets) -> impl Bundle {
@@ -165,7 +171,7 @@ impl FromWorld for SelectorAssets {
             },
             white_material: {
                 let mut materials = world.get_resource_mut::<Assets<ColorMaterial>>().unwrap();
-                materials.add(ColorMaterial::from(Color::ALICE_BLUE.with_a(0.15)))
+                materials.add(ColorMaterial::from(Color::ALICE_BLUE.with_a(0.2)))
             },
         }
     }
