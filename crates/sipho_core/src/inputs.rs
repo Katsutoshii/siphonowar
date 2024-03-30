@@ -225,7 +225,6 @@ impl ControlEvent {
                             RaycastTarget::None => raycast_event.position,
                         },
                     };
-                    info!("Held!");
                     dbg!(&event);
                     control_events.send(event);
                 }
