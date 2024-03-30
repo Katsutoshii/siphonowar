@@ -106,7 +106,7 @@ pub struct ControlActions {
 }
 impl ControlActions {}
 
-#[derive(Debug, Default, Reflect)]
+#[derive(Debug, Default, Reflect, Clone, Copy, PartialEq)]
 pub enum ControlMode {
     #[default]
     Normal,
@@ -121,7 +121,7 @@ impl From<InputAction> for ControlMode {
     }
 }
 
-#[derive(Default, Resource, Reflect)]
+#[derive(Default, Resource, Reflect, Clone)]
 #[reflect(Resource)]
 pub struct ControlState {
     pub mode: ControlMode,
@@ -165,9 +165,8 @@ impl ControlEvent {
                     raycast_event = raycast.raycast(ray);
                 }
             }
-            state.mode = ControlMode::from(event.action);
             if let Some(raycast_event) = &raycast_event {
-                let action = ControlAction::from((raycast_event.target, event.action));
+                let action = ControlAction::from((raycast_event.target, state.mode, event.action));
 
                 // Skip this action if the timer isn't ready.
                 if let Some(timer) = timers.get_mut(&action) {
@@ -182,10 +181,10 @@ impl ControlEvent {
                     }
                 }
 
-                let event = ControlEvent {
+                control_events.send(ControlEvent {
                     action,
                     state: event.state,
-                    mode: ControlMode::Normal,
+                    mode: state.mode,
                     position: match raycast_event.target {
                         RaycastTarget::Minimap => grid_spec.local_to_world_position(
                             raycast_event.position * Vec2 { x: 1., y: -1. },
@@ -193,8 +192,9 @@ impl ControlEvent {
                         RaycastTarget::WorldGrid => raycast_event.world_position,
                         RaycastTarget::None => raycast_event.position,
                     },
-                };
-                control_events.send(event);
+                });
+
+                state.mode = ControlMode::from(event.action);
             }
         }
         // Tick all active timers.
@@ -240,6 +240,7 @@ pub enum ControlAction {
     None,
     Select,
     Move,
+    AttackMove,
     PanCamera,
     DragCamera,
     SpawnHead,
@@ -251,23 +252,26 @@ pub enum ControlAction {
     Fuse,
     PauseMenu,
 }
-impl From<(RaycastTarget, InputAction)> for ControlAction {
-    fn from(value: (RaycastTarget, InputAction)) -> Self {
+impl From<(RaycastTarget, ControlMode, InputAction)> for ControlAction {
+    fn from(value: (RaycastTarget, ControlMode, InputAction)) -> Self {
         match value {
-            (RaycastTarget::Minimap, InputAction::Primary) => Self::PanCamera,
-            (RaycastTarget::Minimap, InputAction::Secondary) => Self::Move,
-            (RaycastTarget::WorldGrid, InputAction::Primary) => Self::Select,
-            (RaycastTarget::WorldGrid, InputAction::Secondary) => Self::Move,
-            (RaycastTarget::WorldGrid, InputAction::SpawnHead) => Self::SpawnHead,
-            (RaycastTarget::WorldGrid, InputAction::SpawnZooid) => Self::SpawnZooid,
-            (RaycastTarget::WorldGrid, InputAction::SpawnRed) => Self::SpawnRed,
-            (RaycastTarget::WorldGrid, InputAction::SpawnBlue) => Self::SpawnBlue,
-            (RaycastTarget::WorldGrid, InputAction::SpawnPlankton) => Self::SpawnPlankton,
-            (RaycastTarget::WorldGrid, InputAction::SpawnFood) => Self::SpawnFood,
-            (RaycastTarget::WorldGrid, InputAction::Fuse) => Self::Fuse,
-            (RaycastTarget::WorldGrid, InputAction::DragCamera) => Self::DragCamera,
-            (_, InputAction::PauseMenu) => Self::PauseMenu,
-            (RaycastTarget::None, _) => Self::None,
+            (RaycastTarget::Minimap, _, InputAction::Primary) => Self::PanCamera,
+            (RaycastTarget::Minimap, _, InputAction::Secondary) => Self::Move,
+            (RaycastTarget::WorldGrid, ControlMode::Normal, InputAction::Primary) => Self::Select,
+            (RaycastTarget::WorldGrid, ControlMode::Attack, InputAction::Primary) => {
+                Self::AttackMove
+            }
+            (RaycastTarget::WorldGrid, _, InputAction::Secondary) => Self::Move,
+            (RaycastTarget::WorldGrid, _, InputAction::SpawnHead) => Self::SpawnHead,
+            (RaycastTarget::WorldGrid, _, InputAction::SpawnZooid) => Self::SpawnZooid,
+            (RaycastTarget::WorldGrid, _, InputAction::SpawnRed) => Self::SpawnRed,
+            (RaycastTarget::WorldGrid, _, InputAction::SpawnBlue) => Self::SpawnBlue,
+            (RaycastTarget::WorldGrid, _, InputAction::SpawnPlankton) => Self::SpawnPlankton,
+            (RaycastTarget::WorldGrid, _, InputAction::SpawnFood) => Self::SpawnFood,
+            (RaycastTarget::WorldGrid, _, InputAction::Fuse) => Self::Fuse,
+            (RaycastTarget::WorldGrid, _, InputAction::DragCamera) => Self::DragCamera,
+            (_, _, InputAction::PauseMenu) => Self::PauseMenu,
+            (RaycastTarget::None, _, _) => Self::None,
             _ => Self::None,
         }
     }

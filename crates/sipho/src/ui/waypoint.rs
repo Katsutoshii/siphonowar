@@ -40,7 +40,8 @@ impl Waypoint {
         mut input_actions: EventReader<ControlEvent>,
     ) {
         for &ControlEvent { action, .. } in input_actions.read() {
-            if action != ControlAction::Move {
+            if let ControlAction::Move | ControlAction::AttackMove = action {
+            } else {
                 continue;
             }
 
@@ -65,13 +66,21 @@ impl Waypoint {
         assets: Res<WaypointAssets>,
     ) {
         for control in control_events.read() {
-            if !control.is_pressed(ControlAction::Move) {
+            if !(control.is_pressed(ControlAction::Move)
+                || control.is_pressed(ControlAction::AttackMove))
+            {
                 continue;
             }
 
+            if control.action == ControlAction::AttackMove && control.mode != ControlMode::Attack {
+                error!("WTF");
+            }
             // Spawn a new waypoint.
-            let waypoint_bundle =
-                Waypoint::default().bundle(&assets, control.position.extend(zindex::WAYPOINT));
+            let waypoint_bundle = Waypoint::default().bundle(
+                &assets,
+                control.position.extend(zindex::WAYPOINT),
+                control.mode,
+            );
             let entity = commands.spawn(waypoint_bundle).id();
 
             for (selected, mut objectives) in selection.iter_mut() {
@@ -83,7 +92,12 @@ impl Waypoint {
         }
     }
 
-    pub fn bundle(self, assets: &WaypointAssets, translation: Vec3) -> impl Bundle {
+    pub fn bundle(
+        self,
+        assets: &WaypointAssets,
+        translation: Vec3,
+        mode: ControlMode,
+    ) -> impl Bundle {
         (
             MaterialMesh2dBundle::<ColorMaterial> {
                 mesh: assets.mesh.clone().into(),
@@ -91,7 +105,10 @@ impl Waypoint {
                     .with_scale(Vec2::splat(self.size).extend(1.))
                     .with_rotation(Quat::from_axis_angle(Vec3::Z, PI))
                     .with_translation(translation),
-                material: assets.blue_material.clone(),
+                material: match mode {
+                    ControlMode::Normal => assets.blue_material.clone(),
+                    ControlMode::Attack => assets.red_material.clone(),
+                },
                 ..default()
             },
             Velocity::ZERO,
@@ -105,6 +122,7 @@ impl Waypoint {
 pub struct WaypointAssets {
     pub mesh: Handle<Mesh>,
     pub blue_material: Handle<ColorMaterial>,
+    pub red_material: Handle<ColorMaterial>,
 }
 impl FromWorld for WaypointAssets {
     fn from_world(world: &mut World) -> Self {
@@ -121,6 +139,10 @@ impl FromWorld for WaypointAssets {
             blue_material: {
                 let mut materials = world.get_resource_mut::<Assets<ColorMaterial>>().unwrap();
                 materials.add(ColorMaterial::from(Color::TURQUOISE.with_a(0.5)))
+            },
+            red_material: {
+                let mut materials = world.get_resource_mut::<Assets<ColorMaterial>>().unwrap();
+                materials.add(ColorMaterial::from(Color::TOMATO.with_a(0.5)))
             },
         }
     }
