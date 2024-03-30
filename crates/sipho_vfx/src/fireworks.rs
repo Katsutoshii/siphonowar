@@ -10,7 +10,7 @@ impl Plugin for FireworkPlugin {
             .init_resource::<EffectAssets>()
             .init_resource::<ParticleEffectPool<{ Team::Blue as u8 }>>()
             .init_resource::<ParticleEffectPool<{ Team::Red as u8 }>>()
-            .add_systems(OnEnter(GameState::Running), EffectCommands::startup)
+            .add_systems(Startup, EffectCommands::startup)
             .add_systems(FixedUpdate, ScheduleDespawn::despawn);
     }
 }
@@ -75,20 +75,24 @@ pub fn firework_effect(team: Team, n: f32) -> EffectAsset {
         speed: (writer.rand(ScalarType::Float) * writer.lit(20.) + writer.lit(90.)).expr(),
     };
 
-    EffectAsset::new(n as u32, Spawner::once(n.into(), true), writer.finish())
-        .with_name("firework")
-        .init(init_pos)
-        .init(init_vel)
-        .init(init_age)
-        .init(init_lifetime)
-        .update(update_drag)
-        .render(ColorOverLifetimeModifier {
-            gradient: color_gradient,
-        })
-        .render(SizeOverLifetimeModifier {
-            gradient: size_gradient1,
-            screen_space_size: false,
-        })
+    EffectAsset::new(
+        n as u32,
+        Spawner::once(n.into(), true).with_starts_active(false),
+        writer.finish(),
+    )
+    .with_name("firework")
+    .init(init_pos)
+    .init(init_vel)
+    .init(init_age)
+    .init(init_lifetime)
+    .update(update_drag)
+    .render(ColorOverLifetimeModifier {
+        gradient: color_gradient,
+    })
+    .render(SizeOverLifetimeModifier {
+        gradient: size_gradient1,
+        screen_space_size: false,
+    })
 }
 
 #[derive(Resource)]
@@ -182,6 +186,7 @@ impl EffectCommands<'_, '_> {
             };
             let (mut transform, mut spawner) = self.effects.get_mut(entity).unwrap();
             *transform = spec.transform;
+            spawner.set_active(true);
             spawner.reset();
         }
     }
