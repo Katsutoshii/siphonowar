@@ -1,7 +1,6 @@
 use bevy::{
     prelude::*,
     render::render_resource::{AsBindGroup, ShaderRef},
-    sprite::Material2d,
 };
 
 use crate::prelude::*;
@@ -147,7 +146,7 @@ impl MinimapShaderMaterial {
         }
     }
 }
-impl Material2d for MinimapShaderMaterial {
+impl Material for MinimapShaderMaterial {
     fn fragment_shader() -> ShaderRef {
         "shaders/minimap.wgsl".into()
     }

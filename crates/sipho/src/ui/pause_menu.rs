@@ -270,6 +270,7 @@ impl PauseMenu {
 
     fn show(mut query: Query<&mut Visibility, With<PauseMenu>>) {
         for mut visibility in query.iter_mut() {
+            info!("Show menu!");
             *visibility = Visibility::Visible;
         }
     }

@@ -2,7 +2,6 @@ use crate::prelude::*;
 use bevy::{
     prelude::*,
     render::render_resource::{AsBindGroup, ShaderRef},
-    sprite::Material2d,
 };
 
 /// Plugin for obstacles.
@@ -187,7 +186,7 @@ impl ObstaclesShaderMaterial {
         }
     }
 }
-impl Material2d for ObstaclesShaderMaterial {
+impl Material for ObstaclesShaderMaterial {
     fn fragment_shader() -> ShaderRef {
         "shaders/obstacles.wgsl".into()
     }

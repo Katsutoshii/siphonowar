@@ -1,8 +1,5 @@
 use crate::prelude::*;
-use bevy::{
-    render::render_resource::{AsBindGroup, ShaderRef},
-    sprite::Material2d,
-};
+use bevy::render::render_resource::{AsBindGroup, ShaderRef};
 
 pub struct NavigationVisualizerPlugin;
 impl Plugin for NavigationVisualizerPlugin {
@@ -71,7 +68,7 @@ impl NavigationShaderMaterial {
         }
     }
 }
-impl Material2d for NavigationShaderMaterial {
+impl Material for NavigationShaderMaterial {
     fn fragment_shader() -> ShaderRef {
         "shaders/navigation_shader.wgsl".into()
     }

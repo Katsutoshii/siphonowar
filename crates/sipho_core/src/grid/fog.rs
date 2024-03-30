@@ -1,9 +1,6 @@
 use crate::prelude::*;
 
-use bevy::{
-    render::render_resource::{AsBindGroup, ShaderRef},
-    sprite::Material2d,
-};
+use bevy::render::render_resource::{AsBindGroup, ShaderRef};
 
 /// Plugin for fog of war.
 pub struct FogPlugin;
@@ -207,7 +204,7 @@ impl ShaderPlaneMaterial for FogShaderMaterial {
         Vec2::ZERO.extend(zindex::FOG_OF_WAR)
     }
 }
-impl Material2d for FogShaderMaterial {
+impl Material for FogShaderMaterial {
     fn fragment_shader() -> ShaderRef {
         "shaders/fog_of_war.wgsl".into()
     }

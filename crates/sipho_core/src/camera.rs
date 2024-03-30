@@ -5,6 +5,7 @@ use bevy::{
     },
     input::ButtonState,
     prelude::*,
+    render::camera::ScalingMode,
     window::PrimaryWindow,
 };
 
@@ -42,17 +43,22 @@ pub struct MainCamera;
 impl MainCamera {
     pub fn startup(mut commands: Commands) {
         commands.spawn((
-            Camera2dBundle {
+            Camera3dBundle {
                 camera: Camera {
                     hdr: true, // 1. HDR is required for bloom
                     ..default()
                 },
                 projection: OrthographicProjection {
+                    // 6 world units per window height.
+                    // scaling_mode: ScalingMode::FixedVertical(6.0),
                     far: 1000.,
                     near: -1000.,
                     scale: CAMERA_ZOOM,
                     ..default()
-                },
+                }
+                .into(),
+                transform: Transform::from_xyz(0.0, 0.0, zindex::CAMERA),
+                // .looking_at(Vec3::ZERO, Vec3::Z),
                 tonemapping: Tonemapping::TonyMcMapface,
                 ..default()
             },

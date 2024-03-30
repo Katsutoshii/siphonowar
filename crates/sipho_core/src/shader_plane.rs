@@ -1,8 +1,5 @@
 use crate::prelude::*;
-use bevy::{
-    sprite::{Material2d, Material2dPlugin, MaterialMesh2dBundle},
-    window::PrimaryWindow,
-};
+use bevy::window::PrimaryWindow;
 use std::marker::PhantomData;
 
 /// Plugin for a 2D plane with a shader material.
@@ -10,17 +7,17 @@ use std::marker::PhantomData;
 pub struct ShaderPlanePlugin<M: ShaderPlaneMaterial>(PhantomData<M>);
 impl<M: ShaderPlaneMaterial> Plugin for ShaderPlanePlugin<M>
 where
-    Material2dPlugin<M>: Plugin,
+    MaterialPlugin<M>: Plugin,
 {
     fn build(&self, app: &mut App) {
-        app.add_plugins(Material2dPlugin::<M>::default())
+        app.add_plugins(MaterialPlugin::<M>::default())
             .init_resource::<ShaderPlaneAssets<M>>()
             .add_systems(FixedUpdate, M::resize_on_change);
     }
 }
 
 /// Trait must be implemented by all Plane shaders.
-pub trait ShaderPlaneMaterial: Material2d + Default {
+pub trait ShaderPlaneMaterial: Material + Default {
     /// If true, this grid shader will have the camera as a parent.
     fn parent_camera() -> bool {
         false
@@ -95,8 +92,8 @@ impl<M: ShaderPlaneMaterial> ShaderPlane<M> {
     ) -> impl Bundle {
         let material = assets.shader_material.clone();
         (
-            MaterialMesh2dBundle::<M> {
-                mesh: assets.mesh.clone().into(),
+            MaterialMeshBundle {
+                mesh: assets.mesh.clone(),
                 transform: Transform::default()
                     .with_scale(M::scale(window, spec))
                     .with_translation(M::translation(window, spec)),
@@ -111,11 +108,11 @@ impl<M: ShaderPlaneMaterial> ShaderPlane<M> {
 
 /// Handles to shader plane assets.
 #[derive(Resource)]
-pub struct ShaderPlaneAssets<M: Material2d> {
+pub struct ShaderPlaneAssets<M: Material> {
     pub mesh: Handle<Mesh>,
     pub shader_material: Handle<M>,
 }
-impl<M: Material2d + Default> FromWorld for ShaderPlaneAssets<M> {
+impl<M: Material + Default> FromWorld for ShaderPlaneAssets<M> {
     fn from_world(world: &mut World) -> Self {
         let assets = Self {
             mesh: {

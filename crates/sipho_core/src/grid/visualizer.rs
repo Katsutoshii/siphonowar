@@ -1,7 +1,4 @@
-use bevy::{
-    render::render_resource::{AsBindGroup, ShaderRef},
-    sprite::Material2d,
-};
+use bevy::render::render_resource::{AsBindGroup, ShaderRef};
 
 use crate::prelude::*;
 
@@ -88,7 +85,7 @@ impl GridVisualizerShaderMaterial {
         }
     }
 }
-impl Material2d for GridVisualizerShaderMaterial {
+impl Material for GridVisualizerShaderMaterial {
     fn fragment_shader() -> ShaderRef {
         "shaders/grid_background.wgsl".into()
     }

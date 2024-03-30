@@ -17,7 +17,7 @@ pub struct RaycastCommands<'w, 's> {
         (
             Entity,
             &'static RaycastTarget,
-            &'static Mesh2dHandle,
+            &'static Handle<Mesh>,
             &'static GlobalTransform,
         ),
     >,
@@ -27,7 +27,7 @@ impl RaycastCommands<'_, '_> {
     pub fn raycast(&self, ray: Ray3d) -> Option<RaycastEvent> {
         let mut hits = Vec::default();
         for (entity, &target, mesh_handle, transform) in self.meshes.iter() {
-            let mesh = self.assets.get(&mesh_handle.0).unwrap();
+            let mesh = self.assets.get(mesh_handle).unwrap();
             let mesh_to_world = transform.compute_matrix();
             let world_to_mesh = mesh_to_world.inverse();
             if let Some(intersection) = bevy_mod_raycast::prelude::ray_intersection_over_mesh(

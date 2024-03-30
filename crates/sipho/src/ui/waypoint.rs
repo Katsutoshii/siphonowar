@@ -1,7 +1,7 @@
 use std::f32::consts::PI;
 
 use crate::prelude::*;
-use bevy::{prelude::*, sprite::MaterialMesh2dBundle, utils::hashbrown::HashSet};
+use bevy::{prelude::*, utils::hashbrown::HashSet};
 
 /// Plugin to add a waypoint system where the player can click to create a waypoint.
 pub struct WaypointPlugin;
@@ -64,6 +64,7 @@ impl Waypoint {
         mut selection: Query<(&Selected, &mut Objectives), Without<Self>>,
         mut commands: Commands,
         assets: Res<WaypointAssets>,
+        meshes: Res<Assets<Mesh>>,
     ) {
         for control in control_events.read() {
             if !(control.is_pressed(ControlAction::Move)
@@ -71,6 +72,9 @@ impl Waypoint {
             {
                 continue;
             }
+
+            // let mesh = meshes.get(&assets.mesh).unwrap();
+            // dbg!(mesh);
 
             if control.action == ControlAction::AttackMove && control.mode != ControlMode::Attack {
                 error!("WTF");
@@ -103,11 +107,11 @@ impl Waypoint {
         mode: ControlMode,
     ) -> impl Bundle {
         (
-            MaterialMesh2dBundle::<ColorMaterial> {
-                mesh: assets.mesh.clone().into(),
+            PbrBundle {
+                mesh: assets.mesh.clone(),
                 transform: Transform::default()
                     .with_scale(Vec2::splat(self.size).extend(1.))
-                    .with_rotation(Quat::from_axis_angle(Vec3::Z, PI))
+                    // .with_rotation(Quat::from_axis_angle(Vec3::Y, PI / 2.))
                     .with_translation(translation),
                 material: match mode {
                     ControlMode::Normal => assets.blue_material.clone(),
@@ -125,28 +129,35 @@ impl Waypoint {
 #[derive(Resource)]
 pub struct WaypointAssets {
     pub mesh: Handle<Mesh>,
-    pub blue_material: Handle<ColorMaterial>,
-    pub red_material: Handle<ColorMaterial>,
+    pub blue_material: Handle<StandardMaterial>,
+    pub red_material: Handle<StandardMaterial>,
 }
 impl FromWorld for WaypointAssets {
     fn from_world(world: &mut World) -> Self {
         Self {
             mesh: {
-                let mut meshes = world.get_resource_mut::<Assets<Mesh>>().unwrap();
-                meshes.add(Mesh::from(RegularPolygon {
-                    circumcircle: Circle {
-                        radius: 2f32.sqrt() / 2.,
-                    },
-                    sides: 3,
-                }))
+                let asset_server = world.get_resource::<AssetServer>().unwrap();
+                let mesh = asset_server.load("models/triangle/triangle.gltf#Mesh0/Primitive0");
+                mesh
+                // let mut meshes = world.get_resource_mut::<Assets<Mesh>>().unwrap();
+                // meshes.add(Mesh::from(RegularPolygon {
+                //     circumcircle: Circle {
+                //         radius: 2f32.sqrt() / 2.,
+                //     },
+                //     sides: 3,
+                // }))
             },
             blue_material: {
-                let mut materials = world.get_resource_mut::<Assets<ColorMaterial>>().unwrap();
-                materials.add(ColorMaterial::from(Color::TURQUOISE.with_a(0.5)))
+                let mut materials = world
+                    .get_resource_mut::<Assets<StandardMaterial>>()
+                    .unwrap();
+                materials.add(StandardMaterial::from(Color::TURQUOISE.with_a(0.5)))
             },
             red_material: {
-                let mut materials = world.get_resource_mut::<Assets<ColorMaterial>>().unwrap();
-                materials.add(ColorMaterial::from(Color::TOMATO.with_a(0.5)))
+                let mut materials = world
+                    .get_resource_mut::<Assets<StandardMaterial>>()
+                    .unwrap();
+                materials.add(StandardMaterial::from(Color::TOMATO.with_a(0.5)))
             },
         }
     }

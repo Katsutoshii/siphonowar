@@ -18,3 +18,4 @@ pub const WAYPOINT: f32 = 22.0;
 pub const MINIMAP: f32 = 25.0;
 pub const SELECTOR: f32 = 30.0;
 pub const CURSOR: f32 = 35.0;
+pub const CAMERA: f32 = 40.0;
