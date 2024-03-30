@@ -43,6 +43,7 @@
         Equal: SpawnBlue,
         KeyF: SpawnPlankton,
         KeyG: SpawnFood,
+        KeyC: TieWorkers,
         Escape: PauseMenu,
         KeyO: Fuse,
       },

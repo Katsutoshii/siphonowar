@@ -51,6 +51,7 @@ pub enum InputAction {
     SpawnBlue,
     SpawnPlankton,
     SpawnFood,
+    TieWorkers,
     PauseMenu,
     Fuse,
 }
@@ -249,6 +250,7 @@ pub enum ControlAction {
     SpawnBlue,
     SpawnPlankton,
     SpawnFood,
+    TieWorkers,
     Fuse,
     PauseMenu,
 }
@@ -269,9 +271,11 @@ impl From<(RaycastTarget, ControlMode, InputAction)> for ControlAction {
             (RaycastTarget::WorldGrid, _, InputAction::SpawnPlankton) => Self::SpawnPlankton,
             (RaycastTarget::WorldGrid, _, InputAction::SpawnFood) => Self::SpawnFood,
             (RaycastTarget::WorldGrid, _, InputAction::Fuse) => Self::Fuse,
+            (RaycastTarget::WorldGrid, _, InputAction::TieWorkers) => Self::TieWorkers,
             (RaycastTarget::WorldGrid, _, InputAction::DragCamera) => Self::DragCamera,
             (_, _, InputAction::PauseMenu) => Self::PauseMenu,
             (RaycastTarget::None, _, _) => Self::None,
+
             _ => Self::None,
         }
     }
