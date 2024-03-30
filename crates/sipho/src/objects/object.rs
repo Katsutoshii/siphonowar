@@ -165,14 +165,16 @@ impl Object {
                 {
                     // If already attacking an entity but we are now closer to different entity, attack the new closest
                     // entity.
-                    if let Objective::AttackEntity(entity) =
-                        object.objectives.bypass_change_detection().last_mut()
-                    {
-                        *entity = neighbor.entity;
-                    } else {
-                        object
-                            .objectives
-                            .push(Objective::AttackEntity(neighbor.entity));
+                    match object.objectives.bypass_change_detection().last_mut() {
+                        Objective::AttackEntity(entity) => {
+                            *entity = neighbor.entity;
+                        }
+                        Objective::AttackFollowEntity(_) | Objective::None => {
+                            object
+                                .objectives
+                                .push(Objective::AttackEntity(neighbor.entity));
+                        }
+                        Objective::FollowEntity(_) => {}
                     }
                 }
             }

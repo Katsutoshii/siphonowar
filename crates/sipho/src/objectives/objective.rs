@@ -21,8 +21,10 @@ pub enum Objective {
     /// Entity has no objective.
     #[default]
     None,
-    /// Entity wants to follow the transform of another entity.
+    /// Entity follows the transform of another entity.
     FollowEntity(Entity),
+    /// Entity follows the transform of another entity, or attacks
+    AttackFollowEntity(Entity),
     /// Attack Entity
     AttackEntity(Entity),
 }
@@ -38,7 +40,7 @@ impl Objective {
         commands.remove::<(DashAttacker, Navigator)>();
         match self {
             Self::None => {}
-            Self::FollowEntity(entity) => {
+            Self::FollowEntity(entity) | Self::AttackFollowEntity(entity) => {
                 let (transform, _velocity, _carried_by) = targets.get(*entity)?;
                 commands.insert(Navigator {
                     target: transform.translation().xy(),
@@ -74,7 +76,7 @@ impl Objective {
     ) -> Result<(), Error> {
         match self {
             Self::None => {}
-            Self::FollowEntity(entity) => {
+            Self::FollowEntity(entity) | Self::AttackFollowEntity(entity) => {
                 let (transform, _velocity, _carried_by) = targets.get(*entity)?;
                 if let Some(ref mut navigator) = components.navigator {
                     navigator.target = transform.translation().xy();
@@ -100,7 +102,9 @@ impl Objective {
     /// If this objective is following an entity, return that Entity.
     pub fn get_followed_entity(&self) -> Option<Entity> {
         match self {
-            Self::AttackEntity(entity) | Self::FollowEntity(entity) => Some(*entity),
+            Self::AttackEntity(entity)
+            | Self::AttackFollowEntity(entity)
+            | Self::FollowEntity(entity) => Some(*entity),
             Self::None => None,
         }
     }

@@ -86,7 +86,11 @@ impl Waypoint {
             for (selected, mut objectives) in selection.iter_mut() {
                 if selected.is_selected() {
                     objectives.clear();
-                    objectives.push(Objective::FollowEntity(entity));
+                    let objective = match control.mode {
+                        ControlMode::Normal => Objective::FollowEntity(entity),
+                        ControlMode::Attack => Objective::AttackFollowEntity(entity),
+                    };
+                    objectives.push(objective);
                 }
             }
         }
