@@ -59,7 +59,7 @@ impl FromWorld for ObjectAssets {
         Self {
             mesh: {
                 let mut meshes = world.get_resource_mut::<Assets<Mesh>>().unwrap();
-                meshes.add(Mesh::from(Circle::default()))
+                meshes.add(Mesh::from(Sphere { radius: 0.5 }))
             },
             team_materials: {
                 let mut materials = world

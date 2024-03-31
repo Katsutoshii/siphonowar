@@ -93,7 +93,7 @@ impl ObjectCommands<'_, '_> {
                         ObjectBundle {
                             mesh: self.assets.mesh.clone(),
                             transform: Transform::default()
-                                .with_scale(Vec2::splat(config.radius).extend(1.))
+                                .with_scale(Vec3::splat(config.radius))
                                 .with_translation(
                                     spec.position.extend(spec.zindex + self.random_offset()),
                                 ),
@@ -113,7 +113,7 @@ impl ObjectCommands<'_, '_> {
                     ObjectBundle {
                         mesh: self.assets.mesh.clone(),
                         transform: Transform::default()
-                            .with_scale(Vec2::splat(config.radius).extend(1.))
+                            .with_scale(Vec3::splat(config.radius))
                             .with_translation(spec.position.extend(zindex::ZOOID_HEAD)),
                         material: team_material.primary,
                         name: Name::new("ZooidHead"),
@@ -134,7 +134,7 @@ impl ObjectCommands<'_, '_> {
                             team: Team::None,
                             mesh: self.assets.mesh.clone(),
                             transform: Transform::default()
-                                .with_scale(Vec2::splat(config.radius).extend(1.))
+                                .with_scale(Vec3::splat(config.radius))
                                 .with_translation(spec.position.extend(zindex::PLANKTON)),
                             material: team_material.primary,
                             name: Name::new("Plankton"),
@@ -178,7 +178,7 @@ impl ObjectCommands<'_, '_> {
             PbrBundle {
                 mesh: self.assets.mesh.clone(),
                 transform: Transform::default()
-                    .with_scale(Vec2::splat(1.5).extend(1.))
+                    .with_scale(Vec3::splat(1.5))
                     .with_translation(Vec3 {
                         x: 0.0,
                         y: 0.0,

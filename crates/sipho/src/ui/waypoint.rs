@@ -45,12 +45,15 @@ impl Waypoint {
 
             let mut followed_entities = HashSet::new();
             for objectives in all_objectives.iter() {
-                if let Some(entity) = objectives.last().get_followed_entity() {
-                    followed_entities.insert(entity);
+                for objective in objectives.iter() {
+                    if let Some(entity) = objective.get_followed_entity() {
+                        followed_entities.insert(entity);
+                    }
                 }
             }
             for entity in waypoints.iter() {
                 if !followed_entities.contains(&entity) {
+                    info!("Cleanup waypoint");
                     commands.entity(entity).despawn();
                 }
             }

@@ -119,13 +119,7 @@ impl Selector {
             Highlight,
             PbrBundle {
                 mesh,
-                transform: Transform::default()
-                    .with_scale(Vec2::splat(1.).extend(1.))
-                    .with_translation(Vec3 {
-                        x: 0.0,
-                        y: 0.0,
-                        z: zindex::HIGHLIGHT,
-                    }),
+                transform: Transform::default().with_scale(Vec2::splat(1.2).extend(1.2)),
                 material: assets.white_material.clone(),
                 visibility: Visibility::Visible,
                 ..default()

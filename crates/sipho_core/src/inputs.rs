@@ -188,9 +188,9 @@ impl ControlEvent {
                     state: event.state,
                     mode: state.mode,
                     position: match raycast_event.target {
-                        RaycastTarget::Minimap => grid_spec.local_to_world_position(
-                            raycast_event.position * Vec2 { x: 1., y: -1. },
-                        ),
+                        RaycastTarget::Minimap => {
+                            grid_spec.local_to_world_position(raycast_event.position)
+                        }
                         RaycastTarget::WorldGrid => raycast_event.world_position,
                         RaycastTarget::None => raycast_event.position,
                     },
@@ -221,9 +221,9 @@ impl ControlEvent {
                         state: ButtonState::Pressed,
                         mode: ControlMode::Normal,
                         position: match raycast_event.target {
-                            RaycastTarget::Minimap => grid_spec.local_to_world_position(
-                                raycast_event.position * Vec2 { x: 1., y: -1. },
-                            ),
+                            RaycastTarget::Minimap => {
+                                grid_spec.local_to_world_position(raycast_event.position)
+                            }
                             RaycastTarget::WorldGrid => raycast_event.world_position,
                             RaycastTarget::None => raycast_event.position,
                         },

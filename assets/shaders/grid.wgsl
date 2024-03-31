@@ -25,7 +25,9 @@ fn grid_coords(size: GridSize, position: vec2<f32>) -> vec2<f32> {
 
 /// Get fractional rowcol coords from UV coordinates.
 fn grid_uv(size: GridSize, uv: vec2<f32>) -> vec2<f32> {
-    return uv * vec2<f32>(
+    var flipped_uv = uv;
+    flipped_uv.y = 1. - uv.y;
+    return flipped_uv * vec2<f32>(
         f32(size.cols),
         f32(size.rows)
     );

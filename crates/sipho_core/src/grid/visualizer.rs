@@ -89,4 +89,7 @@ impl Material for GridVisualizerShaderMaterial {
     fn fragment_shader() -> ShaderRef {
         "shaders/grid_background.wgsl".into()
     }
+    fn alpha_mode(&self) -> AlphaMode {
+        AlphaMode::Blend
+    }
 }

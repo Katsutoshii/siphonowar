@@ -1,3 +1,5 @@
+use std::slice::Iter;
+
 /// Objectives define what an object is trying to do.
 /// We maintain a stack of objectives for each object.
 /// Each frame, we check the current object and try to resolve it to the corresponding behavior components.
@@ -144,6 +146,10 @@ impl Objectives {
                 }
             }
         }
+    }
+
+    pub fn iter(&self) -> Iter<Objective> {
+        self.0.iter()
     }
 
     pub fn is_empty(&self) -> bool {

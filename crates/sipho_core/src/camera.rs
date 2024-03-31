@@ -20,7 +20,7 @@ impl Plugin for CameraPlugin {
             .add_systems(Startup, MainCamera::startup)
             .insert_resource(AmbientLight {
                 color: Color::WHITE,
-                brightness: 2500.,
+                brightness: 1000.,
             })
             .add_systems(
                 Update,
@@ -53,10 +53,13 @@ impl MainCamera {
                 },
                 projection: PerspectiveProjection {
                     fov: PI / 2.0,
+                    near: 0.1,
+                    far: 2000.,
                     ..default()
                 }
                 .into(),
-                transform: Transform::from_xyz(0.0, 0.0, zindex::CAMERA),
+                transform: Transform::from_xyz(0.0, 0.0, zindex::CAMERA)
+                    .with_rotation(Quat::from_axis_angle(Vec3::X, PI / 16.)),
                 // .looking_at(Vec3::ZERO, Vec3::Z),
                 tonemapping: Tonemapping::TonyMcMapface,
                 ..default()
@@ -76,6 +79,16 @@ impl MainCamera {
             InheritedVisibility::default(),
             MainCamera,
         ));
+        commands.spawn(DirectionalLightBundle {
+            transform: Transform::from_xyz(0.0, 0.0, zindex::CAMERA)
+                .with_rotation(Quat::from_axis_angle(Vec3::X, PI / 16.)),
+            directional_light: DirectionalLight {
+                color: Color::ANTIQUE_WHITE,
+                illuminance: 8000.,
+                ..default()
+            },
+            ..default()
+        });
     }
 }
 

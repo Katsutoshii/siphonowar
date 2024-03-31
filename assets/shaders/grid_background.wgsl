@@ -18,5 +18,5 @@ fn fragment(mesh: VertexOutput) -> @location(0) vec4<f32> {
     output_color.r += highlight;
     output_color.g += highlight;
     output_color.b += highlight;
-    return output_color / 25.;
+    return output_color / 1.5;
 }
