@@ -18,16 +18,16 @@ pub struct CursorParam<'w, 's> {
 }
 impl CursorParam<'_, '_> {
     /// Returns the world position of the cursor.
-    pub fn world_position(&self) -> Option<Vec2> {
+    pub fn ray3d(&self) -> Option<Ray3d> {
         let (camera, camera_transform) = self.camera.single();
         let window = self.window.single();
         let cursor_position = window.cursor_position()?;
-        camera.viewport_to_world_2d(camera_transform, cursor_position)
+        camera.viewport_to_world(camera_transform, cursor_position)
     }
-    pub fn ray3d(&self) -> Option<Ray3d> {
-        let world_position = self.world_position()?;
-        Some(Ray3d::new(world_position.extend(zindex::CURSOR), -Vec3::Z))
-    }
+    // pub fn ray3d(&self) -> Option<Ray3d> {
+    //     let world_position = self.world_position()?;
+    //     Some(Ray3d::new(world_position.extend(zindex::CURSOR), -Vec3::Z))
+    // }
 }
 
 #[derive(Component, Debug, Default)]

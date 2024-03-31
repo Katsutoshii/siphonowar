@@ -43,7 +43,7 @@ impl Default for GridVisualizerShaderMaterial {
     }
 }
 impl ShaderPlaneMaterial for GridVisualizerShaderMaterial {
-    fn translation(_window: &Window, _spec: &GridSpec) -> Vec3 {
+    fn translation(_camera: &Camera, _spec: &GridSpec) -> Vec3 {
         Vec2::ZERO.extend(zindex::SHADER_BACKGROUND)
     }
 

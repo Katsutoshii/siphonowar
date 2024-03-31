@@ -153,7 +153,7 @@ impl Default for ObstaclesShaderMaterial {
     }
 }
 impl ShaderPlaneMaterial for ObstaclesShaderMaterial {
-    fn translation(_window: &Window, _spec: &GridSpec) -> Vec3 {
+    fn translation(_camera: &Camera, _spec: &GridSpec) -> Vec3 {
         Vec2::ZERO.extend(zindex::OBSTACLES)
     }
 

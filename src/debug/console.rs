@@ -32,6 +32,7 @@ impl SpawnCommand {
         mut log: ConsoleCommand<SpawnCommand>,
         mut commands: ObjectCommands,
         cursor: CursorParam,
+        raycast: RaycastCommands,
         obstacles: ResMut<Grid2<Obstacle>>,
     ) {
         if let Some(Ok(SpawnCommand {
@@ -41,22 +42,24 @@ impl SpawnCommand {
         })) = log.take()
         {
             reply!(log, "spawning {} {:?}", count, object);
-            if let Some(cursor_position) = cursor.world_position() {
-                let sqrt_count = (count as f32).sqrt() as usize;
-                for i in 0..sqrt_count {
-                    for j in 0..sqrt_count {
-                        let position = cursor_position
-                            + Vec2 {
-                                x: (i * 40) as f32,
-                                y: (j * 40) as f32,
-                            };
-                        if obstacles[obstacles.to_rowcol(position)] == Obstacle::Empty {
-                            commands.spawn(ObjectSpec {
-                                object,
-                                team,
-                                position,
-                                ..default()
-                            })
+            if let Some(ray) = cursor.ray3d() {
+                if let Some(raycast_event) = raycast.raycast(ray) {
+                    let sqrt_count = (count as f32).sqrt() as usize;
+                    for i in 0..sqrt_count {
+                        for j in 0..sqrt_count {
+                            let position = raycast_event.world_position
+                                + Vec2 {
+                                    x: (i * 40) as f32,
+                                    y: (j * 40) as f32,
+                                };
+                            if obstacles[obstacles.to_rowcol(position)] == Obstacle::Empty {
+                                commands.spawn(ObjectSpec {
+                                    object,
+                                    team,
+                                    position,
+                                    ..default()
+                                })
+                            }
                         }
                     }
                 }
@@ -75,40 +78,43 @@ impl BattleCommand {
         mut log: ConsoleCommand<BattleCommand>,
         mut commands: ObjectCommands,
         cursor: CursorParam,
+        raycast: RaycastCommands,
         obstacles: ResMut<Grid2<Obstacle>>,
     ) {
         if let Some(Ok(BattleCommand { count })) = log.take() {
             reply!(log, "spawning battle {}", count);
-            if let Some(cursor_position) = cursor.world_position() {
-                let sqrt_count = (count as f32).sqrt() as usize;
-                for i in 0..sqrt_count {
-                    for j in 0..sqrt_count {
-                        let stride = 40;
-                        let blue_position = cursor_position
-                            + Vec2 {
-                                x: (i * stride) as f32,
-                                y: (j * stride) as f32,
-                            };
-                        if obstacles[obstacles.to_rowcol(blue_position)] == Obstacle::Empty {
-                            commands.spawn(ObjectSpec {
-                                object: Object::Worker,
-                                team: Team::Blue,
-                                position: blue_position,
-                                ..default()
-                            })
-                        }
-                        let red_position = cursor_position
-                            + Vec2 {
-                                x: (i * stride + stride / 2) as f32,
-                                y: (j * stride + stride / 2) as f32,
-                            };
-                        if obstacles[obstacles.to_rowcol(red_position)] == Obstacle::Empty {
-                            commands.spawn(ObjectSpec {
-                                object: Object::Worker,
-                                team: Team::Red,
-                                position: red_position,
-                                ..default()
-                            })
+            if let Some(ray) = cursor.ray3d() {
+                if let Some(raycast_event) = raycast.raycast(ray) {
+                    let sqrt_count = (count as f32).sqrt() as usize;
+                    for i in 0..sqrt_count {
+                        for j in 0..sqrt_count {
+                            let stride = 40;
+                            let blue_position = raycast_event.world_position
+                                + Vec2 {
+                                    x: (i * stride) as f32,
+                                    y: (j * stride) as f32,
+                                };
+                            if obstacles[obstacles.to_rowcol(blue_position)] == Obstacle::Empty {
+                                commands.spawn(ObjectSpec {
+                                    object: Object::Worker,
+                                    team: Team::Blue,
+                                    position: blue_position,
+                                    ..default()
+                                })
+                            }
+                            let red_position = raycast_event.world_position
+                                + Vec2 {
+                                    x: (i * stride + stride / 2) as f32,
+                                    y: (j * stride + stride / 2) as f32,
+                                };
+                            if obstacles[obstacles.to_rowcol(red_position)] == Obstacle::Empty {
+                                commands.spawn(ObjectSpec {
+                                    object: Object::Worker,
+                                    team: Team::Red,
+                                    position: red_position,
+                                    ..default()
+                                })
+                            }
                         }
                     }
                 }

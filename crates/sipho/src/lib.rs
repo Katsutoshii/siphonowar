@@ -37,42 +37,6 @@ impl Plugin for SiphonowarPlugin {
             scene::LoadableScenePlugin,
             ui::UiPlugin,
             sipho_vfx::VfxPlugin,
-        ))
-        .add_systems(Startup, spawn_gltf);
+        ));
     }
-}
-
-fn spawn_gltf(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    mut meshes: ResMut<Assets<Mesh>>,
-) {
-    // info!("Spawn gltf");
-    // // note that we have to include the `Scene0` label
-    // // let mesh = asset_server.load("models/triangle/triangle.gltf#Mesh0/Primitive0");
-    // let mesh = meshes.add(Mesh::from(RegularPolygon {
-    //     circumcircle: Circle {
-    //         radius: 2f32.sqrt() / 2.,
-    //     },
-    //     sides: 3,
-    // }));
-    // let material = materials.add(StandardMaterial::from(Color::TURQUOISE));
-    // // to position our 3d model, simply use the Transform
-    // // in the SceneBundle
-    // commands.spawn((
-    //     Name::new("test"),
-    //     PbrBundle {
-    //         mesh,
-    //         transform: Transform::default()
-    //             .with_scale(Vec2::splat(10.5).extend(1.))
-    //             .with_translation(Vec3 {
-    //                 x: 0.0,
-    //                 y: 0.0,
-    //                 z: 2000.,
-    //             }),
-    //         material,
-    //         ..default()
-    //     },
-    // ));
 }

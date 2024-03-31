@@ -1,3 +1,5 @@
+use std::f32::consts::PI;
+
 use bevy::{
     core_pipeline::{
         bloom::{BloomCompositeMode, BloomPrefilterSettings, BloomSettings},
@@ -5,7 +7,6 @@ use bevy::{
     },
     input::ButtonState,
     prelude::*,
-    render::camera::ScalingMode,
     window::PrimaryWindow,
 };
 
@@ -39,8 +40,6 @@ pub struct CameraMoveEvent {
     pub position: Vec2,
 }
 
-pub const CAMERA_ZOOM: f32 = 1.5;
-
 /// Used to help identify our main camera
 #[derive(Component)]
 pub struct MainCamera;
@@ -52,11 +51,8 @@ impl MainCamera {
                     hdr: true, // 1. HDR is required for bloom
                     ..default()
                 },
-                projection: OrthographicProjection {
-                    // scaling_mode: ScalingMode::FixedVertical(64.0 * 30.),
-                    far: 1000.,
-                    near: -1000.,
-                    scale: CAMERA_ZOOM,
+                projection: PerspectiveProjection {
+                    fov: PI / 2.0,
                     ..default()
                 }
                 .into(),
@@ -80,22 +76,6 @@ impl MainCamera {
             InheritedVisibility::default(),
             MainCamera,
         ));
-        // .with_children(|parent| {
-        //     parent.spawn((
-        //         Name::new("SpotLight"),
-        //         SpotLightBundle {
-        //             spot_light: SpotLight {
-        //                 intensity: 1_000_000_000.0,
-        //                 color: Color::YELLOW,
-        //                 shadows_enabled: true,
-        //                 inner_angle: 0.6,
-        //                 outer_angle: 0.8,
-        //                 ..default()
-        //             },
-        //             ..default()
-        //         },
-        //     ));
-        // });
     }
 }
 
@@ -172,7 +152,6 @@ impl CameraController {
     pub fn update_control(
         mut controller_query: Query<(&mut Self, &mut Transform), With<MainCamera>>,
         mut controls: EventReader<ControlEvent>,
-        cursor: CursorParam,
         mut event_writer: EventWriter<CameraMoveEvent>,
     ) {
         let (mut controller, mut camera_transform) = controller_query.single_mut();
@@ -181,20 +160,18 @@ impl CameraController {
                 ControlEvent {
                     action: ControlAction::DragCamera,
                     state: ButtonState::Pressed,
+                    position,
                     ..
                 } => {
-                    if let Some(cursor_position) = cursor.world_position() {
-                        let delta = if let Some(last_drag_position) = controller.last_drag_position
-                        {
-                            let delta = last_drag_position - cursor_position;
-                            let new_position = camera_transform.translation.xy() + delta;
-                            controller.set_position(&mut camera_transform, new_position);
-                            delta
-                        } else {
-                            Vec2::ZERO
-                        };
-                        controller.last_drag_position = Some(cursor_position + delta);
-                    }
+                    let delta = if let Some(last_drag_position) = controller.last_drag_position {
+                        let delta = last_drag_position - *position;
+                        let new_position = camera_transform.translation.xy() + delta;
+                        controller.set_position(&mut camera_transform, new_position);
+                        delta
+                    } else {
+                        Vec2::ZERO
+                    };
+                    controller.last_drag_position = Some(*position + delta);
                 }
                 ControlEvent {
                     action: ControlAction::DragCamera,
@@ -229,14 +206,12 @@ impl CameraController {
         let window = window_query.single();
         let (mut controller, mut camera_transform) = controller_query.single_mut();
 
-        // let cursor = cursor.single();
-        // let cursor_position = cursor.translation.xy();
         let mut acceleration = Vec2::ZERO;
         controller.velocity = Vec2::ZERO;
         let window_size = window.scaled_size();
 
         if let Some(centered_cursor_position) = window.cursor_position() {
-            let boundary = 1.;
+            let boundary = 2.;
             // Screen border panning.
             acceleration += if centered_cursor_position.x < boundary {
                 -Vec2::X

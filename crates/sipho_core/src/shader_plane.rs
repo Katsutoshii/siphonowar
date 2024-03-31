@@ -1,5 +1,4 @@
 use crate::prelude::*;
-use bevy::window::PrimaryWindow;
 use std::marker::PhantomData;
 
 /// Plugin for a 2D plane with a shader material.
@@ -29,12 +28,12 @@ pub trait ShaderPlaneMaterial: Material + Default {
     }
 
     /// Scale factor
-    fn scale(_window: &Window, spec: &GridSpec) -> Vec3 {
+    fn scale(_window: &Camera, spec: &GridSpec) -> Vec3 {
         spec.scale().extend(1.)
     }
 
     /// Translation
-    fn translation(_window: &Window, spec: &GridSpec) -> Vec3;
+    fn translation(_window: &Camera, spec: &GridSpec) -> Vec3;
 
     /// Resize the grid based on the grid spec.
     fn resize(&mut self, spec: &GridSpec);
@@ -43,9 +42,8 @@ pub trait ShaderPlaneMaterial: Material + Default {
     fn resize_on_change(
         spec: Res<GridSpec>,
         mut query: Query<(Entity, &mut Visibility), With<ShaderPlane<Self>>>,
-        camera: Query<Entity, With<MainCamera>>,
+        camera: Query<(Entity, &Camera), With<MainCamera>>,
         assets: Res<ShaderPlaneAssets<Self>>,
-        window: Query<&Window, With<PrimaryWindow>>,
         mut shader_assets: ResMut<Assets<Self>>,
         mut commands: Commands,
     ) {
@@ -62,17 +60,16 @@ pub trait ShaderPlaneMaterial: Material + Default {
         let material = shader_assets.get_mut(&assets.shader_material).unwrap();
         material.resize(&spec);
 
+        let (camera_entity, camera) = camera.single();
         let plane_entity = {
-            let window = window.single();
             let mut plane =
-                commands.spawn(ShaderPlane::<Self>::default().bundle(&spec, window, &assets));
+                commands.spawn(ShaderPlane::<Self>::default().bundle(&spec, camera, &assets));
             if Self::raycast_target() != RaycastTarget::None {
                 plane.insert(Self::raycast_target());
             }
             plane.id()
         };
         if Self::parent_camera() {
-            let camera_entity = camera.single();
             commands
                 .entity(camera_entity)
                 .push_children(&[plane_entity]);
@@ -88,7 +85,7 @@ impl<M: ShaderPlaneMaterial> ShaderPlane<M> {
     pub fn bundle(
         self,
         spec: &GridSpec,
-        window: &Window,
+        camera: &Camera,
         assets: &ShaderPlaneAssets<M>,
     ) -> impl Bundle {
         let material = assets.shader_material.clone();
@@ -96,8 +93,8 @@ impl<M: ShaderPlaneMaterial> ShaderPlane<M> {
             MaterialMeshBundle {
                 mesh: assets.mesh.clone(),
                 transform: Transform::default()
-                    .with_scale(M::scale(window, spec))
-                    .with_translation(M::translation(window, spec)),
+                    .with_scale(M::scale(camera, spec))
+                    .with_translation(M::translation(camera, spec)),
                 material,
                 ..default()
             },

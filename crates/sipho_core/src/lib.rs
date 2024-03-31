@@ -20,7 +20,7 @@ pub mod zindex;
 pub mod prelude {
     pub use crate::{
         aabb::Aabb2,
-        camera::{CameraController, CameraMoveEvent, MainCamera, CAMERA_ZOOM},
+        camera::{CameraController, CameraMoveEvent, MainCamera},
         cursor::{Cursor, CursorAssets, CursorParam},
         error::Error,
         game_state::{AssetLoadState, GameState},

@@ -50,24 +50,23 @@ impl Default for MinimapShaderMaterial {
     }
 }
 impl ShaderPlaneMaterial for MinimapShaderMaterial {
-    fn scale(window: &Window, _spec: &GridSpec) -> Vec3 {
-        let quad_size = Self::quad_size(window) * CAMERA_ZOOM;
-        (quad_size * Vec2 { x: 1., y: 1. }).extend(1.)
+    fn scale(_camera: &Camera, _spec: &GridSpec) -> Vec3 {
+        (Vec2::ONE / 4.).extend(1.)
     }
-    fn translation(window: &Window, _spec: &GridSpec) -> Vec3 {
-        let viewport_size = window.scaled_size() * CAMERA_ZOOM;
-        let quad_size = Self::quad_size(window) * CAMERA_ZOOM;
+    fn translation(camera: &Camera, _spec: &GridSpec) -> Vec3 {
+        let viewport_size = camera.logical_viewport_size().unwrap();
+        let projection = Vec2 {
+            x: viewport_size.x / viewport_size.y,
+            y: 1.,
+        };
+        let bottom_left = projection / 2.;
 
-        let mut translation = Vec2::ZERO;
-        translation += Vec2 {
-            x: viewport_size.x,
-            y: -viewport_size.y,
-        } / 2.;
-        translation -= Vec2 {
-            x: quad_size.x,
-            y: -quad_size.y,
-        } / 2.;
-        translation.extend(zindex::MINIMAP)
+        let quad = Vec2::ONE / 4.;
+        let quad_offset = quad / 2.;
+
+        let depth = -0.5;
+        let flip_y = Vec2 { x: 1., y: -1. };
+        ((bottom_left - quad_offset) * flip_y).extend(depth)
     }
 
     fn resize(&mut self, spec: &GridSpec) {
@@ -88,12 +87,6 @@ impl ShaderPlaneMaterial for MinimapShaderMaterial {
     }
 }
 impl MinimapShaderMaterial {
-    const SCREEN_RATIO: f32 = 1. / 8.;
-
-    fn quad_size(window: &Window) -> Vec2 {
-        window.scaled_size().xx() * Self::SCREEN_RATIO
-    }
-
     /// Update the grid shader material.
     pub fn update(
         spec: Res<GridSpec>,

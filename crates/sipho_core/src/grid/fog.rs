@@ -200,7 +200,7 @@ impl ShaderPlaneMaterial for FogShaderMaterial {
         self.grid
             .resize(spec.rows as usize * spec.cols as usize, 1.);
     }
-    fn translation(_window: &Window, _spec: &GridSpec) -> Vec3 {
+    fn translation(_camera: &Camera, _spec: &GridSpec) -> Vec3 {
         Vec2::ZERO.extend(zindex::FOG_OF_WAR)
     }
 }
