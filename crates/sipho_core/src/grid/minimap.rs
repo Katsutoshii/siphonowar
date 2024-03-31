@@ -52,7 +52,7 @@ impl Default for MinimapShaderMaterial {
 impl ShaderPlaneMaterial for MinimapShaderMaterial {
     fn scale(window: &Window, _spec: &GridSpec) -> Vec3 {
         let quad_size = Self::quad_size(window) * CAMERA_ZOOM;
-        (quad_size * Vec2 { x: 1., y: -1. }).extend(1.)
+        (quad_size * Vec2 { x: 1., y: 1. }).extend(1.)
     }
     fn translation(window: &Window, _spec: &GridSpec) -> Vec3 {
         let viewport_size = window.scaled_size() * CAMERA_ZOOM;
@@ -149,5 +149,8 @@ impl MinimapShaderMaterial {
 impl Material for MinimapShaderMaterial {
     fn fragment_shader() -> ShaderRef {
         "shaders/minimap.wgsl".into()
+    }
+    fn alpha_mode(&self) -> AlphaMode {
+        AlphaMode::Blend
     }
 }

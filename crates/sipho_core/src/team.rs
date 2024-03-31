@@ -47,16 +47,16 @@ impl Team {
 
 #[derive(Default, Clone)]
 pub struct TeamMaterials {
-    pub primary: Handle<ColorMaterial>,
-    pub secondary: Handle<ColorMaterial>,
-    pub background: Handle<ColorMaterial>,
+    pub primary: Handle<StandardMaterial>,
+    pub secondary: Handle<StandardMaterial>,
+    pub background: Handle<StandardMaterial>,
 }
 impl TeamMaterials {
-    pub fn new(color: Color, assets: &mut Assets<ColorMaterial>) -> Self {
+    pub fn new(color: Color, assets: &mut Assets<StandardMaterial>) -> Self {
         Self {
-            primary: assets.add(ColorMaterial::from(color)),
-            secondary: assets.add(ColorMaterial::from(color.with_a(0.8).with_g(0.8))),
-            background: assets.add(ColorMaterial::from(color.with_a(0.3))),
+            primary: assets.add(StandardMaterial::from(color)),
+            secondary: assets.add(StandardMaterial::from(color)),
+            background: assets.add(StandardMaterial::from(color.with_a(0.3))),
         }
     }
 }

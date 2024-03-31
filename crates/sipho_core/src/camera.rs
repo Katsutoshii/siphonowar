@@ -17,6 +17,10 @@ impl Plugin for CameraPlugin {
         app.insert_resource(ClearColor(Color::BLACK))
             .add_event::<CameraMoveEvent>()
             .add_systems(Startup, MainCamera::startup)
+            .insert_resource(AmbientLight {
+                color: Color::WHITE,
+                brightness: 2500.,
+            })
             .add_systems(
                 Update,
                 (
@@ -49,8 +53,7 @@ impl MainCamera {
                     ..default()
                 },
                 projection: OrthographicProjection {
-                    // 6 world units per window height.
-                    // scaling_mode: ScalingMode::FixedVertical(6.0),
+                    // scaling_mode: ScalingMode::FixedVertical(64.0 * 30.),
                     far: 1000.,
                     near: -1000.,
                     scale: CAMERA_ZOOM,
@@ -72,11 +75,27 @@ impl MainCamera {
                     threshold_softness: 0.0,
                 },
                 composite_mode: BloomCompositeMode::EnergyConserving,
-            }, // 3. Enable bloom for the camera
+            },
             CameraController::default(),
             InheritedVisibility::default(),
             MainCamera,
         ));
+        // .with_children(|parent| {
+        //     parent.spawn((
+        //         Name::new("SpotLight"),
+        //         SpotLightBundle {
+        //             spot_light: SpotLight {
+        //                 intensity: 1_000_000_000.0,
+        //                 color: Color::YELLOW,
+        //                 shadows_enabled: true,
+        //                 inner_angle: 0.6,
+        //                 outer_angle: 0.8,
+        //                 ..default()
+        //             },
+        //             ..default()
+        //         },
+        //     ));
+        // });
     }
 }
 
@@ -105,7 +124,7 @@ impl Default for CameraController {
 impl CameraController {
     // Set camera position.
     pub fn set_position(&self, camera_transform: &mut Transform, position: Vec2) {
-        camera_transform.translation = position.extend(0.);
+        camera_transform.translation = position.extend(zindex::CAMERA);
         self.world2d_bounds
             .clamp3(&mut camera_transform.translation)
     }

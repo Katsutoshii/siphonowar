@@ -1,5 +1,5 @@
-#import bevy_sprite::mesh2d_vertex_output::VertexOutput
 #import "shaders/grid.wgsl"::{GridSize, grid_index, grid_offset, grid_coords};
+#import bevy_pbr::{mesh_view_bindings::globals, forward_io::VertexOutput};
 
 @group(2) @binding(0) var<uniform> color: vec4<f32>;
 @group(2) @binding(1) var<uniform> size: GridSize;

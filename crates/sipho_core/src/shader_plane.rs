@@ -42,7 +42,7 @@ pub trait ShaderPlaneMaterial: Material + Default {
     /// When the spec is changed, respawn the visualizer entity with the new size.
     fn resize_on_change(
         spec: Res<GridSpec>,
-        query: Query<Entity, With<ShaderPlane<Self>>>,
+        mut query: Query<(Entity, &mut Visibility), With<ShaderPlane<Self>>>,
         camera: Query<Entity, With<MainCamera>>,
         assets: Res<ShaderPlaneAssets<Self>>,
         window: Query<&Window, With<PrimaryWindow>>,
@@ -54,7 +54,8 @@ pub trait ShaderPlaneMaterial: Material + Default {
         }
 
         // Cleanup entities on change.
-        for entity in &query {
+        for (entity, mut visibility) in query.iter_mut() {
+            *visibility = Visibility::Hidden;
             commands.entity(entity).despawn();
         }
 

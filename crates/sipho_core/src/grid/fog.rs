@@ -208,6 +208,9 @@ impl Material for FogShaderMaterial {
     fn fragment_shader() -> ShaderRef {
         "shaders/fog_of_war.wgsl".into()
     }
+    fn alpha_mode(&self) -> AlphaMode {
+        AlphaMode::Blend
+    }
 }
 impl FogShaderMaterial {
     pub fn update(

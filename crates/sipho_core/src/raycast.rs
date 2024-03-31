@@ -1,4 +1,4 @@
-use bevy::{ecs::system::SystemParam, prelude::*, sprite::Mesh2dHandle, utils::FloatOrd};
+use bevy::{ecs::system::SystemParam, prelude::*, utils::FloatOrd};
 
 #[derive(Component, Default, PartialEq, Debug, Clone, Copy)]
 pub enum RaycastTarget {

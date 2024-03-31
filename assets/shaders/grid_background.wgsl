@@ -1,4 +1,4 @@
-#import bevy_sprite::mesh2d_vertex_output::VertexOutput
+#import bevy_pbr::{mesh_view_bindings::globals, forward_io::VertexOutput}
 #import "shaders/constants.wgsl"::{COLOR_MULTIPLIER, HIGHLIGHT_LEVEL, CHECKERBOARD_LIGHT, CHECKERBOARD_DARK};
 #import "shaders/grid.wgsl"::{GridSize, grid_index, grid_offset, grid_coords};
 
@@ -18,5 +18,5 @@ fn fragment(mesh: VertexOutput) -> @location(0) vec4<f32> {
     output_color.r += highlight;
     output_color.g += highlight;
     output_color.b += highlight;
-    return output_color / 1.5;
+    return output_color / 25.;
 }

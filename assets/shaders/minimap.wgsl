@@ -1,6 +1,6 @@
-#import bevy_sprite::mesh2d_vertex_output::VertexOutput
 #import "shaders/constants.wgsl"::{COLOR_MULTIPLIER, HIGHLIGHT_LEVEL, CHECKERBOARD_LIGHT, CHECKERBOARD_DARK};
 #import "shaders/grid.wgsl"::{GridSize, grid_index, grid_offset, grid_coords, grid_uv};
+#import bevy_pbr::{mesh_view_bindings::globals, forward_io::VertexOutput};
 
 @group(2) @binding(0) var<uniform> color: vec4<f32>;
 @group(2) @binding(1) var<uniform> size: GridSize;
@@ -11,7 +11,9 @@
 
 @fragment
 fn fragment(mesh: VertexOutput) -> @location(0) vec4<f32> {
-    let g = grid_uv(size, mesh.uv);
+    var uv = mesh.uv;
+    uv.y = 1. - mesh.uv.y;
+    let g = grid_uv(size, uv);
     let g_frac = g - floor(g);
     let row = u32(g.y);
     let col = u32(g.x);
@@ -54,9 +56,7 @@ fn fragment(mesh: VertexOutput) -> @location(0) vec4<f32> {
     highlight += f32(grid[grid_index(size, row + 1u, col - 1u)]);
     highlight = min(highlight, HIGHLIGHT_LEVEL) * (1. - visible);
 
-
     output_color += 30. * color * highlight;
-
 
     // fog += f32(visibility_grid[grid_index(size, row, col)]);
     output_color *= 1. - fog;

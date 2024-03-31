@@ -134,7 +134,7 @@ impl ScheduleDespawn {
     }
 }
 
-pub const POOL_SIZE: usize = 256;
+pub const POOL_SIZE: usize = 8;
 #[derive(Resource, Default, Deref, DerefMut)]
 pub struct ParticleEffectPool<const T: u8>(EntityPool<POOL_SIZE>);
 

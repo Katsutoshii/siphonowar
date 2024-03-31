@@ -122,7 +122,7 @@ impl Grid2<Obstacle> {
     ) {
         for (global_transform, mut transform, mut velocity, mut acceleration) in query.iter_mut() {
             let obstacle_acceleration =
-                obstacles.acceleration(global_transform.translation().xy(), *velocity) * 3.;
+                obstacles.acceleration(global_transform.translation().xy(), *velocity) * 6.;
             *acceleration += obstacle_acceleration;
 
             if obstacles[obstacles.to_rowcol(transform.translation.xy())] != Obstacle::Empty {
@@ -189,5 +189,8 @@ impl ObstaclesShaderMaterial {
 impl Material for ObstaclesShaderMaterial {
     fn fragment_shader() -> ShaderRef {
         "shaders/obstacles.wgsl".into()
+    }
+    fn alpha_mode(&self) -> AlphaMode {
+        AlphaMode::Blend
     }
 }

@@ -1,9 +1,5 @@
 use crate::prelude::*;
-use bevy::{
-    ecs::system::SystemParam,
-    prelude::*,
-    sprite::{MaterialMesh2dBundle, Mesh2dHandle},
-};
+use bevy::{ecs::system::SystemParam, prelude::*};
 
 use super::{
     neighbors::NeighborsBundle,
@@ -30,8 +26,8 @@ pub struct ObjectBundle {
     pub team: Team,
     pub physics: PhysicsBundle,
     pub objectives: Objectives,
-    pub mesh: Mesh2dHandle,
-    pub material: Handle<ColorMaterial>,
+    pub mesh: Handle<Mesh>,
+    pub material: Handle<StandardMaterial>,
     pub transform: Transform,
     pub global_transform: GlobalTransform,
     pub visibility: Visibility,
@@ -95,7 +91,7 @@ impl ObjectCommands<'_, '_> {
                         ZooidWorker::default(),
                         NearestZooidHead::default(),
                         ObjectBundle {
-                            mesh: self.assets.mesh.clone().into(),
+                            mesh: self.assets.mesh.clone(),
                             transform: Transform::default()
                                 .with_scale(Vec2::splat(config.radius).extend(1.))
                                 .with_translation(
@@ -115,7 +111,7 @@ impl ObjectCommands<'_, '_> {
                     ZooidHead,
                     Consumer::new(3),
                     ObjectBundle {
-                        mesh: self.assets.mesh.clone().into(),
+                        mesh: self.assets.mesh.clone(),
                         transform: Transform::default()
                             .with_scale(Vec2::splat(config.radius).extend(1.))
                             .with_translation(spec.position.extend(zindex::ZOOID_HEAD)),
@@ -136,7 +132,7 @@ impl ObjectCommands<'_, '_> {
                         Plankton,
                         ObjectBundle {
                             team: Team::None,
-                            mesh: self.assets.mesh.clone().into(),
+                            mesh: self.assets.mesh.clone(),
                             transform: Transform::default()
                                 .with_scale(Vec2::splat(config.radius).extend(1.))
                                 .with_translation(spec.position.extend(zindex::PLANKTON)),
@@ -152,7 +148,7 @@ impl ObjectCommands<'_, '_> {
             Object::Food => {
                 self.commands.spawn(ObjectBundle {
                     team: Team::None,
-                    mesh: self.assets.mesh.clone().into(),
+                    mesh: self.assets.mesh.clone(),
                     transform: Transform::default()
                         .with_scale(Vec2::splat(config.radius).extend(1.))
                         .with_translation(spec.position.extend(zindex::FOOD)),
@@ -179,8 +175,8 @@ impl ObjectCommands<'_, '_> {
     pub fn background_bundle(&self, team_material: TeamMaterials, zindex: f32) -> impl Bundle {
         (
             ObjectBackground,
-            MaterialMesh2dBundle::<ColorMaterial> {
-                mesh: self.assets.mesh.clone().into(),
+            PbrBundle {
+                mesh: self.assets.mesh.clone(),
                 transform: Transform::default()
                     .with_scale(Vec2::splat(1.5).extend(1.))
                     .with_translation(Vec3 {

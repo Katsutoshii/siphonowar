@@ -167,6 +167,7 @@ impl ControlEvent {
                 }
             }
             if let Some(raycast_event) = &raycast_event {
+                dbg!(raycast_event);
                 let action = ControlAction::from((raycast_event.target, state.mode, event.action));
 
                 // Skip this action if the timer isn't ready.

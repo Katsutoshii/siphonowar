@@ -72,4 +72,7 @@ impl Material for NavigationShaderMaterial {
     fn fragment_shader() -> ShaderRef {
         "shaders/navigation_shader.wgsl".into()
     }
+    fn alpha_mode(&self) -> AlphaMode {
+        AlphaMode::Blend
+    }
 }

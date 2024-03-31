@@ -1,5 +1,4 @@
-#import bevy_sprite::mesh2d_vertex_output::VertexOutput;
-#import bevy_sprite::mesh2d_view_bindings::globals;
+#import bevy_pbr::{mesh_view_bindings::globals, forward_io::VertexOutput};
 #import "shaders/perlin_noise_2d.wgsl"::{perlin_noise_2d};
 #import "shaders/grid.wgsl"::{GridSize, grid_index, grid_offset, grid_coords};
 
@@ -30,5 +29,6 @@ fn fragment(mesh: VertexOutput) -> @location(0) vec4<f32> {
     let noise = (2. + sin_t) / 3. * perlin_noise_2d(vec2<f32>(g.x + sin_t, g.y - sin_xt));
 
     output_color.a *= (1.0 - noise_amount) * alpha + noise_amount * noise;
+    // output_color.a *= 0.0;
     return output_color;
 }

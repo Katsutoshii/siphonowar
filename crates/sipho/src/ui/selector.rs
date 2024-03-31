@@ -1,8 +1,4 @@
-use bevy::{
-    input::ButtonState,
-    prelude::*,
-    sprite::{MaterialMesh2dBundle, Mesh2dHandle},
-};
+use bevy::{input::ButtonState, prelude::*};
 
 use crate::prelude::*;
 
@@ -41,7 +37,7 @@ impl Selector {
         commands.spawn(Self::default().bundle(&assets));
     }
 
-    #[allow(clippy::too_many_arguments)]
+    #[allow(clippy::too_many_arguments, clippy::type_complexity)]
     pub fn update(
         mut commands: Commands,
         mut query: Query<(&mut Self, &mut Transform, &mut Visibility)>,
@@ -52,7 +48,7 @@ impl Selector {
                 &GlobalTransform,
                 &Team,
                 &mut Selected,
-                &Mesh2dHandle,
+                &Handle<Mesh>,
             ),
             Without<Self>,
         >,
@@ -102,7 +98,7 @@ impl Selector {
                                     continue;
                                 }
                                 let child_entity = commands
-                                    .spawn(Self::highlight_bundle(&assets, mesh.0.clone()))
+                                    .spawn(Self::highlight_bundle(&assets, mesh.clone()))
                                     .id();
                                 commands.entity(entity).add_child(child_entity);
                                 *selected = Selected::Selected;
@@ -119,9 +115,10 @@ impl Selector {
 
     fn highlight_bundle(assets: &SelectorAssets, mesh: Handle<Mesh>) -> impl Bundle {
         (
+            Name::new("Highlight"),
             Highlight,
-            MaterialMesh2dBundle::<ColorMaterial> {
-                mesh: mesh.clone().into(),
+            PbrBundle {
+                mesh,
                 transform: Transform::default()
                     .with_scale(Vec2::splat(1.).extend(1.))
                     .with_translation(Vec3 {
@@ -139,8 +136,9 @@ impl Selector {
     fn bundle(self, assets: &SelectorAssets) -> impl Bundle {
         (
             self,
-            MaterialMesh2dBundle::<ColorMaterial> {
-                mesh: assets.mesh.clone().into(),
+            Name::new("Selector"),
+            PbrBundle {
+                mesh: assets.mesh.clone(),
                 transform: Transform::default().with_scale(Vec2::splat(1.).extend(1.)),
                 material: assets.blue_material.clone(),
                 visibility: Visibility::Hidden,
@@ -154,8 +152,8 @@ impl Selector {
 #[derive(Resource)]
 pub struct SelectorAssets {
     pub mesh: Handle<Mesh>,
-    pub blue_material: Handle<ColorMaterial>,
-    pub white_material: Handle<ColorMaterial>,
+    pub blue_material: Handle<StandardMaterial>,
+    pub white_material: Handle<StandardMaterial>,
 }
 
 impl FromWorld for SelectorAssets {
@@ -166,12 +164,16 @@ impl FromWorld for SelectorAssets {
                 meshes.add(Mesh::from(meshes::UNIT_SQUARE))
             },
             blue_material: {
-                let mut materials = world.get_resource_mut::<Assets<ColorMaterial>>().unwrap();
-                materials.add(ColorMaterial::from(Color::BLUE.with_a(0.04)))
+                let mut materials = world
+                    .get_resource_mut::<Assets<StandardMaterial>>()
+                    .unwrap();
+                materials.add(StandardMaterial::from(Color::BLUE.with_a(0.04)))
             },
             white_material: {
-                let mut materials = world.get_resource_mut::<Assets<ColorMaterial>>().unwrap();
-                materials.add(ColorMaterial::from(Color::ALICE_BLUE.with_a(0.2)))
+                let mut materials = world
+                    .get_resource_mut::<Assets<StandardMaterial>>()
+                    .unwrap();
+                materials.add(StandardMaterial::from(Color::ALICE_BLUE.with_a(0.2)))
             },
         }
     }

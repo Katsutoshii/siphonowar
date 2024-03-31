@@ -64,7 +64,7 @@ impl Waypoint {
         mut selection: Query<(&Selected, &mut Objectives), Without<Self>>,
         mut commands: Commands,
         assets: Res<WaypointAssets>,
-        meshes: Res<Assets<Mesh>>,
+        // meshes: Res<Assets<Mesh>>,
     ) {
         for control in control_events.read() {
             if !(control.is_pressed(ControlAction::Move)
@@ -107,6 +107,7 @@ impl Waypoint {
         mode: ControlMode,
     ) -> impl Bundle {
         (
+            Name::new("Waypoint"),
             PbrBundle {
                 mesh: assets.mesh.clone(),
                 transform: Transform::default()
@@ -136,16 +137,16 @@ impl FromWorld for WaypointAssets {
     fn from_world(world: &mut World) -> Self {
         Self {
             mesh: {
-                let asset_server = world.get_resource::<AssetServer>().unwrap();
-                let mesh = asset_server.load("models/triangle/triangle.gltf#Mesh0/Primitive0");
-                mesh
-                // let mut meshes = world.get_resource_mut::<Assets<Mesh>>().unwrap();
-                // meshes.add(Mesh::from(RegularPolygon {
-                //     circumcircle: Circle {
-                //         radius: 2f32.sqrt() / 2.,
-                //     },
-                //     sides: 3,
-                // }))
+                // let asset_server = world.get_resource::<AssetServer>().unwrap();
+                // let mesh = asset_server.load("models/triangle/triangle.gltf#Mesh0/Primitive0");
+                // mesh
+                let mut meshes = world.get_resource_mut::<Assets<Mesh>>().unwrap();
+                meshes.add(Mesh::from(RegularPolygon {
+                    circumcircle: Circle {
+                        radius: 2f32.sqrt() / 2.,
+                    },
+                    sides: 3,
+                }))
             },
             blue_material: {
                 let mut materials = world

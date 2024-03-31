@@ -62,7 +62,9 @@ impl FromWorld for ObjectAssets {
                 meshes.add(Mesh::from(Circle::default()))
             },
             team_materials: {
-                let mut materials = world.get_resource_mut::<Assets<ColorMaterial>>().unwrap();
+                let mut materials = world
+                    .get_resource_mut::<Assets<StandardMaterial>>()
+                    .unwrap();
                 Team::COLORS
                     .iter()
                     .map(|color| TeamMaterials::new(*color, &mut materials))

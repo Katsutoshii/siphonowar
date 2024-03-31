@@ -80,7 +80,7 @@ pub struct CursorAssets {
     pub mesh: Handle<Mesh>,
     pub cursor: Handle<Image>,
     pub attack: Handle<Image>,
-    pub blue_material: Handle<ColorMaterial>,
+    pub blue_material: Handle<StandardMaterial>,
 }
 impl FromWorld for CursorAssets {
     fn from_world(world: &mut World) -> Self {
@@ -107,8 +107,10 @@ impl FromWorld for CursorAssets {
                     .load("textures/cursor/plain-dagger-s.png")
             },
             blue_material: {
-                let mut materials = world.get_resource_mut::<Assets<ColorMaterial>>().unwrap();
-                materials.add(ColorMaterial::from(Color::ALICE_BLUE.with_a(0.5)))
+                let mut materials = world
+                    .get_resource_mut::<Assets<StandardMaterial>>()
+                    .unwrap();
+                materials.add(StandardMaterial::from(Color::ALICE_BLUE.with_a(0.5)))
             },
         };
         let mut load_state = world.get_resource_mut::<AssetLoadState>().unwrap();
