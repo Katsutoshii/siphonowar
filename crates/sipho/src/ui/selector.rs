@@ -72,7 +72,7 @@ impl Selector {
                             *selected = Selected::Unselected;
                         }
                         for entity in highlights.iter() {
-                            commands.entity(entity).despawn();
+                            commands.entity(entity).remove_parent().despawn();
                         }
                         selector.aabb.min = control.position;
                         *visibility = Visibility::Visible;

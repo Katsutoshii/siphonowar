@@ -77,13 +77,7 @@ impl ObjectCommands<'_, '_> {
     pub fn spawn(&mut self, spec: ObjectSpec) {
         let config = &self.configs[&spec.object];
         let team_material = self.assets.get_team_material(spec.team);
-        let background = self.background_bundle(
-            team_material.clone(),
-            match spec.object {
-                Object::Worker | Object::Head => zindex::ZOOID_HEAD_BACKGROUND,
-                Object::Plankton | Object::Food => zindex::PLANKTON_BACKGROUND,
-            },
-        );
+        let background = self.background_bundle(team_material.clone());
         match spec.object {
             Object::Worker => {
                 self.commands
@@ -172,18 +166,12 @@ impl ObjectCommands<'_, '_> {
         self.commands.entity(entity).despawn_recursive();
     }
 
-    pub fn background_bundle(&self, team_material: TeamMaterials, zindex: f32) -> impl Bundle {
+    pub fn background_bundle(&self, team_material: TeamMaterials) -> impl Bundle {
         (
             ObjectBackground,
             PbrBundle {
                 mesh: self.assets.mesh.clone(),
-                transform: Transform::default()
-                    .with_scale(Vec3::splat(1.5))
-                    .with_translation(Vec3 {
-                        x: 0.0,
-                        y: 0.0,
-                        z: zindex,
-                    }),
+                transform: Transform::default().with_scale(Vec3::splat(1.5)),
                 material: team_material.background,
                 ..default()
             },
