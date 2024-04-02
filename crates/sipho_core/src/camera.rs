@@ -20,7 +20,7 @@ impl Plugin for CameraPlugin {
             .add_systems(Startup, MainCamera::startup)
             .insert_resource(AmbientLight {
                 color: Color::WHITE,
-                brightness: 500.,
+                brightness: 2100.,
             })
             .add_systems(
                 Update,
@@ -84,7 +84,7 @@ impl MainCamera {
                 .with_rotation(Quat::from_axis_angle(Vec3::X, PI / 8.)),
             directional_light: DirectionalLight {
                 color: Color::ANTIQUE_WHITE,
-                illuminance: 8000.,
+                illuminance: 2000.,
                 ..default()
             },
             ..default()

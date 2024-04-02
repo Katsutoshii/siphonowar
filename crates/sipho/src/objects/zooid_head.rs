@@ -92,13 +92,11 @@ impl ZooidHead {
                 }
                 if consumer.consumed > 0 {
                     consumer.consumed -= 1;
-                    let zindex = zindex::ZOOIDS_MIN + zindex::ZOOIDS_MAX - zindex::ZOOIDS_MIN;
                     let velocity: Vec2 = Vec2::Y * config.spawn_velocity + velocity.0;
                     commands.spawn(ObjectSpec {
                         position: transform.translation().xy() + velocity,
                         velocity: Some(Velocity(velocity)),
                         team: *team,
-                        zindex,
                         objectives: Objectives::new(Objective::FollowEntity(head_id)),
                         ..default()
                     });

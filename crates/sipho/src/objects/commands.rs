@@ -14,7 +14,6 @@ use super::{
 pub struct ObjectSpec {
     pub object: Object,
     pub position: Vec2,
-    pub zindex: f32,
     pub team: Team,
     pub velocity: Option<Velocity>,
     pub objectives: Objectives,
@@ -39,11 +38,23 @@ pub struct ObjectBundle {
     pub name: Name,
 }
 impl ObjectBundle {
-    pub fn new(config: &ObjectConfig, spec: ObjectSpec) -> Self {
+    /// Returns random value [0, 1.)
+    fn random_offset(time: &Time) -> f32 {
+        time.elapsed().as_secs_f32() / time.wrap_period().as_secs_f32()
+    }
+    pub fn new(config: &ObjectConfig, spec: ObjectSpec, time: &Time) -> Self {
+        let name: &'static str = spec.object.into();
         Self {
             object: spec.object,
             team: spec.team,
             objectives: spec.objectives,
+            transform: Transform {
+                scale: Vec3::splat(config.radius),
+                translation: spec
+                    .position
+                    .extend(spec.object.zindex() + 0.1 * Self::random_offset(time)),
+                ..default()
+            },
             physics: PhysicsBundle {
                 material: config.physics_material,
                 velocity: spec
@@ -52,6 +63,7 @@ impl ObjectBundle {
                 ..default()
             },
             health: Health::new(config.health),
+            name: Name::new(name),
             ..default()
         }
     }
@@ -70,10 +82,6 @@ pub struct ObjectCommands<'w, 's> {
     time: Res<'w, Time>,
 }
 impl ObjectCommands<'_, '_> {
-    /// Returns random value [0, 1.)
-    fn random_offset(&self) -> f32 {
-        self.time.elapsed().as_secs_f32() / self.time.wrap_period().as_secs_f32()
-    }
     pub fn spawn(&mut self, spec: ObjectSpec) {
         let config = &self.configs[&spec.object];
         let team_material = self.assets.get_team_material(spec.team);
@@ -86,14 +94,8 @@ impl ObjectCommands<'_, '_> {
                         NearestZooidHead::default(),
                         ObjectBundle {
                             mesh: self.assets.mesh.clone(),
-                            transform: Transform::default()
-                                .with_scale(Vec3::splat(config.radius))
-                                .with_translation(
-                                    spec.position.extend(spec.zindex + self.random_offset()),
-                                ),
                             material: team_material.primary,
-                            name: Name::new("Zooid"),
-                            ..ObjectBundle::new(config, spec)
+                            ..ObjectBundle::new(config, spec, &self.time)
                         },
                     ))
                     .with_children(|parent| {
@@ -106,12 +108,8 @@ impl ObjectCommands<'_, '_> {
                     Consumer::new(3),
                     ObjectBundle {
                         mesh: self.assets.mesh.clone(),
-                        transform: Transform::default()
-                            .with_scale(Vec3::splat(config.radius))
-                            .with_translation(spec.position.extend(zindex::ZOOID_HEAD)),
                         material: team_material.primary,
-                        name: Name::new("ZooidHead"),
-                        ..ObjectBundle::new(config, spec)
+                        ..ObjectBundle::new(config, spec, &self.time)
                     },
                 ));
                 entity_commands.with_children(|parent| {
@@ -125,14 +123,9 @@ impl ObjectCommands<'_, '_> {
                     .spawn((
                         Plankton,
                         ObjectBundle {
-                            team: Team::None,
                             mesh: self.assets.mesh.clone(),
-                            transform: Transform::default()
-                                .with_scale(Vec3::splat(config.radius))
-                                .with_translation(spec.position.extend(zindex::PLANKTON)),
                             material: team_material.primary,
-                            name: Name::new("Plankton"),
-                            ..ObjectBundle::new(config, spec)
+                            ..ObjectBundle::new(config, spec, &self.time)
                         },
                     ))
                     .with_children(|parent| {
@@ -141,14 +134,9 @@ impl ObjectCommands<'_, '_> {
             }
             Object::Food => {
                 self.commands.spawn(ObjectBundle {
-                    team: Team::None,
                     mesh: self.assets.mesh.clone(),
-                    transform: Transform::default()
-                        .with_scale(Vec2::splat(config.radius).extend(1.))
-                        .with_translation(spec.position.extend(zindex::FOOD)),
                     material: team_material.secondary,
-                    name: Name::new("Food"),
-                    ..ObjectBundle::new(config, spec)
+                    ..ObjectBundle::new(config, spec, &self.time)
                 });
             }
         }

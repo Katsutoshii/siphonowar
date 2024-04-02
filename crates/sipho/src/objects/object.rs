@@ -1,4 +1,5 @@
 use std::f32::consts::PI;
+use strum_macros::IntoStaticStr;
 
 use super::{
     carry::{CarriedBy, CarryEvent},
@@ -31,7 +32,19 @@ impl Plugin for ObjectPlugin {
 }
 
 /// Entities that can interact with each other.
-#[derive(Component, Reflect, Default, Copy, Clone, PartialEq, Eq, Hash, Debug, clap::ValueEnum)]
+#[derive(
+    Component,
+    Reflect,
+    Default,
+    Copy,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    Debug,
+    clap::ValueEnum,
+    IntoStaticStr,
+)]
 #[reflect(Component)]
 pub enum Object {
     #[default]
@@ -76,6 +89,14 @@ pub struct UpdateObjectiveNeighborQueryData {
 }
 
 impl Object {
+    pub fn zindex(self) -> f32 {
+        match self {
+            Self::Worker => zindex::ZOOIDS_MIN,
+            Self::Head => zindex::ZOOID_HEAD,
+            Self::Food => zindex::FOOD,
+            Self::Plankton => zindex::PLANKTON,
+        }
+    }
     pub fn update_acceleration(
         mut query: Query<UpdateAccelerationQueryData>,
         others: Query<(&Self, &Velocity)>,

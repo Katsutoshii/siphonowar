@@ -10,6 +10,7 @@ bevy = {version = "0.13.0", features = ["dynamic_linking", "file_watcher"]}
 clap = "4.5.2"
 rand = "0.8.5"
 serde = "1.0.192"
+strum_macros = "0.26.2"
 
 sipho_core = {path = "../sipho_core"}
 sipho_vfx = {path = "../sipho_vfx"}
