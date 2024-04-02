@@ -54,9 +54,22 @@ pub struct TeamMaterials {
 impl TeamMaterials {
     pub fn new(color: Color, assets: &mut Assets<StandardMaterial>) -> Self {
         Self {
-            primary: assets.add(StandardMaterial::from(color)),
-            secondary: assets.add(StandardMaterial::from(color)),
-            background: assets.add(StandardMaterial::from(color.with_a(0.3))),
+            primary: assets.add(StandardMaterial {
+                base_color: color,
+                perceptual_roughness: 1.0,
+                ..default()
+            }),
+            secondary: assets.add(StandardMaterial {
+                base_color: color,
+                perceptual_roughness: 1.0,
+                ..default()
+            }),
+            background: assets.add(StandardMaterial {
+                base_color: color.with_a(0.3),
+                perceptual_roughness: 1.0,
+                alpha_mode: AlphaMode::Blend,
+                ..default()
+            }),
         }
     }
 }

@@ -18,6 +18,8 @@ pub mod prelude {
     };
 }
 
+use std::f32::consts::PI;
+
 use prelude::*;
 
 pub struct SiphonowarPlugin;
@@ -37,6 +39,31 @@ impl Plugin for SiphonowarPlugin {
             scene::LoadableScenePlugin,
             ui::UiPlugin,
             sipho_vfx::VfxPlugin,
-        ));
+        ))
+        .add_systems(Startup, spawn_gltf);
     }
+}
+
+fn spawn_gltf(mut commands: Commands, asset_server: Res<AssetServer>) {
+    info!("Spawn gltf");
+    commands.spawn((
+        Name::new("Rocks"),
+        SceneBundle {
+            scene: asset_server.load("models/rocks/RocksLowPoly.gltf#Scene0"),
+            transform: Transform {
+                scale: Vec3 {
+                    x: 8.,
+                    y: 1.5,
+                    z: 8.,
+                },
+                translation: Vec3 {
+                    x: -150.,
+                    y: 490.,
+                    z: -10.,
+                },
+                rotation: Quat::from_axis_angle(Vec3::X, PI / 2.),
+            },
+            ..default()
+        },
+    ));
 }

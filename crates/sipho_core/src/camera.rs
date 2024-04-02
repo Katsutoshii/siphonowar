@@ -20,7 +20,7 @@ impl Plugin for CameraPlugin {
             .add_systems(Startup, MainCamera::startup)
             .insert_resource(AmbientLight {
                 color: Color::WHITE,
-                brightness: 2100.,
+                brightness: 1000.,
             })
             .add_systems(
                 Update,
@@ -59,7 +59,7 @@ impl MainCamera {
                 }
                 .into(),
                 transform: Transform::from_xyz(0.0, 0.0, zindex::CAMERA)
-                    .with_rotation(Quat::from_axis_angle(Vec3::X, PI / 16.)),
+                    .with_rotation(Quat::from_axis_angle(Vec3::X, PI / 8.)),
                 // .looking_at(Vec3::ZERO, Vec3::Z),
                 tonemapping: Tonemapping::TonyMcMapface,
                 ..default()
@@ -81,10 +81,10 @@ impl MainCamera {
         ));
         commands.spawn(DirectionalLightBundle {
             transform: Transform::from_xyz(0.0, 0.0, zindex::CAMERA)
-                .with_rotation(Quat::from_axis_angle(Vec3::X, PI / 8.)),
+                .with_rotation(Quat::from_axis_angle(Vec3::ONE, -PI / 6.)),
             directional_light: DirectionalLight {
                 color: Color::ANTIQUE_WHITE,
-                illuminance: 2000.,
+                illuminance: 3000.,
                 ..default()
             },
             ..default()

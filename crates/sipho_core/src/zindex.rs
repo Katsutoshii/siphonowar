@@ -11,9 +11,7 @@ pub const FOOD: f32 = 0.12 * FACTOR;
 
 pub const NAVIGATION_LAYER: f32 = 0.14 * FACTOR;
 pub const HIGHLIGHT: f32 = 0.15 * FACTOR;
-pub const FOG_OF_WAR: f32 = 0.20 * FACTOR;
 pub const WAYPOINT: f32 = 0.22 * FACTOR;
-pub const MINIMAP: f32 = 0.25 * FACTOR;
 pub const SELECTOR: f32 = 0.30 * FACTOR;
-pub const CURSOR: f32 = 0.35 * FACTOR;
+pub const FOG_OF_WAR: f32 = 4.0 * FACTOR;
 pub const CAMERA: f32 = 1000.0;
