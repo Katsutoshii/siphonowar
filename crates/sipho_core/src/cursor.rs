@@ -24,10 +24,6 @@ impl CursorParam<'_, '_> {
         let cursor_position = window.cursor_position()?;
         camera.viewport_to_world(camera_transform, cursor_position)
     }
-    // pub fn ray3d(&self) -> Option<Ray3d> {
-    //     let world_position = self.world_position()?;
-    //     Some(Ray3d::new(world_position.extend(zindex::CURSOR), -Vec3::Z))
-    // }
 }
 
 #[derive(Component, Debug, Default)]

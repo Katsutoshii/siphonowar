@@ -3,7 +3,10 @@ use bevy::{
     render::render_resource::{AsBindGroup, ShaderRef},
 };
 
-use crate::prelude::*;
+use crate::{
+    camera::{self, CameraAspectRatio},
+    prelude::*,
+};
 
 /// Plugin for visualizing the grid.
 /// This plugin reads events from the entity grid and updates the shader's input buffer
@@ -53,20 +56,15 @@ impl ShaderPlaneMaterial for MinimapShaderMaterial {
     fn scale(_camera: &Camera, _spec: &GridSpec) -> Vec3 {
         (Vec2::ONE / 4.).extend(1.)
     }
-    fn translation(camera: &Camera, _spec: &GridSpec) -> Vec3 {
-        let viewport_size = camera.logical_viewport_size().unwrap();
-        let projection = Vec2 {
-            x: viewport_size.x / viewport_size.y,
-            y: 1.,
-        };
-        let bottom_left = projection / 2.;
-
-        let quad = Vec2::ONE / 4.;
+    fn translation(cam: &Camera, _spec: &GridSpec) -> Vec3 {
+        let aspect_ratio = cam.aspect_ratio();
+        let bottom_left = aspect_ratio / 2.;
+        let quad = Self::scale(cam, _spec).xy();
         let quad_offset = quad / 2.;
-
-        let depth = -0.5;
         let flip_y = Vec2 { x: 1., y: -1. };
-        ((bottom_left - quad_offset) * flip_y).extend(depth)
+
+        // Position the object in the bottom left.
+        ((bottom_left - quad_offset) * flip_y).extend(-camera::get_depth())
     }
 
     fn resize(&mut self, spec: &GridSpec) {

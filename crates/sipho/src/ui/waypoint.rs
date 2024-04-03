@@ -74,12 +74,6 @@ impl Waypoint {
                 continue;
             }
 
-            // let mesh = meshes.get(&assets.mesh).unwrap();
-            // dbg!(mesh);
-
-            if control.action == ControlAction::AttackMove && control.mode != ControlMode::Attack {
-                error!("WTF");
-            }
             // Spawn a new waypoint.
             let waypoint_bundle = Waypoint::default().bundle(
                 &assets,

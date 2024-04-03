@@ -12,6 +12,15 @@ use bevy::{
 
 use crate::prelude::*;
 
+pub trait CameraAspectRatio {
+    fn aspect_ratio(&self) -> Vec2;
+}
+impl CameraAspectRatio for Camera {
+    fn aspect_ratio(&self) -> Vec2 {
+        let viewport_size = self.logical_viewport_size().unwrap();
+        viewport_size / viewport_size.y
+    }
+}
 pub struct CameraPlugin;
 impl Plugin for CameraPlugin {
     fn build(&self, app: &mut App) {
@@ -40,6 +49,15 @@ pub struct CameraMoveEvent {
     pub position: Vec2,
 }
 
+pub const FOV: f32 = PI / 4.;
+
+// Compute UI depth for camera such that the Y distance is 1.
+pub fn get_depth() -> f32 {
+    let theta = FOV / 2.;
+    let opposite = 1. / 2.;
+    opposite / theta.tan()
+}
+
 /// Used to help identify our main camera
 #[derive(Component)]
 pub struct MainCamera;
@@ -52,7 +70,7 @@ impl MainCamera {
                     ..default()
                 },
                 projection: PerspectiveProjection {
-                    fov: PI / 2.0,
+                    fov: FOV,
                     near: 0.1,
                     far: 2000.,
                     ..default()
@@ -60,7 +78,6 @@ impl MainCamera {
                 .into(),
                 transform: Transform::from_xyz(0.0, 0.0, zindex::CAMERA)
                     .with_rotation(Quat::from_axis_angle(Vec3::X, PI / 8.)),
-                // .looking_at(Vec3::ZERO, Vec3::Z),
                 tonemapping: Tonemapping::TonyMcMapface,
                 ..default()
             },

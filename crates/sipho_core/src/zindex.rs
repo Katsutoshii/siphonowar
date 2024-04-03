@@ -14,4 +14,4 @@ pub const HIGHLIGHT: f32 = 0.15 * FACTOR;
 pub const WAYPOINT: f32 = 0.22 * FACTOR;
 pub const SELECTOR: f32 = 0.30 * FACTOR;
 pub const FOG_OF_WAR: f32 = 4.0 * FACTOR;
-pub const CAMERA: f32 = 1000.0;
+pub const CAMERA: f32 = 2000.0;
