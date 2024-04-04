@@ -4,7 +4,7 @@ use crate::prelude::*;
 use bevy::{prelude::*, render::render_resource::ShaderType};
 
 /// Shader supported grid size.
-#[derive(Default, ShaderType, Clone)]
+#[derive(Default, ShaderType, Debug, Clone)]
 #[repr(C)]
 pub struct GridSize {
     pub width: f32,
@@ -58,9 +58,10 @@ impl GridSpec {
         } - self.offset()
     }
 
-    /// Convert local position [-0.5, 0.5] to world coordinates.
-    pub fn local_to_world_position(&self, position: Vec2) -> Vec2 {
-        position * 2. * self.offset()
+    /// Convert local position [0, 1] to world coordinates.
+    pub fn uv_to_world_position(&self, position: Vec2) -> Vec2 {
+        let position = Vec2::new(position.x, 1. - position.y);
+        position * self.scale() - self.offset()
     }
 
     /// Compute the offset vector for this grid spec.

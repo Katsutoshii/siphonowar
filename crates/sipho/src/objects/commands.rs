@@ -150,7 +150,7 @@ impl ObjectCommands<'_, '_> {
                 }
             }
         }
-        self.grid.remove(entity, &grid_entity);
+        self.grid.remove(entity, &grid_entity); // TODO: propagate the event to other systems.
         self.commands.entity(entity).despawn_recursive();
     }
 

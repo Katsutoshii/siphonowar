@@ -5,7 +5,6 @@ use crate::prelude::*;
 pub mod entity;
 pub mod fog;
 pub mod grid2;
-pub mod minimap;
 pub mod obstacles;
 pub mod rowcol;
 pub mod sparse_grid2;
@@ -16,7 +15,7 @@ pub use {
     entity::{EntityGridEvent, EntitySet, GridEntity},
     fog::{FogPlugin, VisibilityUpdate, VisibilityUpdateEvent},
     grid2::{Grid2, Grid2Plugin},
-    minimap::{MinimapPlugin, MinimapShaderMaterial},
+    // minimap::{MinimapPlugin, MinimapShaderMaterial},
     obstacles::{Obstacle, ObstaclesPlugin},
     rowcol::{RowCol, RowColDistance},
     sparse_grid2::SparseGrid2,
@@ -33,7 +32,7 @@ impl Plugin for GridPlugin {
             .add_event::<EntityGridEvent>()
             .add_plugins((
                 GridVisualizerPlugin,
-                MinimapPlugin,
+                // MinimapPlugin,
                 ObstaclesPlugin,
                 FogPlugin,
                 Grid2Plugin::<EntitySet>::default(),

@@ -1,3 +1,7 @@
+const WIDTH = 256;
+const HEIGHT = 256;
+const SIZE = WIDTH * HEIGHT;
+
 // Specifies grid size.
 struct GridSize {
     width: f32,

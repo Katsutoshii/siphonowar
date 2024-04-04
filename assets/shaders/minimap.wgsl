@@ -1,29 +1,50 @@
-#import bevy_pbr::{mesh_view_bindings::globals, forward_io::VertexOutput};
-#import "shaders/constants.wgsl"::{COLOR_MULTIPLIER, HIGHLIGHT_LEVEL, CHECKERBOARD_LIGHT, CHECKERBOARD_DARK};
-#import "shaders/grid.wgsl"::{GridSize, grid_index, grid_offset, grid_coords, grid_uv};
+// This shader draws a circle with a given input color
+#import bevy_ui::ui_vertex_output::UiVertexOutput
+#import "shaders/grid.wgsl"::{GridSize, grid_index, grid_offset, grid_coords, grid_uv, SIZE};
+#import "shaders/team.wgsl"::{TEAM_NONE, TEAM_BLUE, TEAM_RED, NUM_TEAMS};
+#import "shaders/constants.wgsl"::{HIGHLIGHT_LEVEL};
 
-@group(2) @binding(0) var<uniform> color: vec4<f32>;
-@group(2) @binding(1) var<uniform> size: GridSize;
-@group(2) @binding(2) var<uniform> camera_position: vec2<f32>;
-@group(2) @binding(3) var<uniform> viewport_size: vec2<f32>;
-@group(2) @binding(4) var<storage> grid: array<u32>;
-@group(2) @binding(5) var<storage> visibility_grid: array<f32>;
+struct GridEntry {
+    visibility: f32,
+    team_presence: array<f32, NUM_TEAMS>,
+}
+struct MinimapUiMaterial {
+    @location(0) colors: array<vec4<f32>, NUM_TEAMS>,
+    @location(1) size: GridSize,
+    @location(2) camera_position: vec2<f32>,
+    @location(3) viewport_size: vec2<f32>,
+}
+
+@group(1) @binding(0)
+var<uniform> input: MinimapUiMaterial;
+@group(1) @binding(1)
+var<storage> grid: array<GridEntry>;
+
+fn get_visibility(row: u32, col: u32) -> f32 {
+    return grid[grid_index(input.size, row, col)].visibility;
+}
+
+fn get_team_presence(row: u32, col: u32) -> vec3<f32> {
+    let arr = grid[grid_index(input.size, row, col)].team_presence;
+    return vec3<f32>(arr[0], arr[1], arr[2]);
+}
 
 @fragment
-fn fragment(mesh: VertexOutput) -> @location(0) vec4<f32> {
-    let g = grid_uv(size, mesh.uv);
+fn fragment(in: UiVertexOutput) -> @location(0) vec4<f32> {
+
+    let g = grid_uv(input.size, in.uv);
     let g_frac = g - floor(g);
     let row = u32(g.y);
     let col = u32(g.x);
 
     var camera_brightness = vec4<f32>(0.);
-    let camera_check = abs(g - camera_position);
-    if camera_check.x < viewport_size.x && camera_check.y < viewport_size.y {
-        camera_brightness = vec4<f32>(0.02);
+    let camera_check = abs(g - input.camera_position);
+    if camera_check.x < input.viewport_size.x && camera_check.y < input.viewport_size.y {
+        camera_brightness = vec4<f32>(0.05);
     }
 
     let e = 0.01;
-    let boundary_check = abs(mesh.uv - 0.5);
+    let boundary_check = abs(in.uv - 0.5);
     if boundary_check.x > 0.5 - e {
         return vec4<f32>(0.3);
     }
@@ -32,35 +53,37 @@ fn fragment(mesh: VertexOutput) -> @location(0) vec4<f32> {
     }
 
     var output_color = vec4<f32>(.1, .1, .1, 1.);
-    output_color *= f32((col / 8u + row / 8u) % 2u) * (0.3 - 0.2) + 0.2;
+    output_color *= f32((col / 8u + row / 8u) % 2u) * (0.05) + 0.1;
 
-    let visible = visibility_grid[grid_index(size, row, col)];
+    let visible = grid[grid_index(input.size, row, col)].visibility;
     var fog = visible;
-    fog += visibility_grid[grid_index(size, row + 1u, col + 0u)] * g_frac.y;
-    fog += visibility_grid[grid_index(size, row + 0u, col + 1u)] * g_frac.x;
-    fog += visibility_grid[grid_index(size, row - 1u, col - 0u)] * (1. - g_frac.y);
-    fog += visibility_grid[grid_index(size, row - 0u, col - 1u)] * (1. - g_frac.x);
-    fog *= 0.3;
+    fog += get_visibility(row + 1u, col + 0u) * g_frac.y;
+    fog += get_visibility(row + 0u, col + 1u) * g_frac.x;
+    fog += get_visibility(row - 1u, col - 0u) * (1. - g_frac.y);
+    fog += get_visibility(row - 0u, col - 1u) * (1. - g_frac.x);
+    fog *= 0.8;
 
-    var highlight = 0.;
-    highlight += f32(grid[grid_index(size, row, col)]);
-    highlight += f32(grid[grid_index(size, row + 1u, col + 0u)]);
-    highlight += f32(grid[grid_index(size, row + 0u, col + 1u)]);
-    highlight += f32(grid[grid_index(size, row - 1u, col + 0u)]);
-    highlight += f32(grid[grid_index(size, row + 0u, col - 1u)]);
-    highlight += f32(grid[grid_index(size, row + 1u, col + 1u)]);
-    highlight += f32(grid[grid_index(size, row - 1u, col - 1u)]);
-    highlight += f32(grid[grid_index(size, row - 1u, col + 1u)]);
-    highlight += f32(grid[grid_index(size, row + 1u, col - 1u)]);
-    highlight = min(highlight, HIGHLIGHT_LEVEL) * (1. - visible);
+    var highlight = get_team_presence(row, col);
+    highlight += get_team_presence(row + 1u, col + 0u);
+    highlight += get_team_presence(row + 0u, col + 1u);
+    highlight += get_team_presence(row - 1u, col + 0u);
+    highlight += get_team_presence(row + 0u, col - 1u);
+    highlight += get_team_presence(row + 1u, col + 1u);
+    highlight += get_team_presence(row - 1u, col - 1u);
+    highlight += get_team_presence(row - 1u, col + 1u);
+    highlight += get_team_presence(row + 1u, col - 1u);
+    highlight.x = min(highlight.x, HIGHLIGHT_LEVEL);
+    highlight.y = min(highlight.y, HIGHLIGHT_LEVEL);
+    highlight.z = min(highlight.z, HIGHLIGHT_LEVEL);
 
+    output_color += 30. * input.colors[TEAM_NONE] * highlight.x;
+    output_color += 30. * input.colors[TEAM_BLUE] * highlight.y;
+    output_color += 30. * input.colors[TEAM_RED] * highlight.z;
+    output_color /= 2. * (highlight.x + highlight.y + highlight.z + 1.);
 
-    output_color += 30. * color * highlight;
-
-
-    // fog += f32(visibility_grid[grid_index(size, row, col)]);
-    output_color *= 1. - fog;
+    output_color *= fog;
     output_color += camera_brightness;
     output_color.a = 0.9;
     return output_color;
 }
+

@@ -98,16 +98,23 @@ impl Grid2<EntitySet> {
     }
 
     /// Remove an entity from the grid entirely.
-    pub fn remove(&mut self, entity: Entity, grid_entity: &GridEntity) {
+    pub fn remove(&mut self, entity: Entity, grid_entity: &GridEntity) -> Option<EntityGridEvent> {
         if let Some(rowcol) = grid_entity.cell {
             if let Some(cell) = self.get_mut(rowcol) {
                 cell.remove(&entity);
+                return Some(EntityGridEvent {
+                    entity,
+                    prev_cell: Some(rowcol),
+                    prev_cell_empty: cell.is_empty(),
+                    cell: None,
+                });
             } else {
                 error!("No cell at {:?}.", rowcol)
             }
         } else {
             error!("No row col for {:?}", entity)
         }
+        None
     }
 
     /// Get all entities in a given bounding box.

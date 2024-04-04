@@ -17,23 +17,18 @@ where
 
 /// Trait must be implemented by all Plane shaders.
 pub trait ShaderPlaneMaterial: Material + Default {
-    /// If true, this grid shader will have the camera as a parent.
-    fn parent_camera() -> bool {
-        false
-    }
-
     /// If true, receive raycasts.
     fn raycast_target() -> RaycastTarget {
         RaycastTarget::None
     }
 
     /// Scale factor
-    fn scale(_window: &Camera, spec: &GridSpec) -> Vec3 {
+    fn scale(spec: &GridSpec) -> Vec3 {
         spec.scale().extend(1.)
     }
 
     /// Translation
-    fn translation(_window: &Camera, spec: &GridSpec) -> Vec3;
+    fn translation(spec: &GridSpec) -> Vec3;
 
     /// Resize the grid based on the grid spec.
     fn resize(&mut self, spec: &GridSpec);
@@ -42,7 +37,6 @@ pub trait ShaderPlaneMaterial: Material + Default {
     fn resize_on_change(
         spec: Res<GridSpec>,
         mut query: Query<(Entity, &mut Visibility), With<ShaderPlane<Self>>>,
-        camera: Query<(Entity, &Camera), With<MainCamera>>,
         assets: Res<ShaderPlaneAssets<Self>>,
         mut shader_assets: ResMut<Assets<Self>>,
         mut commands: Commands,
@@ -60,19 +54,9 @@ pub trait ShaderPlaneMaterial: Material + Default {
         let material = shader_assets.get_mut(&assets.shader_material).unwrap();
         material.resize(&spec);
 
-        let (camera_entity, camera) = camera.single();
-        let plane_entity = {
-            let mut plane =
-                commands.spawn(ShaderPlane::<Self>::default().bundle(&spec, camera, &assets));
-            if Self::raycast_target() != RaycastTarget::None {
-                plane.insert(Self::raycast_target());
-            }
-            plane.id()
-        };
-        if Self::parent_camera() {
-            commands
-                .entity(camera_entity)
-                .push_children(&[plane_entity]);
+        let mut plane = commands.spawn(ShaderPlane::<Self>::default().bundle(&spec, &assets));
+        if Self::raycast_target() != RaycastTarget::None {
+            plane.insert(Self::raycast_target());
         }
     }
 }
@@ -82,19 +66,14 @@ pub trait ShaderPlaneMaterial: Material + Default {
 #[component(storage = "SparseSet")]
 pub struct ShaderPlane<M: ShaderPlaneMaterial>(PhantomData<M>);
 impl<M: ShaderPlaneMaterial> ShaderPlane<M> {
-    pub fn bundle(
-        self,
-        spec: &GridSpec,
-        camera: &Camera,
-        assets: &ShaderPlaneAssets<M>,
-    ) -> impl Bundle {
+    pub fn bundle(self, spec: &GridSpec, assets: &ShaderPlaneAssets<M>) -> impl Bundle {
         let material = assets.shader_material.clone();
         (
             MaterialMeshBundle {
                 mesh: assets.mesh.clone(),
                 transform: Transform::default()
-                    .with_scale(M::scale(camera, spec))
-                    .with_translation(M::translation(camera, spec)),
+                    .with_scale(M::scale(spec))
+                    .with_translation(M::translation(spec)),
                 material,
                 ..default()
             },

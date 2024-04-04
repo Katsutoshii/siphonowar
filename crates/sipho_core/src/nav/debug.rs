@@ -37,7 +37,7 @@ impl Default for NavigationShaderMaterial {
     }
 }
 impl ShaderPlaneMaterial for NavigationShaderMaterial {
-    fn translation(_camera: &Camera, _spec: &GridSpec) -> Vec3 {
+    fn translation(_spec: &GridSpec) -> Vec3 {
         Vec2::ZERO.extend(zindex::NAVIGATION_LAYER)
     }
     fn resize(&mut self, spec: &GridSpec) {
