@@ -18,9 +18,8 @@ pub mod prelude {
     };
 }
 
-use std::f32::consts::PI;
-
 use prelude::*;
+use std::f32::consts::PI;
 
 pub struct SiphonowarPlugin;
 impl Plugin for SiphonowarPlugin {

@@ -47,10 +47,11 @@ impl Plugin for ObjectsPlugin {
 #[derive(Resource)]
 pub struct ObjectAssets {
     pub mesh: Handle<Mesh>,
+    pub connector_mesh: Handle<Mesh>,
     team_materials: Vec<TeamMaterials>,
 }
 impl ObjectAssets {
-    fn get_team_material(&self, team: Team) -> TeamMaterials {
+    pub fn get_team_material(&self, team: Team) -> TeamMaterials {
         self.team_materials.get(team as usize).unwrap().clone()
     }
 }
@@ -60,6 +61,10 @@ impl FromWorld for ObjectAssets {
             mesh: {
                 let mut meshes = world.get_resource_mut::<Assets<Mesh>>().unwrap();
                 meshes.add(Mesh::from(Sphere { radius: 0.5 }))
+            },
+            connector_mesh: {
+                let asset_server = world.get_resource_mut::<AssetServer>().unwrap();
+                asset_server.load("models/connector/connector.gltf#Mesh0/Primitive0")
             },
             team_materials: {
                 let mut materials = world

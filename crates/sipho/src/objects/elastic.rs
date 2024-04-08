@@ -1,16 +1,44 @@
 use crate::prelude::*;
 
-#[derive(Component, Reflect, Debug)]
-#[reflect(Component)]
-struct Elastic {
-    entities: [Entity; 2],
+use super::ObjectAssets;
+
+pub struct ElasticPlugin;
+impl Plugin for ElasticPlugin {
+    fn build(&self, app: &mut App) {
+        app.register_type::<Elastic>().add_systems(
+            FixedUpdate,
+            (Elastic::tie_together, Elastic::update)
+                .chain()
+                .in_set(SystemStage::PostCompute)
+                .in_set(GameStateSet::Running),
+        );
+    }
 }
 
+#[derive(Component, Reflect, Debug)]
+#[reflect(Component)]
+pub struct Elastic {
+    entities: [Entity; 2],
+}
+impl Default for Elastic {
+    fn default() -> Self {
+        Self {
+            entities: [Entity::PLACEHOLDER, Entity::PLACEHOLDER],
+        }
+    }
+}
+
+#[derive(Bundle, Default)]
+pub struct ElasticBundle {
+    pub elastic: Elastic,
+    pub pbr: PbrBundle,
+}
 impl Elastic {
     pub fn tie_together(
         mut commands: Commands,
         mut control_events: EventReader<ControlEvent>,
-        query: Query<(Entity, &Selected)>,
+        query: Query<((Entity, &Team), &Selected)>,
+        assets: Res<ObjectAssets>,
     ) {
         let mut entity_set = vec![];
         for (entity, selected) in query.iter() {
@@ -24,8 +52,18 @@ impl Elastic {
         for control_event in control_events.read() {
             if control_event.is_pressed(ControlAction::TieWorkers) {
                 for slice in entity_set.windows(2) {
-                    if let [a, b] = slice {
-                        commands.spawn(Elastic { entities: [*a, *b] });
+                    if let [(a, &a_team), (b, &b_team)] = slice {
+                        if a_team != b_team {
+                            continue;
+                        }
+                        commands.spawn(ElasticBundle {
+                            elastic: Elastic { entities: [*a, *b] },
+                            pbr: PbrBundle {
+                                mesh: assets.connector_mesh.clone(),
+                                material: assets.get_team_material(a_team).background,
+                                ..default()
+                            },
+                        });
                     }
                 }
             }
@@ -33,41 +71,34 @@ impl Elastic {
     }
     pub fn update(
         mut commands: Commands,
-        elastic_query: Query<(Entity, &Elastic)>,
+        mut elastic_query: Query<(Entity, &Elastic, &mut Transform)>,
         worker_query: Query<(Entity, &GlobalTransform)>,
         mut accel_query: Query<&mut Acceleration>,
-        mut gizmos: Gizmos,
     ) {
-        for (cord_entity, cord) in elastic_query.iter() {
+        for (entity, elastic, mut transform) in elastic_query.iter_mut() {
             if let (Ok((entity1, transform1)), Ok((entity2, transform2))) = (
-                worker_query.get(cord.entities[0]),
-                worker_query.get(cord.entities[1]),
+                worker_query.get(elastic.entities[0]),
+                worker_query.get(elastic.entities[1]),
             ) {
-                let delta = transform2.translation().xy() - transform1.translation().xy();
+                let position1 = transform1.translation().xy();
+                let position2 = transform2.translation().xy();
+
+                let delta = position2 - position1;
                 let direction = delta.normalize_or_zero();
-                let force = delta.length_squared() * 0.0005;
+                let magnitude = delta.length();
+                let force = magnitude * magnitude * 0.0005;
                 *accel_query.get_mut(entity1).unwrap() += Acceleration(direction * force);
                 *accel_query.get_mut(entity2).unwrap() -= Acceleration(direction * force);
-                gizmos.line_2d(
-                    transform1.translation().xy(),
-                    transform2.translation().xy(),
-                    Color::GRAY,
-                );
+
+                // Set transform.
+                let width = 4.;
+                let depth = transform1.translation().z;
+                transform.translation = ((position1 + position2) / 2.).extend(depth);
+                transform.scale = Vec3::new(magnitude / 2., width, width);
+                transform.rotation = Quat::from_axis_angle(Vec3::Z, delta.to_angle())
             } else {
-                commands.entity(cord_entity).despawn();
+                commands.entity(entity).despawn();
             }
         }
-    }
-}
-
-pub struct ElasticPlugin;
-impl Plugin for ElasticPlugin {
-    fn build(&self, app: &mut App) {
-        app.register_type::<Elastic>().add_systems(
-            FixedUpdate,
-            (Elastic::tie_together, Elastic::update)
-                .in_set(SystemStage::PostCompute)
-                .in_set(GameStateSet::Running),
-        );
     }
 }
