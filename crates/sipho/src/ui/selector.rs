@@ -155,7 +155,7 @@ impl FromWorld for SelectorAssets {
         Self {
             mesh: {
                 let mut meshes = world.get_resource_mut::<Assets<Mesh>>().unwrap();
-                meshes.add(Mesh::from(meshes::UNIT_SQUARE))
+                meshes.add(Mesh::from(Cuboid::from_size(Vec2::splat(1.).extend(0.))))
             },
             blue_material: {
                 let mut materials = world
