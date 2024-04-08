@@ -35,7 +35,7 @@ impl Objective {
     pub fn try_add_components(
         &self,
         components: &mut ObjectivesQueryDataItem,
-        targets: &Query<(&GlobalTransform, &Velocity, Option<&CarriedBy>)>,
+        targets: &Query<(&GlobalTransform, &Velocity, &CarriedBy)>,
         commands: &mut Commands,
     ) -> Result<(), Error> {
         let mut commands = commands.entity(components.entity);
@@ -51,7 +51,7 @@ impl Objective {
             }
             Self::AttackEntity(entity) => {
                 let (transform, velocity, carried_by) = targets.get(*entity)?;
-                if carried_by.is_some() {
+                if !carried_by.is_empty() {
                     return Err(Error::Default);
                 }
                 let target_position = transform.translation().xy() + velocity.0;
@@ -74,7 +74,7 @@ impl Objective {
     pub fn try_update_components(
         &self,
         components: &mut ObjectivesQueryDataItem,
-        targets: &Query<(&GlobalTransform, &Velocity, Option<&CarriedBy>)>,
+        targets: &Query<(&GlobalTransform, &Velocity, &CarriedBy)>,
     ) -> Result<(), Error> {
         match self {
             Self::None => {}
@@ -86,7 +86,7 @@ impl Objective {
             }
             Self::AttackEntity(entity) => {
                 let (transform, velocity, carried_by) = targets.get(*entity)?;
-                if carried_by.is_some() {
+                if !carried_by.is_empty() {
                     return Err(Error::Default);
                 }
                 let target_position = transform.translation().xy() + velocity.0;
@@ -124,7 +124,7 @@ impl Default for Objectives {
 impl Objectives {
     pub fn update_components(
         mut query: Query<(&mut Objectives, ObjectivesQueryData)>,
-        targets: Query<(&GlobalTransform, &Velocity, Option<&CarriedBy>)>,
+        targets: Query<(&GlobalTransform, &Velocity, &CarriedBy)>,
         mut commands: Commands,
     ) {
         for (mut objectives, mut components) in query.iter_mut() {

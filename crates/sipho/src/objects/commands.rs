@@ -36,6 +36,7 @@ pub struct ObjectBundle {
     pub health: Health,
     pub neighbors: NeighborsBundle,
     pub attached_to: AttachedTo,
+    pub carried_by: CarriedBy,
     pub name: Name,
 }
 impl ObjectBundle {

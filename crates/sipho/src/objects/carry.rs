@@ -29,7 +29,7 @@ pub struct CarryEvent {
 #[query_data(mutable)]
 pub struct CarriedByQueryData {
     pub entity: Entity,
-    pub carried_by: Option<&'static mut CarriedBy>,
+    pub carried_by: &'static mut CarriedBy,
     pub objectives: &'static mut Objectives,
     pub nearest_head: Option<&'static NearestZooidHead>,
     pub velocity: &'static mut Velocity,
@@ -44,28 +44,22 @@ impl CarryEvent {
     ) {
         for event in events.read() {
             {
-                let carried = query.get_mut(event.carried).unwrap();
-
-                if let Some(mut carried_by) = carried.carried_by {
-                    carried_by.push(event.carrier);
-                } else {
-                    commands
-                        .entity(event.carried)
-                        .insert(CarriedBy::new(event.carrier));
-                }
-
+                let mut carried = query.get_mut(event.carried).unwrap();
+                carried.carried_by.push(event.carrier);
                 commands
                     .entity(event.carrier)
                     .set_parent_in_place(event.carried);
-            };
-            let mut carrier = query.get_mut(event.carrier).unwrap();
-
-            if let Some(NearestZooidHead {
-                entity: Some(entity),
-            }) = carrier.nearest_head
+            }
             {
-                carrier.objectives.clear();
-                carrier.objectives.push(Objective::FollowEntity(*entity));
+                let mut carrier = query.get_mut(event.carrier).unwrap();
+
+                if let Some(NearestZooidHead {
+                    entity: Some(entity),
+                }) = carrier.nearest_head
+                {
+                    carrier.objectives.clear();
+                    carrier.objectives.push(Objective::FollowEntity(*entity));
+                }
             }
         }
     }
@@ -77,17 +71,9 @@ impl CarriedBy {
     pub fn new(entity: Entity) -> Self {
         Self(vec![entity])
     }
-    pub fn update(
-        mut carried: Query<(Entity, &mut CarriedBy)>,
-        carriers: Query<Entity>,
-        mut commands: Commands,
-    ) {
-        for (entity, mut carried_by) in &mut carried {
+    pub fn update(mut carried: Query<&mut CarriedBy>, carriers: Query<Entity>) {
+        for mut carried_by in &mut carried {
             carried_by.retain(|&carrier| carriers.get(carrier).is_ok());
-            if carried_by.is_empty() {
-                warn!("No carriers!");
-                commands.entity(entity).remove::<Self>();
-            }
         }
     }
 }

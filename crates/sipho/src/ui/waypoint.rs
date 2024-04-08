@@ -139,6 +139,7 @@ impl Waypoint {
                 },
                 ..default()
             },
+            CarriedBy::default(),
             Velocity::ZERO,
             self,
         )

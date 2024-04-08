@@ -65,7 +65,7 @@ pub struct UpdateAccelerationQueryData {
     objectives: &'static Objectives,
     neighbors: &'static AlliedNeighbors,
     enemy_neighbors: &'static EnemyNeighbors,
-    carried_by: Option<&'static CarriedBy>,
+    carried_by: &'static CarriedBy,
     attached_to: &'static AttachedTo,
 }
 
@@ -86,7 +86,7 @@ pub struct UpdateObjectiveNeighborQueryData {
     object: &'static Object,
     velocity: &'static Velocity,
     parent: Option<&'static Parent>,
-    carried_by: Option<&'static CarriedBy>,
+    carried_by: &'static CarriedBy,
 }
 
 impl Object {
@@ -152,7 +152,7 @@ impl Object {
 
             // When idle, slow down.
             if *object.objectives.last() == Objective::None
-                && object.carried_by.is_none()
+                && object.carried_by.is_empty()
                 && object.attached_to.is_empty()
             {
                 let idle_slow_threshold = config.idle_speed;
@@ -186,7 +186,7 @@ impl Object {
                 if object.object.can_attack()
                     && neighbor.object.can_be_attacked()
                     && object.parent.is_none()
-                    && other.carried_by.is_none()
+                    && other.carried_by.is_empty()
                 {
                     // If already attacking an entity but we are now closer to different entity, attack the new closest
                     // entity.
