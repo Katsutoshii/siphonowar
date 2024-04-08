@@ -62,8 +62,10 @@ impl Waypoint {
 
     pub fn update(
         mut control_events: EventReader<ControlEvent>,
-        mut selection: Query<(&Selected, &mut Objectives), Without<Self>>,
+        selection: Query<(Entity, &Selected, &Object, &AttachedTo)>,
         mut commands: Commands,
+        attachments: Query<&AttachedTo>,
+        mut objectives: Query<&mut Objectives>,
         assets: Res<WaypointAssets>,
         // meshes: Res<Assets<Mesh>>,
     ) {
@@ -80,14 +82,36 @@ impl Waypoint {
                 control.position.extend(zindex::WAYPOINT),
                 control.mode,
             );
-            let entity = commands.spawn(waypoint_bundle).id();
+            let waypoint_entity = commands.spawn(waypoint_bundle).id();
 
-            for (selected, mut objectives) in selection.iter_mut() {
+            for (entity, selected, object, attached_to) in selection.iter() {
                 if selected.is_selected() {
+                    // When a head is selected, clear the objectives of all attached children.
+                    if *object == Object::Head && !attached_to.is_empty() {
+                        // DFS to clear objectives of all attached.
+                        let mut visited: HashSet<Entity> = HashSet::new();
+                        let mut stack: Vec<Entity> = Vec::new();
+                        stack.extend(attached_to.iter());
+                        while let Some(entity) = stack.pop() {
+                            if !visited.insert(entity) {
+                                continue;
+                            }
+
+                            // Clear objective.
+                            if let Ok(mut objectives) = objectives.get_mut(entity) {
+                                objectives.clear();
+                            }
+
+                            if let Ok(attached_to) = attachments.get(entity) {
+                                stack.extend(attached_to.iter());
+                            }
+                        }
+                    }
+                    let mut objectives = objectives.get_mut(entity).unwrap();
                     objectives.clear();
                     let objective = match control.mode {
-                        ControlMode::Normal => Objective::FollowEntity(entity),
-                        ControlMode::Attack => Objective::AttackFollowEntity(entity),
+                        ControlMode::Normal => Objective::FollowEntity(waypoint_entity),
+                        ControlMode::Attack => Objective::AttackFollowEntity(waypoint_entity),
                     };
                     objectives.push(objective);
                 }

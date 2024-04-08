@@ -18,7 +18,7 @@ pub use {
     config::{InteractionConfig, InteractionConfigs, ObjectConfig, ObjectConfigs},
     consumer::Consumer,
     damage::{DamageEvent, Health},
-    elastic::ElasticPlugin,
+    elastic::{AttachedTo, Elastic, ElasticPlugin},
     neighbors::CollidingNeighbors,
     object::Object,
 };

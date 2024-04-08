@@ -1,3 +1,6 @@
+use bevy::utils::smallvec::SmallVec;
+use sipho_core::grid::fog::FogConfig;
+
 use crate::prelude::*;
 
 use super::ObjectAssets;
@@ -15,16 +18,23 @@ impl Plugin for ElasticPlugin {
     }
 }
 
-#[derive(Component, Reflect, Debug)]
+#[derive(Component, Debug, Default, DerefMut, Deref)]
+pub struct AttachedTo(pub SmallVec<[Entity; 8]>);
+
+#[derive(Component, Reflect, Debug, Deref, DerefMut)]
 #[reflect(Component)]
-pub struct Elastic {
-    entities: [Entity; 2],
-}
+pub struct Elastic((Entity, Entity));
 impl Default for Elastic {
     fn default() -> Self {
-        Self {
-            entities: [Entity::PLACEHOLDER, Entity::PLACEHOLDER],
-        }
+        Self((Entity::PLACEHOLDER, Entity::PLACEHOLDER))
+    }
+}
+impl Elastic {
+    pub fn first(&self) -> Entity {
+        self.0 .0
+    }
+    pub fn second(&self) -> Entity {
+        self.0 .1
     }
 }
 
@@ -37,35 +47,38 @@ impl Elastic {
     pub fn tie_together(
         mut commands: Commands,
         mut control_events: EventReader<ControlEvent>,
-        query: Query<((Entity, &Team), &Selected)>,
+        mut query: Query<(Entity, &Selected, &mut AttachedTo)>,
         assets: Res<ObjectAssets>,
+        config: Res<FogConfig>,
     ) {
-        let mut entity_set = vec![];
-        for (entity, selected) in query.iter() {
-            match selected {
-                Selected::Selected { .. } => {
-                    entity_set.push(entity);
-                }
-                Selected::Unselected => {}
-            }
-        }
         for control_event in control_events.read() {
             if control_event.is_pressed(ControlAction::TieWorkers) {
-                for slice in entity_set.windows(2) {
-                    if let [(a, &a_team), (b, &b_team)] = slice {
-                        if a_team != b_team {
-                            continue;
+                // Collect entities to tie together.
+                let mut entities = vec![];
+                let mut attachments = vec![];
+                for (entity, selected, attached_to) in query.iter_mut() {
+                    match selected {
+                        Selected::Selected { .. } => {
+                            entities.push(entity);
+                            attachments.push(attached_to);
                         }
-                        commands.spawn(ElasticBundle {
-                            elastic: Elastic { entities: [*a, *b] },
-                            pbr: PbrBundle {
-                                mesh: assets.connector_mesh.clone(),
-                                material: assets.get_team_material(a_team).background,
-                                ..default()
-                            },
-                        });
+                        Selected::Unselected => {}
                     }
                 }
+                for i in 0..entities.len() - 1 {
+                    let pair = (entities[i], entities[i + 1]);
+                    commands.spawn(ElasticBundle {
+                        elastic: Elastic(pair),
+                        pbr: PbrBundle {
+                            mesh: assets.connector_mesh.clone(),
+                            material: assets.get_team_material(config.player_team).background,
+                            ..default()
+                        },
+                    });
+                    attachments[i].push(pair.1);
+                    attachments[i + 1].push(pair.0);
+                }
+                break;
             }
         }
     }
@@ -74,11 +87,12 @@ impl Elastic {
         mut elastic_query: Query<(Entity, &Elastic, &mut Transform)>,
         worker_query: Query<(Entity, &GlobalTransform)>,
         mut accel_query: Query<&mut Acceleration>,
+        mut attachments: Query<&mut AttachedTo>,
     ) {
         for (entity, elastic, mut transform) in elastic_query.iter_mut() {
             if let (Ok((entity1, transform1)), Ok((entity2, transform2))) = (
-                worker_query.get(elastic.entities[0]),
-                worker_query.get(elastic.entities[1]),
+                worker_query.get(elastic.first()),
+                worker_query.get(elastic.second()),
             ) {
                 let position1 = transform1.translation().xy();
                 let position2 = transform2.translation().xy();
@@ -97,7 +111,14 @@ impl Elastic {
                 transform.scale = Vec3::new(magnitude / 2., width, width);
                 transform.rotation = Quat::from_axis_angle(Vec3::Z, delta.to_angle())
             } else {
+                // Clean up invalid connections.
                 commands.entity(entity).despawn();
+                if let Ok(mut attached_to) = attachments.get_mut(elastic.first()) {
+                    attached_to.retain(|&mut x| x != elastic.second())
+                }
+                if let Ok(mut attached_to) = attachments.get_mut(elastic.first()) {
+                    attached_to.retain(|&mut x| x != elastic.second())
+                }
             }
         }
     }

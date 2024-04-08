@@ -66,6 +66,7 @@ pub struct UpdateAccelerationQueryData {
     neighbors: &'static AlliedNeighbors,
     enemy_neighbors: &'static EnemyNeighbors,
     carried_by: Option<&'static CarriedBy>,
+    attached_to: &'static AttachedTo,
 }
 
 #[derive(QueryData)]
@@ -150,7 +151,10 @@ impl Object {
             *object.acceleration += separation_acceleration;
 
             // When idle, slow down.
-            if *object.objectives.last() == Objective::None && object.carried_by.is_none() {
+            if *object.objectives.last() == Objective::None
+                && object.carried_by.is_none()
+                && object.attached_to.is_empty()
+            {
                 let idle_slow_threshold = config.idle_speed;
                 let velocity_squared = object.velocity.length_squared();
                 if velocity_squared > 0. {

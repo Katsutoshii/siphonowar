@@ -35,6 +35,7 @@ pub struct ObjectBundle {
     pub selected: Selected,
     pub health: Health,
     pub neighbors: NeighborsBundle,
+    pub attached_to: AttachedTo,
     pub name: Name,
 }
 impl ObjectBundle {
