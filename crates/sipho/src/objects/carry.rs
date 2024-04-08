@@ -79,23 +79,13 @@ impl CarriedBy {
     }
     pub fn update(
         mut carried: Query<(Entity, &mut CarriedBy)>,
-        mut carriers_query: Query<Entity, Without<CarriedBy>>,
+        carriers: Query<Entity>,
         mut commands: Commands,
     ) {
         for (entity, mut carried_by) in &mut carried {
-            let mut valid_carriers = Vec::default();
-
-            for &carrier in carried_by.iter() {
-                if let Ok(carrier) = carriers_query.get_mut(carrier) {
-                    valid_carriers.push(carrier);
-                    break;
-                } else {
-                    warn!("No carriers!");
-                }
-            }
-
-            carried_by.0 = valid_carriers;
+            carried_by.retain(|&carrier| carriers.get(carrier).is_ok());
             if carried_by.is_empty() {
+                warn!("No carriers!");
                 commands.entity(entity).remove::<Self>();
             }
         }
