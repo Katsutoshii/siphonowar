@@ -132,21 +132,16 @@ impl MinimapUiMaterial {
             if spec.is_changed() {
                 material.resize(&spec);
             }
-            for &EntityGridEvent {
-                entity,
-                prev_cell,
-                prev_cell_empty,
-                cell: rowcol,
-            } in grid_events.read()
-            {
-                if let Ok(&team) = teams.get(entity) {
-                    if let Some(rowcol) = prev_cell {
-                        if prev_cell_empty && spec.in_bounds(rowcol) {
+            for event in grid_events.read() {
+                if let Ok(&team) = teams.get(event.entity) {
+                    if let Some(rowcol) = event.prev_cell {
+                        // TODO this should remove if the cell has none of the TEAM left, not any entity at all.
+                        if event.prev_cell_empty && spec.in_bounds(rowcol) {
                             material.grid[spec.flat_index(rowcol)].team_presence[team as usize] =
                                 0.;
                         }
                     }
-                    if let Some(rowcol) = rowcol {
+                    if let Some(rowcol) = event.cell {
                         if spec.in_bounds(rowcol) {
                             material.grid[spec.flat_index(rowcol)].team_presence[team as usize] =
                                 1.;
