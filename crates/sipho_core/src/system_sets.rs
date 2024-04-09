@@ -17,17 +17,30 @@ impl Plugin for SystemSetPlugin {
     }
 }
 
-/// Stage of computation
+/// Stage of computation for a given frame.
 #[derive(Debug, Hash, PartialEq, Eq, Clone, SystemSet)]
 pub enum SystemStage {
+    /// Process input from the user.
     Input,
+    /// Spawn entities for this frame.
     Spawn,
+    /// Operations before computation of forces.
     PreCompute,
+    /// Find nearest neighbors.
     FindNeighbors,
+    /// Compute forces between objects
     Compute,
+    /// Operations after computing forces
     PostCompute,
+    /// Apply physics integration.
     Apply,
+    /// Operations after applying physics integration.
     PostApply,
+    /// Compute which entities died and send events.
+    Death,
+    /// Process death events and clean up references.
+    Cleanup,
+    /// Despawn dead or orphaned entities.
     Despawn,
 }
 impl SystemStage {
@@ -41,6 +54,8 @@ impl SystemStage {
             Self::PostCompute,
             Self::Apply,
             Self::PostApply,
+            Self::Death,
+            Self::Cleanup,
             Self::Despawn,
         )
             .chain()
@@ -49,7 +64,9 @@ impl SystemStage {
 
 #[derive(SystemSet, Default, Debug, Clone, PartialEq, Eq, Hash)]
 pub enum GameStateSet {
+    /// Game is running.
     #[default]
     Running,
+    /// Game is paused.
     Paused,
 }

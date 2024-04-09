@@ -61,25 +61,27 @@ fn fragment(in: UiVertexOutput) -> @location(0) vec4<f32> {
     fog += get_visibility(row + 0u, col + 1u) * g_frac.x;
     fog += get_visibility(row - 1u, col - 0u) * (1. - g_frac.y);
     fog += get_visibility(row - 0u, col - 1u) * (1. - g_frac.x);
-    fog *= 0.8;
+    fog /= 3.;
 
-    var highlight = get_team_presence(row, col);
-    highlight += get_team_presence(row + 1u, col + 0u);
-    highlight += get_team_presence(row + 0u, col + 1u);
-    highlight += get_team_presence(row - 1u, col + 0u);
-    highlight += get_team_presence(row + 0u, col - 1u);
-    highlight += get_team_presence(row + 1u, col + 1u);
-    highlight += get_team_presence(row - 1u, col - 1u);
-    highlight += get_team_presence(row - 1u, col + 1u);
-    highlight += get_team_presence(row + 1u, col - 1u);
-    highlight.x = min(highlight.x, HIGHLIGHT_LEVEL);
-    highlight.y = min(highlight.y, HIGHLIGHT_LEVEL);
-    highlight.z = min(highlight.z, HIGHLIGHT_LEVEL);
+    if fog >= 1. {
+        var highlight = get_team_presence(row, col);
+        highlight += get_team_presence(row + 1u, col + 0u);
+        highlight += get_team_presence(row + 0u, col + 1u);
+        highlight += get_team_presence(row - 1u, col + 0u);
+        highlight += get_team_presence(row + 0u, col - 1u);
+        highlight += get_team_presence(row + 1u, col + 1u);
+        highlight += get_team_presence(row - 1u, col - 1u);
+        highlight += get_team_presence(row - 1u, col + 1u);
+        highlight += get_team_presence(row + 1u, col - 1u);
+        highlight.x = min(highlight.x, HIGHLIGHT_LEVEL);
+        highlight.y = min(highlight.y, HIGHLIGHT_LEVEL);
+        highlight.z = min(highlight.z, HIGHLIGHT_LEVEL);
 
-    output_color += 30. * input.colors[TEAM_NONE] * highlight.x;
-    output_color += 30. * input.colors[TEAM_BLUE] * highlight.y;
-    output_color += 30. * input.colors[TEAM_RED] * highlight.z;
-    output_color /= 2. * (highlight.x + highlight.y + highlight.z + 1.);
+        output_color += 30. * input.colors[TEAM_NONE] * highlight.x;
+        output_color += 30. * input.colors[TEAM_BLUE] * highlight.y;
+        output_color += 30. * input.colors[TEAM_RED] * highlight.z;
+        output_color /= 2. * (highlight.x + highlight.y + highlight.z + 1.);
+    }
 
     output_color *= fog;
     output_color += camera_brightness;

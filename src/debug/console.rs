@@ -139,7 +139,7 @@ impl DespawnCommand {
             reply!(log, "despawn {:?}", team);
             for (entity, grid_entity, object_team) in objects.iter() {
                 if *object_team == team {
-                    commands.despawn(entity, *grid_entity);
+                    commands.despawn(entity, grid_entity);
                 }
             }
         }

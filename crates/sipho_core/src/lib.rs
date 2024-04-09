@@ -2,6 +2,7 @@
 pub mod aabb;
 pub mod camera;
 pub mod cursor;
+pub mod despawn;
 pub mod error;
 pub mod game_state;
 pub mod grid;
@@ -22,6 +23,7 @@ pub mod prelude {
         aabb::Aabb2,
         camera::{CameraController, CameraMoveEvent, MainCamera},
         cursor::{Cursor, CursorAssets, CursorParam},
+        despawn::DespawnEvent,
         error::Error,
         game_state::{AssetLoadState, GameState},
         grid::{
@@ -52,6 +54,7 @@ pub struct CorePlugin;
 impl Plugin for CorePlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((
+            despawn::DespawnPlugin,
             game_state::GameStatePlugin,
             system_sets::SystemSetPlugin,
             team::TeamPlugin,

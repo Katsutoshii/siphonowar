@@ -54,8 +54,8 @@ impl ZooidHead {
                             team: config.player_team,
                             ..default()
                         });
-                        for (entity, grid_entity) in killable.iter() {
-                            commands.despawn(*entity, **grid_entity);
+                        for (entity, grid_entity) in killable.into_iter() {
+                            commands.despawn(entity, grid_entity);
                         }
                         break;
                     }

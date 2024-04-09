@@ -14,11 +14,12 @@ impl Plugin for FogPlugin {
             .add_systems(
                 FixedUpdate,
                 (
-                    Grid2::<TeamVisibility>::update.after(GridEntity::update),
-                    Grid2::<TeamVisibility>::update_visibility
-                        .after(Grid2::<TeamVisibility>::update),
-                    FogShaderMaterial::update.after(Grid2::<TeamVisibility>::update),
-                ),
+                    Grid2::<TeamVisibility>::update,
+                    Grid2::<TeamVisibility>::update_visibility,
+                    FogShaderMaterial::update,
+                )
+                    .chain()
+                    .in_set(SystemStage::Cleanup),
             );
     }
 }
@@ -91,20 +92,14 @@ impl Grid2<TeamVisibility> {
     ) {
         let mut updates = VisibilityUpdateEvent::default();
 
-        for &EntityGridEvent {
-            entity,
-            prev_cell,
-            prev_cell_empty: _,
-            cell,
-        } in grid_events.read()
-        {
-            let team = *teams.get(entity).unwrap();
-            if let Some(prev_cell) = prev_cell {
+        for event in grid_events.read() {
+            let team = *teams.get(event.entity).unwrap();
+            if let Some(prev_cell) = event.prev_cell {
                 updates
                     .removals
                     .extend(grid.remove_visibility(prev_cell, team, &config))
             }
-            if let Some(cell) = cell {
+            if let Some(cell) = event.cell {
                 updates
                     .additions
                     .extend(grid.add_visibility(cell, team, &config));

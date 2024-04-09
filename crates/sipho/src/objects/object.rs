@@ -24,7 +24,7 @@ impl Plugin for ObjectPlugin {
                     ObjectBackground::update,
                 )
                     .in_set(SystemStage::Compute),
-                Object::death.in_set(SystemStage::Despawn),
+                Object::death.in_set(SystemStage::Death),
             )
                 .in_set(GameStateSet::Running),
         );
@@ -269,7 +269,7 @@ impl Object {
     ) {
         for (entity, object, grid_entity, health, &transform, team) in &mut objects {
             if health.health <= 0 {
-                object_commands.despawn(entity, *grid_entity);
+                object_commands.despawn(entity, grid_entity);
                 effect_commands.make_fireworks(FireworkSpec {
                     size: VfxSize::Medium,
                     transform: transform.into(),
@@ -339,7 +339,6 @@ impl ObjectBackground {
     pub fn update(
         mut query: Query<(Entity, &mut Transform, Option<&Parent>), With<Self>>,
         parent_velocities: Query<&Velocity, With<Children>>,
-        mut commands: Commands,
     ) {
         for (entity, mut transform, parent) in &mut query {
             if let Some(parent) = parent {
@@ -348,7 +347,6 @@ impl ObjectBackground {
                 }
             } else {
                 info!("No parent, despawn background! {:?}", entity);
-                commands.entity(entity).despawn_recursive();
             }
         }
     }

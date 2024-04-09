@@ -81,6 +81,8 @@ pub struct ObjectCommands<'w, 's> {
     #[allow(clippy::type_complexity)]
     children: Query<'w, 's, &'static Object, With<Parent>>,
     grid: ResMut<'w, Grid2<EntitySet>>,
+    grid_events: EventWriter<'w, EntityGridEvent>,
+    despawn_events: EventWriter<'w, DespawnEvent>,
     time: Res<'w, Time>,
 }
 impl ObjectCommands<'_, '_> {
@@ -144,7 +146,7 @@ impl ObjectCommands<'_, '_> {
         }
     }
 
-    pub fn despawn(&mut self, entity: Entity, grid_entity: GridEntity) {
+    pub fn despawn(&mut self, entity: Entity, grid_entity: &GridEntity) {
         if let Ok(children) = self.parents.get(entity) {
             for &child in children {
                 if self.children.get(child).is_ok() {
@@ -152,8 +154,10 @@ impl ObjectCommands<'_, '_> {
                 }
             }
         }
-        self.grid.remove(entity, &grid_entity); // TODO: propagate the event to other systems.
-        self.commands.entity(entity).despawn_recursive();
+        if let Some(event) = self.grid.remove(entity, grid_entity) {
+            self.grid_events.send(event);
+        }
+        self.despawn_events.send(DespawnEvent(entity));
     }
 
     pub fn background_bundle(&self, team_material: TeamMaterials) -> impl Bundle {
