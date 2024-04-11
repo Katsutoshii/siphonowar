@@ -13,6 +13,7 @@ impl Plugin for ObjectConfigPlugin {
             .register_type::<ObjectConfig>()
             .register_type::<ObjectConfigs>()
             .register_type::<InteractionConfigs>()
+            .add_systems(OnExit(GameState::Loading), ObjectConfigs::setup)
             .insert_resource(ObjectConfigs::default());
     }
 }
@@ -52,7 +53,6 @@ pub struct ObjectConfigs(pub HashMap<Object, ObjectConfig>);
 pub struct ObjectConfig {
     pub physics_material: PhysicsMaterialType,
     pub neighbor_radius: f32,
-    pub obstacle_acceleration: f32,
     pub nav_flow_factor: f32,
     pub attack_velocity: f32,
     pub attack_radius: f32,
@@ -60,7 +60,6 @@ pub struct ObjectConfig {
     pub objective: ObjectiveConfig,
     pub radius: f32,
     pub health: i32,
-    pub death_speed: f32,
     pub idle_speed: f32,
     pub spawn_cost: i32,
     // Interactions
@@ -71,7 +70,6 @@ impl Default for ObjectConfig {
         Self {
             physics_material: PhysicsMaterialType::Default,
             neighbor_radius: 10.0,
-            obstacle_acceleration: 3.,
             nav_flow_factor: 1.,
             attack_velocity: 40.,
             attack_radius: 256.,
@@ -79,14 +77,13 @@ impl Default for ObjectConfig {
             objective: ObjectiveConfig::default(),
             radius: 10.0,
             health: 1,
-            death_speed: 9.0,
             idle_speed: 0.5,
             spawn_cost: 4,
             interactions: InteractionConfigs({
                 let mut interactions = HashMap::new();
-                interactions.insert(Object::Worker, InteractionConfig::default());
-                interactions.insert(Object::Head, InteractionConfig::default());
-                interactions.insert(Object::Plankton, InteractionConfig::default());
+                for object in Object::ALL {
+                    interactions.insert(object, InteractionConfig::default());
+                }
                 interactions
             }),
         }
@@ -95,5 +92,18 @@ impl Default for ObjectConfig {
 impl ObjectConfig {
     pub fn is_colliding(&self, distance_squared: f32) -> bool {
         distance_squared < self.radius * self.radius
+    }
+}
+
+impl ObjectConfigs {
+    /// Setup object config.
+    pub fn setup(mut configs: ResMut<ObjectConfigs>) {
+        // Initialize defaults
+        for object in Object::ALL {
+            let config = configs.entry(object).or_insert(default());
+            for other in Object::ALL {
+                config.interactions.entry(other).or_insert(default());
+            }
+        }
     }
 }

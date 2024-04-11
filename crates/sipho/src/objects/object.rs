@@ -53,6 +53,9 @@ pub enum Object {
     Plankton,
     Food,
 }
+impl Object {
+    pub const ALL: [Object; 4] = [Self::Worker, Self::Head, Self::Plankton, Self::Food];
+}
 
 #[derive(QueryData)]
 #[query_data(mutable)]

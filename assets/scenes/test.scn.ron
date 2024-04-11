@@ -65,222 +65,151 @@
       ((135, 126), Full),
       ((134, 126), UpLeft),
     ]),
-    "sipho::objects::config::ObjectConfigs": ObjectConfigs(
-      {
-        Worker: ObjectConfig(
-          physics_material: Zooid,
-          neighbor_radius: 128.0,
-          obstacle_acceleration: 6.,
-          nav_flow_factor: 1.0,
-          attack_velocity: 20.,
-          attack_radius: 128.0,
-          spawn_velocity: 10.0,
-          spawn_cost: 4,
-          objective: ObjectiveConfig(
-            repell_radius: 32.0,
-            slow_factor: 0.2,
-          ),
-          radius: 12.0,
-          death_speed: 5.,
-          health: 6,
-          idle_speed: 0.5,
-          interactions: InteractionConfigs(
-            {
-              Worker: InteractionConfig(
-                separation_radius: 20.0,
-                separation_acceleration: 3.0,
-                cohesion_acceleration: 0.0,
-                alignment_factor: 0.5,
-                slow_factor: 0.0,
-                damage_amount: 1,
-              ),
-              Head: InteractionConfig(
-                separation_radius: 20.0,
-                separation_acceleration: 5.,
-                cohesion_acceleration: 0.0,
-                alignment_factor: 0.05,
-                slow_factor: 0.1,
-                damage_amount: 1,
-              ),
-              Plankton: InteractionConfig(
-                separation_radius: 10.0,
-                separation_acceleration: 0.1,
-                cohesion_acceleration: 0.1,
-                alignment_factor: 0.0,
-                slow_factor: 0.0,
-                damage_amount: 1,
-              ),
-              Food: InteractionConfig(
-                separation_radius: 1.0,
-                separation_acceleration: 0.0,
-                cohesion_acceleration: 0.0,
-                alignment_factor: 0.0,
-                slow_factor: 0.0,
-                damage_amount: 0,
-              )
-            }
-          )
+    "sipho::objects::config::ObjectConfigs": ObjectConfigs({
+      Worker: ObjectConfig(
+        physics_material: Zooid,
+        neighbor_radius: 128.0,
+        nav_flow_factor: 1.0,
+        attack_velocity: 20.,
+        attack_radius: 128.0,
+        spawn_velocity: 10.0,
+        spawn_cost: 4,
+        objective: ObjectiveConfig(
+          repell_radius: 32.0,
+          slow_factor: 0.2,
         ),
-        Head: ObjectConfig(
-          physics_material: SlowZooid,
-          neighbor_radius: 128.0,
-          obstacle_acceleration: 3.,
-          nav_flow_factor: 1.,
-          attack_velocity: 0.,
-          attack_radius: 265.0,
-          spawn_velocity: 2.0,
-          spawn_cost: 4,
-          objective: ObjectiveConfig(
-            repell_radius: 32.0,
-            slow_factor: 0.2,
-          ),
-          radius: 30.0,
-          death_speed: 5.,
-          health: 10,
-          idle_speed: 0.5,
-          interactions: InteractionConfigs(
-            {
-              Worker: InteractionConfig(
-                separation_radius: 16.0,
-                separation_acceleration: 1.,
-                cohesion_acceleration: 0.0,
-                alignment_factor: 0.1,
-                slow_factor: 0.0,
-                damage_amount: 1,
-              ),
-              Head: InteractionConfig(
-                separation_radius: 100.0,
-                separation_acceleration: 2.,
-                cohesion_acceleration: 0.0,
-                alignment_factor: 0.0,
-                slow_factor: 0.0,
-                damage_amount: 0,
-              ),
-              Plankton: InteractionConfig(
-                separation_radius: 100.0,
-                separation_acceleration: 0.5,
-                cohesion_acceleration: 0.1,
-                alignment_factor: 0.0,
-                slow_factor: 0.0,
-                damage_amount: 0,
-              ),
-              Food: InteractionConfig(
-                separation_radius: 1.0,
-                separation_acceleration: 0.0,
-                cohesion_acceleration: 0.0,
-                alignment_factor: 0.0,
-                slow_factor: 0.0,
-                damage_amount: 0,
-              )
-            }
-          )
-        ),
-        Plankton: ObjectConfig(
-          physics_material: Plankton,
-          neighbor_radius: 128.0,
-          obstacle_acceleration: 3.,
-          nav_flow_factor: 1.,
-          attack_velocity: 0.0,
-          attack_radius: 265.0,
-          spawn_velocity: 2.0,
-          spawn_cost: 4,
-          objective: ObjectiveConfig(
-            repell_radius: 0.0,
+        radius: 12.0,
+        health: 6,
+        idle_speed: 0.2,
+        interactions: InteractionConfigs({
+          Worker: InteractionConfig(
+            separation_radius: 20.0,
+            separation_acceleration: 3.0,
+            cohesion_acceleration: 0.0,
+            alignment_factor: 0.5,
             slow_factor: 0.0,
+            damage_amount: 1,
           ),
-          radius: 12.0,
-          death_speed: 5.,
-          health: 1,
-          idle_speed: 0.5,
-          interactions: InteractionConfigs({
-            Worker: InteractionConfig(
-              separation_radius: 100.0,
-              separation_acceleration: 0.05,
-              cohesion_acceleration: 0.0,
-              alignment_factor: 0.0,
-              slow_factor: 0.0,
-              damage_amount: 0,
-            ),
-            Head: InteractionConfig(
-              separation_radius: 100.0,
-              separation_acceleration: 0.05,
-              cohesion_acceleration: 0.0,
-              alignment_factor: 0.0,
-              slow_factor: 0.0,
-              damage_amount: 0,
-            ),
-            Plankton: InteractionConfig(
-              separation_radius: 20.0,
-              separation_acceleration: 1.00,
-              cohesion_acceleration: 0.00,
-              alignment_factor: 0.2,
-              slow_factor: 0.0,
-              damage_amount: 0,
-            ),
-            Food: InteractionConfig(
-              separation_radius: 1.0,
-              separation_acceleration: 0.0,
-              cohesion_acceleration: 0.0,
-              alignment_factor: 0.0,
-              slow_factor: 0.0,
-              damage_amount: 0,
-            )
-          })
-        ),
-        Food: ObjectConfig(
-          physics_material: Zooid,
-          neighbor_radius: 128.0,
-          obstacle_acceleration: 3.,
-          nav_flow_factor: 1.,
-          attack_velocity: 0.0,
-          attack_radius: 265.0,
-          spawn_velocity: 2.0,
-          spawn_cost: 4,
-          objective: ObjectiveConfig(
-            repell_radius: 0.0,
+          Head: InteractionConfig(
+            separation_radius: 20.0,
+            separation_acceleration: 5.,
+            cohesion_acceleration: 0.0,
+            alignment_factor: 0.05,
+            slow_factor: 0.1,
+            damage_amount: 1,
+          ),
+          Plankton: InteractionConfig(
+            separation_radius: 10.0,
+            separation_acceleration: 0.1,
+            cohesion_acceleration: 0.0,
+            alignment_factor: 0.0,
             slow_factor: 0.0,
+            damage_amount: 1,
+          )
+        })
+      ),
+      Head: ObjectConfig(
+        physics_material: SlowZooid,
+        neighbor_radius: 128.0,
+        nav_flow_factor: 1.,
+        attack_velocity: 0.,
+        attack_radius: 265.0,
+        spawn_velocity: 2.0,
+        spawn_cost: 4,
+        objective: ObjectiveConfig(
+          repell_radius: 32.0,
+          slow_factor: 0.2,
+        ),
+        radius: 30.0,
+        health: 10,
+        idle_speed: 0.2,
+        interactions: InteractionConfigs({
+          Worker: InteractionConfig(
+            separation_radius: 16.0,
+            separation_acceleration: 1.,
+            cohesion_acceleration: 0.0,
+            alignment_factor: 0.1,
+            slow_factor: 0.0,
+            damage_amount: 0,
           ),
-          radius: 12.0,
-          death_speed: 5.,
-          health: 1,
-          idle_speed: 0.5,
-          interactions: InteractionConfigs({
-            Worker: InteractionConfig(
-              separation_radius: 100.0,
-              separation_acceleration: 0.05,
-              cohesion_acceleration: 0.0,
-              alignment_factor: 0.0,
-              slow_factor: 0.0,
-              damage_amount: 0,
-            ),
-            Head: InteractionConfig(
-              separation_radius: 100.0,
-              separation_acceleration: 0.05,
-              cohesion_acceleration: 0.0,
-              alignment_factor: 0.0,
-              slow_factor: 0.0,
-              damage_amount: 1,
-            ),
-            Plankton: InteractionConfig(
-              separation_radius: 20.0,
-              separation_acceleration: 1.00,
-              cohesion_acceleration: 0.00,
-              alignment_factor: 0.2,
-              slow_factor: 0.0,
-              damage_amount: 0,
-            ),
-            Food: InteractionConfig(
-              separation_radius: 1.0,
-              separation_acceleration: 0.0,
-              cohesion_acceleration: 0.0,
-              alignment_factor: 0.0,
-              slow_factor: 0.0,
-              damage_amount: 0,
-            )
-          })
-        )
-      }
-    )
+          Head: InteractionConfig(
+            separation_radius: 100.0,
+            separation_acceleration: 2.,
+            cohesion_acceleration: 0.0,
+            alignment_factor: 0.0,
+            slow_factor: 0.0,
+            damage_amount: 0,
+          ),
+          Plankton: InteractionConfig(
+            separation_radius: 100.0,
+            separation_acceleration: 0.5,
+            cohesion_acceleration: 0.1,
+            alignment_factor: 0.0,
+            slow_factor: 0.0,
+            damage_amount: 0,
+          )
+        })
+      ),
+      Plankton: ObjectConfig(
+        physics_material: Plankton,
+        neighbor_radius: 128.0,
+        nav_flow_factor: 1.,
+        attack_velocity: 0.0,
+        attack_radius: 265.0,
+        spawn_velocity: 2.0,
+        spawn_cost: 4,
+        objective: ObjectiveConfig(
+          repell_radius: 0.0,
+          slow_factor: 0.0,
+        ),
+        radius: 12.0,
+        health: 1,
+        idle_speed: 0.2,
+        interactions: InteractionConfigs({
+          Worker: InteractionConfig(
+            separation_radius: 100.0,
+            separation_acceleration: 0.05,
+            cohesion_acceleration: 0.0,
+            alignment_factor: 0.0,
+            slow_factor: 0.0,
+            damage_amount: 0,
+          ),
+          Head: InteractionConfig(
+            separation_radius: 100.0,
+            separation_acceleration: 0.05,
+            cohesion_acceleration: 0.0,
+            alignment_factor: 0.0,
+            slow_factor: 0.0,
+            damage_amount: 0,
+          ),
+          Plankton: InteractionConfig(
+            separation_radius: 20.0,
+            separation_acceleration: 1.00,
+            cohesion_acceleration: 0.00,
+            alignment_factor: 0.2,
+            slow_factor: 0.0,
+            damage_amount: 0,
+          )
+        })
+      ),
+      Food: ObjectConfig(
+        physics_material: Zooid,
+        neighbor_radius: 128.0,
+        nav_flow_factor: 1.,
+        attack_velocity: 0.0,
+        attack_radius: 265.0,
+        spawn_velocity: 2.0,
+        spawn_cost: 4,
+        objective: ObjectiveConfig(
+          repell_radius: 0.0,
+          slow_factor: 0.0,
+        ),
+        radius: 12.0,
+        health: 1,
+        idle_speed: 0.2,
+        interactions: InteractionConfigs({})
+      )
+    })
   },
   entities: {},
 )
