@@ -5,7 +5,7 @@ use bevy::{
         bloom::{BloomCompositeMode, BloomPrefilterSettings, BloomSettings},
         tonemapping::Tonemapping,
     },
-    input::ButtonState,
+    input::{mouse::MouseWheel, ButtonState},
     prelude::*,
     window::PrimaryWindow,
 };
@@ -134,7 +134,7 @@ impl Default for CameraController {
 impl CameraController {
     // Set camera position.
     pub fn set_position(&self, camera_transform: &mut Transform, position: Vec2) {
-        camera_transform.translation = position.extend(zindex::CAMERA);
+        camera_transform.translation = position.extend(camera_transform.translation.z);
         self.world2d_bounds
             .clamp3(&mut camera_transform.translation)
     }
@@ -183,6 +183,7 @@ impl CameraController {
         mut controller_query: Query<(&mut Self, &mut Transform), With<MainCamera>>,
         mut controls: EventReader<ControlEvent>,
         mut event_writer: EventWriter<CameraMoveEvent>,
+        mut mouse_wheel: EventReader<MouseWheel>,
     ) {
         let (mut controller, mut camera_transform) = controller_query.single_mut();
         for control in controls.read() {
@@ -223,6 +224,11 @@ impl CameraController {
                 }
                 _ => {}
             }
+        }
+        for event in mouse_wheel.read() {
+            let height = camera_transform.translation.z;
+            camera_transform.translation.z =
+                (height - event.y * 100.).clamp(zindex::MIN_CAMERA, zindex::CAMERA);
         }
     }
 
