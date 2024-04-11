@@ -95,7 +95,7 @@ impl ObjectCommands<'_, '_> {
                         ZooidWorker::default(),
                         NearestZooidHead::default(),
                         ObjectBundle {
-                            mesh: self.assets.mesh.clone(),
+                            mesh: self.assets.worker_mesh.clone(),
                             material: team_material.primary,
                             ..ObjectBundle::new(config, spec, &self.time)
                         },
@@ -109,7 +109,7 @@ impl ObjectCommands<'_, '_> {
                     ZooidHead,
                     Consumer::new(3),
                     ObjectBundle {
-                        mesh: self.assets.mesh.clone(),
+                        mesh: self.assets.worker_mesh.clone(),
                         material: team_material.primary,
                         ..ObjectBundle::new(config, spec, &self.time)
                     },
@@ -125,7 +125,7 @@ impl ObjectCommands<'_, '_> {
                     .spawn((
                         Plankton,
                         ObjectBundle {
-                            mesh: self.assets.mesh.clone(),
+                            mesh: self.assets.worker_mesh.clone(),
                             material: team_material.primary,
                             ..ObjectBundle::new(config, spec, &self.time)
                         },
@@ -136,7 +136,7 @@ impl ObjectCommands<'_, '_> {
             }
             Object::Food => {
                 self.commands.spawn(ObjectBundle {
-                    mesh: self.assets.mesh.clone(),
+                    mesh: self.assets.worker_mesh.clone(),
                     material: team_material.secondary,
                     ..ObjectBundle::new(config, spec, &self.time)
                 });
@@ -159,7 +159,7 @@ impl ObjectCommands<'_, '_> {
         (
             ObjectBackground,
             PbrBundle {
-                mesh: self.assets.mesh.clone(),
+                mesh: self.assets.worker_mesh.clone(),
                 transform: Transform::default().with_scale(Vec3::splat(1.5)),
                 material: team_material.background,
                 ..default()

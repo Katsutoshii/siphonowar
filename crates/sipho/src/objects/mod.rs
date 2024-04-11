@@ -1,5 +1,6 @@
 use crate::prelude::*;
 
+mod assets;
 mod carry;
 mod commands;
 mod config;
@@ -13,6 +14,7 @@ mod zooid_head;
 mod zooid_worker;
 
 pub use {
+    assets::ObjectAssets,
     carry::{CarriedBy, CarryEvent},
     commands::{ObjectBundle, ObjectCommands, ObjectSpec},
     config::{InteractionConfig, InteractionConfigs, ObjectConfig, ObjectConfigs},
@@ -41,47 +43,4 @@ impl Plugin for ObjectsPlugin {
         ))
         .init_resource::<ObjectAssets>();
     }
-}
-
-/// Handles to common zooid assets.
-#[derive(Resource)]
-pub struct ObjectAssets {
-    pub mesh: Handle<Mesh>,
-    pub connector_mesh: Handle<Mesh>,
-    team_materials: Vec<TeamMaterials>,
-}
-impl ObjectAssets {
-    pub fn get_team_material(&self, team: Team) -> TeamMaterials {
-        self.team_materials.get(team as usize).unwrap().clone()
-    }
-}
-impl FromWorld for ObjectAssets {
-    fn from_world(world: &mut World) -> Self {
-        Self {
-            mesh: {
-                let mut meshes = world.get_resource_mut::<Assets<Mesh>>().unwrap();
-                meshes.add(Mesh::from(Sphere { radius: 0.5 }))
-            },
-            connector_mesh: {
-                let asset_server = world.get_resource_mut::<AssetServer>().unwrap();
-                asset_server.load("models/connector/connector.gltf#Mesh0/Primitive0")
-            },
-            team_materials: {
-                let mut materials = world
-                    .get_resource_mut::<Assets<StandardMaterial>>()
-                    .unwrap();
-                Team::COLORS
-                    .iter()
-                    .map(|color| TeamMaterials::new(*color, &mut materials))
-                    .collect()
-            },
-        }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-
-    #[test]
-    fn test_update() {}
 }
