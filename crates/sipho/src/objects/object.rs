@@ -263,13 +263,13 @@ impl Object {
 
     /// System for objects dying.
     pub fn death(
-        mut objects: Query<(Entity, &Self, &GridEntity, &Health, &GlobalTransform, &Team)>,
+        mut objects: Query<(Entity, &Self, &Health, &GlobalTransform, &Team)>,
         mut object_commands: ObjectCommands,
         mut effect_commands: EffectCommands,
     ) {
-        for (entity, object, grid_entity, health, &transform, team) in &mut objects {
+        for (entity, object, health, &transform, team) in &mut objects {
             if health.health <= 0 {
-                object_commands.despawn(entity, grid_entity);
+                object_commands.despawn(entity);
                 effect_commands.make_fireworks(FireworkSpec {
                     size: VfxSize::Medium,
                     transform: transform.into(),

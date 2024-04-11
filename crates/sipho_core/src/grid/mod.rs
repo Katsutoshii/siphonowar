@@ -1,5 +1,3 @@
-use bevy::transform::TransformSystem;
-
 use crate::prelude::*;
 
 pub mod entity;
@@ -12,15 +10,13 @@ pub mod spec;
 pub mod visualizer;
 
 pub use {
-    entity::{EntityGridEvent, EntitySet, GridEntity},
-    fog::{FogPlugin, VisibilityUpdate, VisibilityUpdateEvent},
+    entity::{EntityGridEvent, EntitySet, GridEntity, TeamEntitySets},
+    fog::{VisibilityUpdate, VisibilityUpdateEvent},
     grid2::{Grid2, Grid2Plugin},
-    // minimap::{MinimapPlugin, MinimapShaderMaterial},
-    obstacles::{Obstacle, ObstaclesPlugin},
+    obstacles::Obstacle,
     rowcol::{RowCol, RowColDistance},
     sparse_grid2::SparseGrid2,
     spec::{GridSize, GridSpec},
-    visualizer::GridVisualizerPlugin,
 };
 
 /// Plugin for an spacial entity paritioning grid with optional debug functionality.
@@ -31,17 +27,10 @@ impl Plugin for GridPlugin {
             .init_resource::<GridSpec>()
             .add_event::<EntityGridEvent>()
             .add_plugins((
-                GridVisualizerPlugin,
-                // MinimapPlugin,
-                ObstaclesPlugin,
-                FogPlugin,
-                Grid2Plugin::<EntitySet>::default(),
-            ))
-            .add_systems(
-                PostUpdate,
-                GridEntity::update
-                    .after(TransformSystem::TransformPropagate)
-                    .in_set(GameStateSet::Running),
-            );
+                visualizer::GridVisualizerPlugin,
+                entity::EntityGridPlugin,
+                obstacles::ObstaclesPlugin,
+                fog::FogPlugin,
+            ));
     }
 }

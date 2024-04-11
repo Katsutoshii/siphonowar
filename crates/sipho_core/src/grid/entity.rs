@@ -1,85 +1,135 @@
-use crate::prelude::*;
-use bevy::{prelude::*, utils::HashSet};
+use std::ops::{Index, IndexMut};
 
+use crate::prelude::*;
+use bevy::{prelude::*, transform::TransformSystem, utils::HashSet};
+
+pub struct EntityGridPlugin;
+impl Plugin for EntityGridPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_plugins(Grid2Plugin::<TeamEntitySets>::default())
+            .add_systems(
+                FixedUpdate,
+                GridEntity::cleanup
+                    .in_set(SystemStage::Cleanup)
+                    .in_set(GameStateSet::Running),
+            )
+            .add_systems(
+                PostUpdate,
+                GridEntity::update
+                    .after(TransformSystem::TransformPropagate)
+                    .in_set(GameStateSet::Running),
+            );
+    }
+}
 /// Stores a set of entities in each grid cell.
 pub type EntitySet = SmallSet<[Entity; 8]>;
+
+#[derive(Default, Clone, Deref, DerefMut, Debug)]
+pub struct TeamEntitySets([EntitySet; Team::COUNT]);
+impl Index<Team> for TeamEntitySets {
+    type Output = EntitySet;
+    fn index(&self, i: Team) -> &Self::Output {
+        &self.0[i as usize]
+    }
+}
+impl IndexMut<Team> for TeamEntitySets {
+    fn index_mut(&mut self, i: Team) -> &mut Self::Output {
+        &mut self.0[i as usize]
+    }
+}
 
 /// Component to track an entity in the grid.
 /// Holds its cell position so it can move/remove itself from the grid.
 #[derive(Component, Reflect, Default, Copy, Clone)]
 #[reflect(Component)]
 pub struct GridEntity {
-    pub cell: Option<RowCol>,
+    pub rowcol: Option<RowCol>,
 }
 impl GridEntity {
     pub fn update(
-        mut query: Query<(Entity, &mut Self, &GlobalTransform)>,
-        mut grid: ResMut<Grid2<EntitySet>>,
+        mut query: Query<(Entity, &mut Self, &Team, &GlobalTransform)>,
+        mut grid: ResMut<Grid2<TeamEntitySets>>,
         mut event_writer: EventWriter<EntityGridEvent>,
     ) {
-        for (entity, mut grid_entity, transform) in &mut query {
-            if let Some(event) =
-                grid.update_entity(entity, grid_entity.cell, transform.translation().xy())
-            {
-                grid_entity.cell = event.cell;
+        for (entity, mut grid_entity, team, transform) in &mut query {
+            let rowcol = grid.to_rowcol(transform.translation().xy());
+            if let Some(event) = grid.update(entity, *team, grid_entity.rowcol, rowcol) {
+                grid_entity.rowcol = event.rowcol;
                 event_writer.send(event);
             }
         }
     }
+    pub fn cleanup(
+        query: Query<(Entity, &Self, &Team)>,
+        mut grid: ResMut<Grid2<TeamEntitySets>>,
+        mut despawns: EventReader<DespawnEvent>,
+        mut grid_events: EventWriter<EntityGridEvent>,
+    ) {
+        for despawn_event in despawns.read() {
+            let (entity, grid_entity, team) = query.get(despawn_event.0).unwrap();
+            if let Some(rowcol) = grid_entity.rowcol {
+                if let Some(grid_event) = grid.remove(entity, *team, rowcol) {
+                    dbg!(&grid_event);
+                    grid_events.send(grid_event);
+                } else {
+                    error!("No rowcol for {:?}", entity)
+                }
+            }
+        }
+    }
 }
-
 /// Communicates updates to the grid to other systems.
 #[derive(Event, Debug)]
 pub struct EntityGridEvent {
     pub entity: Entity,
-    pub prev_cell: Option<RowCol>,
-    pub prev_cell_empty: bool,
-    pub cell: Option<RowCol>,
+    pub team: Team,
+    pub prev_rowcol: Option<RowCol>,
+    pub prev_empty: bool,
+    pub rowcol: Option<RowCol>,
 }
 impl Default for EntityGridEvent {
     fn default() -> Self {
         Self {
             entity: Entity::PLACEHOLDER,
-            prev_cell: None,
-            prev_cell_empty: false,
-            cell: Some((0, 0)),
+            team: Team::None,
+            prev_rowcol: None,
+            prev_empty: false,
+            rowcol: Some((0, 0)),
         }
     }
 }
 
-impl Grid2<EntitySet> {
+impl Grid2<TeamEntitySets> {
     /// Update an entity's position in the grid.
-    pub fn update_entity(
+    pub fn update(
         &mut self,
         entity: Entity,
-        cell: Option<RowCol>,
-        position: Vec2,
+        team: Team,
+        prev_rowcol: Option<RowCol>,
+        rowcol: RowCol,
     ) -> Option<EntityGridEvent> {
-        let rowcol = self.to_rowcol(position);
-
         // Remove this entity's old position if it was different.
-        let mut prev_cell: Option<RowCol> = None;
-        let mut prev_cell_empty: bool = false;
-        if let Some(prev_rowcol) = cell {
+        let mut prev_empty: bool = false;
+        if let Some(prev_rowcol) = prev_rowcol {
             // If in same position, do nothing.
             if prev_rowcol == rowcol {
                 return None;
             }
 
             if let Some(entities) = self.get_mut(prev_rowcol) {
-                entities.remove(&entity);
-                prev_cell = Some(prev_rowcol);
-                prev_cell_empty = entities.is_empty();
+                entities[team].remove(&entity);
+                prev_empty = entities[team].is_empty();
             }
         }
 
         if let Some(entities) = self.get_mut(rowcol) {
-            entities.insert(entity);
+            entities[team].insert(entity);
             return Some(EntityGridEvent {
                 entity,
-                prev_cell,
-                prev_cell_empty,
-                cell: Some(rowcol),
+                team,
+                prev_rowcol,
+                prev_empty,
+                rowcol: Some(rowcol),
             });
         }
         None
@@ -90,28 +140,33 @@ impl Grid2<EntitySet> {
         let positions = self.get_in_radius(position, radius);
         for rowcol in positions {
             if self.in_bounds(rowcol) {
-                other_entities.extend(self[rowcol].iter());
+                for team_entities in self[rowcol].iter() {
+                    other_entities.extend(team_entities.iter());
+                }
             }
         }
         other_entities
     }
 
     /// Remove an entity from the grid entirely.
-    pub fn remove(&mut self, entity: Entity, grid_entity: &GridEntity) -> Option<EntityGridEvent> {
-        if let Some(rowcol) = grid_entity.cell {
-            if let Some(cell) = self.get_mut(rowcol) {
-                cell.remove(&entity);
-                return Some(EntityGridEvent {
-                    entity,
-                    prev_cell: Some(rowcol),
-                    prev_cell_empty: cell.is_empty(),
-                    cell: None,
-                });
-            } else {
-                error!("No cell at {:?}.", rowcol)
-            }
+    pub fn remove(
+        &mut self,
+        entity: Entity,
+        team: Team,
+        rowcol: RowCol,
+    ) -> Option<EntityGridEvent> {
+        if let Some(entities) = self.get_mut(rowcol) {
+            let team_entities = &mut entities[team];
+            team_entities.remove(&entity);
+            return Some(EntityGridEvent {
+                entity,
+                team,
+                prev_rowcol: Some(rowcol),
+                prev_empty: team_entities.is_empty(),
+                rowcol: None,
+            });
         } else {
-            error!("No row col for {:?}", entity)
+            error!("No cell at {:?}.", rowcol)
         }
         None
     }
@@ -121,8 +176,10 @@ impl Grid2<EntitySet> {
         let mut result = HashSet::default();
 
         for rowcol in self.get_in_aabb(aabb) {
-            if let Some(set) = self.get(rowcol) {
-                result.extend(set.iter());
+            if let Some(entities) = self.get(rowcol) {
+                for team_entities in entities.iter() {
+                    result.extend(team_entities.iter());
+                }
             }
         }
         result.into_iter().collect()

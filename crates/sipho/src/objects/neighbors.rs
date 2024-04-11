@@ -56,7 +56,7 @@ pub fn update(
         &GlobalTransform,
     )>,
     others: Query<(&Object, &Team, &GlobalTransform)>,
-    grid: Res<Grid2<EntitySet>>,
+    grid: Res<Grid2<TeamEntitySets>>,
     configs: Res<ObjectConfigs>,
 ) {
     query.par_iter_mut().for_each(

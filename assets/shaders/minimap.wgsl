@@ -55,15 +55,14 @@ fn fragment(in: UiVertexOutput) -> @location(0) vec4<f32> {
     var output_color = vec4<f32>(.1, .1, .1, 1.);
     output_color *= f32((col / 8u + row / 8u) % 2u) * (0.05) + 0.1;
 
-    let visible = grid[grid_index(input.size, row, col)].visibility;
-    var fog = visible;
-    fog += get_visibility(row + 1u, col + 0u) * g_frac.y;
-    fog += get_visibility(row + 0u, col + 1u) * g_frac.x;
-    fog += get_visibility(row - 1u, col - 0u) * (1. - g_frac.y);
-    fog += get_visibility(row - 0u, col - 1u) * (1. - g_frac.x);
-    fog /= 3.;
+    var visibility = grid[grid_index(input.size, row, col)].visibility;
+    visibility += get_visibility(row + 1u, col + 0u) * g_frac.y;
+    visibility += get_visibility(row + 0u, col + 1u) * g_frac.x;
+    visibility += get_visibility(row - 1u, col - 0u) * (1. - g_frac.y);
+    visibility += get_visibility(row - 0u, col - 1u) * (1. - g_frac.x);
+    visibility /= 3.;
 
-    if fog >= 1. {
+    if visibility >= 1. {
         var highlight = get_team_presence(row, col);
         highlight += get_team_presence(row + 1u, col + 0u);
         highlight += get_team_presence(row + 0u, col + 1u);
@@ -83,7 +82,7 @@ fn fragment(in: UiVertexOutput) -> @location(0) vec4<f32> {
         output_color /= 2. * (highlight.x + highlight.y + highlight.z + 1.);
     }
 
-    output_color *= fog;
+    output_color *= visibility;
     output_color += camera_brightness;
     output_color.a = 0.9;
     return output_color;

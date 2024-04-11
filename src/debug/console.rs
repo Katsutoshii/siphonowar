@@ -12,11 +12,9 @@ impl Plugin for CustomConsolePlugin {
                 BattleCommand::update.in_set(SystemStage::Spawn),
             )
             .add_console_command::<DespawnCommand, _>(
-                DespawnCommand::update.in_set(SystemStage::Despawn),
+                DespawnCommand::update.in_set(SystemStage::Death),
             )
-            .add_console_command::<SaveCommand, _>(
-                SaveCommand::update.in_set(SystemStage::Despawn),
-            );
+            .add_console_command::<SaveCommand, _>(SaveCommand::update.in_set(SystemStage::Spawn));
     }
 }
 
@@ -133,13 +131,13 @@ impl DespawnCommand {
     pub fn update(
         mut log: ConsoleCommand<DespawnCommand>,
         mut commands: ObjectCommands,
-        objects: Query<(Entity, &GridEntity, &Team)>,
+        objects: Query<(Entity, &Team)>,
     ) {
         if let Some(Ok(DespawnCommand { team })) = log.take() {
             reply!(log, "despawn {:?}", team);
-            for (entity, grid_entity, object_team) in objects.iter() {
+            for (entity, object_team) in objects.iter() {
                 if *object_team == team {
-                    commands.despawn(entity, grid_entity);
+                    commands.despawn(entity);
                 }
             }
         }

@@ -51,7 +51,7 @@ impl Selector {
             ),
             Without<Self>,
         >,
-        grid: Res<Grid2<EntitySet>>,
+        grid: Res<Grid2<TeamEntitySets>>,
         assets: Res<SelectorAssets>,
         config: Res<TeamConfig>,
         mut events: EventReader<ControlEvent>,

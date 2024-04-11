@@ -28,7 +28,7 @@ impl ZooidHead {
         config: Res<TeamConfig>,
         obj_config: Res<ObjectConfigs>,
         mut control_events: EventReader<ControlEvent>,
-        query: Query<(&ZooidWorker, Entity, &GridEntity, &Selected)>,
+        query: Query<(&ZooidWorker, Entity, &Selected)>,
     ) {
         for control_event in control_events.read() {
             if control_event.is_pressed(ControlAction::SpawnHead) {
@@ -42,9 +42,9 @@ impl ZooidHead {
             if control_event.is_pressed(ControlAction::Fuse) {
                 info!("Fusing!");
                 let mut killable = vec![];
-                for (_, entity, grid_entity, selected) in query.iter() {
+                for (_, entity, selected) in query.iter() {
                     if selected.is_selected() {
-                        killable.push((entity, grid_entity));
+                        killable.push(entity);
                     }
                     if killable.len() >= obj_config.get(&Object::Head).unwrap().spawn_cost as usize
                     {
@@ -54,8 +54,8 @@ impl ZooidHead {
                             team: config.player_team,
                             ..default()
                         });
-                        for (entity, grid_entity) in killable.into_iter() {
-                            commands.despawn(entity, grid_entity);
+                        for entity in killable.into_iter() {
+                            commands.despawn(entity);
                         }
                         break;
                     }

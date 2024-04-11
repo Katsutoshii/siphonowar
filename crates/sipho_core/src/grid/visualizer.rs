@@ -67,20 +67,14 @@ impl GridVisualizerShaderMaterial {
         mut grid_events: EventReader<EntityGridEvent>,
     ) {
         let material = shader_assets.get_mut(&assets.shader_material).unwrap();
-        for &EntityGridEvent {
-            entity: _,
-            prev_cell,
-            prev_cell_empty,
-            cell,
-        } in grid_events.read()
-        {
-            if let Some(prev_cell) = prev_cell {
-                if prev_cell_empty {
+        for event in grid_events.read() {
+            if let Some(prev_cell) = event.prev_rowcol {
+                if event.prev_empty {
                     material.grid[grid_spec.flat_index(prev_cell)] = 0;
                 }
             }
-            if let Some(cell) = cell {
-                material.grid[grid_spec.flat_index(cell)] = 1;
+            if let Some(rowcol) = event.rowcol {
+                material.grid[grid_spec.flat_index(rowcol)] = 1;
             }
         }
     }

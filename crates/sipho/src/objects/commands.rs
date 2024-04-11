@@ -80,8 +80,6 @@ pub struct ObjectCommands<'w, 's> {
     parents: Query<'w, 's, &'static Children, Without<Parent>>,
     #[allow(clippy::type_complexity)]
     children: Query<'w, 's, &'static Object, With<Parent>>,
-    grid: ResMut<'w, Grid2<EntitySet>>,
-    grid_events: EventWriter<'w, EntityGridEvent>,
     despawn_events: EventWriter<'w, DespawnEvent>,
     time: Res<'w, Time>,
 }
@@ -146,16 +144,13 @@ impl ObjectCommands<'_, '_> {
         }
     }
 
-    pub fn despawn(&mut self, entity: Entity, grid_entity: &GridEntity) {
+    pub fn despawn(&mut self, entity: Entity) {
         if let Ok(children) = self.parents.get(entity) {
             for &child in children {
                 if self.children.get(child).is_ok() {
                     self.commands.entity(child).remove_parent_in_place();
                 }
             }
-        }
-        if let Some(event) = self.grid.remove(entity, grid_entity) {
-            self.grid_events.send(event);
         }
         self.despawn_events.send(DespawnEvent(entity));
     }

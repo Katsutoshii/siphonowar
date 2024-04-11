@@ -19,7 +19,8 @@ impl Plugin for FogPlugin {
                     FogShaderMaterial::update,
                 )
                     .chain()
-                    .in_set(SystemStage::Cleanup),
+                    .in_set(SystemStage::Cleanup)
+                    .after(GridEntity::cleanup),
             );
     }
 }
@@ -77,8 +78,8 @@ impl Grid2<TeamVisibility> {
         configs: Res<FogConfig>,
     ) {
         for (grid_entity, mut visibility) in &mut query {
-            if let Some(cell) = grid_entity.cell {
-                *visibility = grid.get_visibility(cell, configs.player_team)
+            if let Some(rowcol) = grid_entity.rowcol {
+                *visibility = grid.get_visibility(rowcol, configs.player_team)
             }
         }
     }
@@ -86,23 +87,21 @@ impl Grid2<TeamVisibility> {
     pub fn update(
         mut grid: ResMut<Self>,
         config: Res<FogConfig>,
-        teams: Query<&Team>,
         mut grid_events: EventReader<EntityGridEvent>,
         mut visibility_events: EventWriter<VisibilityUpdateEvent>,
     ) {
         let mut updates = VisibilityUpdateEvent::default();
 
         for event in grid_events.read() {
-            let team = *teams.get(event.entity).unwrap();
-            if let Some(prev_cell) = event.prev_cell {
+            if let Some(prev_rowcol) = event.prev_rowcol {
                 updates
                     .removals
-                    .extend(grid.remove_visibility(prev_cell, team, &config))
+                    .extend(grid.remove_visibility(prev_rowcol, event.team, &config))
             }
-            if let Some(cell) = event.cell {
+            if let Some(rowcol) = event.rowcol {
                 updates
                     .additions
-                    .extend(grid.add_visibility(cell, team, &config));
+                    .extend(grid.add_visibility(rowcol, event.team, &config));
             }
         }
 
@@ -150,8 +149,7 @@ impl Grid2<TeamVisibility> {
         config: &FogConfig,
     ) -> Vec<VisibilityUpdate> {
         let mut updates = Vec::default();
-        let radius = config.visibility_radius;
-        for other_rowcol in self.get_in_radius_discrete(cell, radius) {
+        for other_rowcol in self.get_in_radius_discrete(cell, config.visibility_radius) {
             if let Some(grid_visibility) = self.get_mut(other_rowcol) {
                 *grid_visibility.get_mut(team) += 1;
                 if team == config.player_team

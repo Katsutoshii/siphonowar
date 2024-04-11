@@ -126,26 +126,21 @@ impl MinimapUiMaterial {
         mut grid_events: EventReader<EntityGridEvent>,
         mut visibility_updates: EventReader<VisibilityUpdateEvent>,
         mut camera_moves: EventReader<CameraMoveEvent>,
-        teams: Query<&Team>,
     ) {
         for (_, material) in shader_assets.iter_mut() {
             if spec.is_changed() {
                 material.resize(&spec);
             }
             for event in grid_events.read() {
-                if let Ok(&team) = teams.get(event.entity) {
-                    if let Some(rowcol) = event.prev_cell {
-                        // TODO this should remove if the cell has none of the TEAM left, not any entity at all.
-                        if event.prev_cell_empty && spec.in_bounds(rowcol) {
-                            material.grid[spec.flat_index(rowcol)].team_presence[team as usize] =
-                                0.;
-                        }
+                let team = event.team as usize;
+                if let Some(rowcol) = event.prev_rowcol {
+                    if event.prev_empty && spec.in_bounds(rowcol) {
+                        material.grid[spec.flat_index(rowcol)].team_presence[team] = 0.;
                     }
-                    if let Some(rowcol) = event.cell {
-                        if spec.in_bounds(rowcol) {
-                            material.grid[spec.flat_index(rowcol)].team_presence[team as usize] =
-                                1.;
-                        }
+                }
+                if let Some(rowcol) = event.rowcol {
+                    if spec.in_bounds(rowcol) {
+                        material.grid[spec.flat_index(rowcol)].team_presence[team] = 1.;
                     }
                 }
             }

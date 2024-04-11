@@ -29,7 +29,8 @@ pub mod prelude {
         game_state::{AssetLoadState, GameState},
         grid::{
             EntityGridEvent, EntitySet, Grid2, Grid2Plugin, GridEntity, GridSize, GridSpec,
-            Obstacle, RowCol, RowColDistance, SparseGrid2, VisibilityUpdate, VisibilityUpdateEvent,
+            Obstacle, RowCol, RowColDistance, SparseGrid2, TeamEntitySets, VisibilityUpdate,
+            VisibilityUpdateEvent,
         },
         inputs::{ControlAction, ControlEvent, ControlMode, ControlState},
         meshes,
