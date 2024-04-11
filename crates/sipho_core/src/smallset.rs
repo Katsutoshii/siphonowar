@@ -1,8 +1,7 @@
-// smallset: a Rust crate for small unordered sets of elements, built on top of
+// Modified from smallset: a Rust crate for small unordered sets of elements, built on top of
 // `smallvec`.
 //
 // Copyright (c) 2016 Chris Fallin <cfallin@c1f.net>. Released under the MIT license.
-//
 use std::fmt;
 use std::iter::{FromIterator, IntoIterator};
 
