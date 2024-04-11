@@ -24,7 +24,6 @@ impl Plugin for SelectorPlugin {
     }
 }
 #[derive(Component)]
-#[component(storage = "SparseSet")]
 pub struct Highlight;
 
 #[derive(Component, Default)]

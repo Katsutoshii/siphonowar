@@ -6,7 +6,6 @@ use bevy::{
 
 /// Plugin for obstacles.
 /// Obstacles are implemented as a hacky force field in the center of each cell they are present in.
-/// TODO: prevent glitchy movement when objects try to move past obstacles.
 pub struct ObstaclesPlugin;
 impl Plugin for ObstaclesPlugin {
     fn build(&self, app: &mut App) {

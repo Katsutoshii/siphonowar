@@ -27,7 +27,6 @@ impl CursorParam<'_, '_> {
 }
 
 #[derive(Component, Debug, Default)]
-#[component(storage = "SparseSet")]
 pub struct Cursor;
 impl Cursor {
     ///Spawn the cursor.

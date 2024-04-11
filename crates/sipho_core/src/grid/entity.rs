@@ -1,9 +1,8 @@
+use crate::prelude::*;
 use bevy::{prelude::*, utils::HashSet};
 
-use crate::prelude::*;
-
 /// Stores a set of entities in each grid cell.
-pub type EntitySet = HashSet<Entity>;
+pub type EntitySet = SmallSet<[Entity; 8]>;
 
 /// Component to track an entity in the grid.
 /// Holds its cell position so it can move/remove itself from the grid.
@@ -91,7 +90,7 @@ impl Grid2<EntitySet> {
         let positions = self.get_in_radius(position, radius);
         for rowcol in positions {
             if self.in_bounds(rowcol) {
-                other_entities.extend(&self[rowcol]);
+                other_entities.extend(self[rowcol].iter());
             }
         }
         other_entities

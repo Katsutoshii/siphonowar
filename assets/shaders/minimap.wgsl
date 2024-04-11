@@ -18,7 +18,7 @@ struct MinimapUiMaterial {
 @group(1) @binding(0)
 var<uniform> input: MinimapUiMaterial;
 @group(1) @binding(1)
-var<storage> grid: array<GridEntry>;
+var<storage, read> grid: array<GridEntry>;
 
 fn get_visibility(row: u32, col: u32) -> f32 {
     return grid[grid_index(input.size, row, col)].visibility;

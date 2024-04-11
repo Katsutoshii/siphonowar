@@ -63,7 +63,6 @@ pub trait ShaderPlaneMaterial: Material + Default {
 
 /// Component that marks an entity as a shader plane.
 #[derive(Debug, Default, Component, Clone)]
-#[component(storage = "SparseSet")]
 pub struct ShaderPlane<M: ShaderPlaneMaterial>(PhantomData<M>);
 impl<M: ShaderPlaneMaterial> ShaderPlane<M> {
     pub fn bundle(self, spec: &GridSpec, assets: &ShaderPlaneAssets<M>) -> impl Bundle {

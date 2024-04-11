@@ -23,6 +23,11 @@ impl Default for TeamConfig {
     }
 }
 
+// Constants for template parameters.
+pub const TEAM_NONE: u8 = 0;
+pub const TEAM_BLUE: u8 = 1;
+pub const TEAM_RED: u8 = 2;
+
 /// Enum to specify the team of the given object.
 #[derive(Component, Default, Debug, PartialEq, Eq, Reflect, Clone, Copy, Hash, clap::ValueEnum)]
 #[reflect(Component)]

@@ -13,6 +13,7 @@ pub mod physics;
 pub mod pool;
 pub mod raycast;
 pub mod shader_plane;
+pub mod smallset;
 pub mod system_sets;
 pub mod team;
 pub mod window;
@@ -39,8 +40,9 @@ pub mod prelude {
         pool::EntityPool,
         raycast::{RaycastCommands, RaycastEvent, RaycastTarget},
         shader_plane::{ShaderPlaneAssets, ShaderPlaneMaterial, ShaderPlanePlugin},
+        smallset::SmallSet,
         system_sets::{GameStateSet, SystemStage},
-        team::{Team, TeamConfig, TeamMaterials},
+        team::{Team, TeamConfig, TeamMaterials, TEAM_BLUE, TEAM_NONE, TEAM_RED},
         window::{self, ScalableWindow},
         zindex, CorePlugin,
     };

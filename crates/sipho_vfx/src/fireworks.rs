@@ -8,8 +8,8 @@ impl Plugin for FireworkPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(HanabiPlugin)
             .init_resource::<EffectAssets>()
-            .init_resource::<ParticleEffectPool<{ Team::Blue as u8 }>>()
-            .init_resource::<ParticleEffectPool<{ Team::Red as u8 }>>()
+            .init_resource::<ParticleEffectPool<TEAM_BLUE>>()
+            .init_resource::<ParticleEffectPool<TEAM_RED>>()
             .add_systems(Startup, EffectCommands::startup)
             .add_systems(FixedUpdate, ScheduleDespawn::despawn);
     }
@@ -134,15 +134,15 @@ impl ScheduleDespawn {
     }
 }
 
-pub const POOL_SIZE: usize = 1;
+pub const POOL_SIZE: usize = 128;
 #[derive(Resource, Default, Deref, DerefMut)]
 pub struct ParticleEffectPool<const T: u8>(EntityPool<POOL_SIZE>);
 
 /// System param to allow spawning effects.
 #[derive(SystemParam)]
 pub struct EffectCommands<'w, 's> {
-    assets: ResMut<'w, EffectAssets>,
     commands: Commands<'w, 's>,
+    assets: ResMut<'w, EffectAssets>,
     blue_pool: ResMut<'w, ParticleEffectPool<{ Team::Blue as u8 }>>,
     red_pool: ResMut<'w, ParticleEffectPool<{ Team::Red as u8 }>>,
     effects: Query<'w, 's, (&'static mut Transform, &'static mut EffectSpawner)>,
@@ -150,6 +150,14 @@ pub struct EffectCommands<'w, 's> {
 
 impl EffectCommands<'_, '_> {
     pub fn startup(mut commands: EffectCommands) {
+        let blue_parent = commands
+            .commands
+            .spawn((Name::new("ParticlePool<Blue>"), SpatialBundle::default()))
+            .id();
+        let red_parent = commands
+            .commands
+            .spawn((Name::new("ParticlePool<Red>"), SpatialBundle::default()))
+            .id();
         for i in 0..POOL_SIZE {
             commands.blue_pool[i] = commands
                 .commands
@@ -160,6 +168,7 @@ impl EffectCommands<'_, '_> {
                         ..default()
                     },
                 ))
+                .set_parent_in_place(blue_parent)
                 .id();
 
             commands.red_pool[i] = commands
@@ -171,6 +180,7 @@ impl EffectCommands<'_, '_> {
                         ..default()
                     },
                 ))
+                .set_parent_in_place(red_parent)
                 .id();
         }
     }

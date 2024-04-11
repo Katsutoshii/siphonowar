@@ -3,7 +3,6 @@ use bevy::text::Text2dBounds;
 use crate::prelude::*;
 
 #[derive(Component)]
-#[component(storage = "SparseSet")]
 pub struct ObjectiveDebugger;
 impl ObjectiveDebugger {
     #[allow(dead_code)]
