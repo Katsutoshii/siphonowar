@@ -9,6 +9,7 @@ pub struct GameStatePlugin;
 impl Plugin for GameStatePlugin {
     fn build(&self, app: &mut App) {
         app.init_state::<GameState>()
+            .init_state::<DebugState>()
             .init_resource::<AssetLoadState>()
             .add_systems(
                 Update,
@@ -53,6 +54,13 @@ pub enum GameState {
     Loading,
     Running,
     Paused,
+}
+
+#[derive(States, Default, Debug, Clone, PartialEq, Eq, Hash)]
+pub enum DebugState {
+    #[default]
+    NoDebug,
+    DebugConsole,
 }
 
 fn toggle_pause_game(

@@ -87,9 +87,10 @@ impl ObjectCommands<'_, '_> {
     pub fn spawn(&mut self, spec: ObjectSpec) {
         let config = &self.configs[&spec.object];
         let team_material = self.assets.get_team_material(spec.team);
-        let background = self.background_bundle(team_material.clone());
         match spec.object {
             Object::Worker => {
+                let mesh = self.assets.worker_mesh.clone();
+                let background = self.background_bundle(team_material.clone(), mesh.clone());
                 self.commands
                     .spawn((
                         ZooidWorker::default(),
@@ -104,12 +105,30 @@ impl ObjectCommands<'_, '_> {
                         parent.spawn(background);
                     });
             }
+            Object::Shocker => {
+                let mesh = self.assets.shocker_mesh.clone();
+                let background = self.background_bundle(team_material.clone(), mesh.clone());
+                self.commands
+                    .spawn((
+                        NearestZooidHead::default(),
+                        ObjectBundle {
+                            mesh: mesh.clone(),
+                            material: team_material.primary,
+                            ..ObjectBundle::new(config, spec, &self.time)
+                        },
+                    ))
+                    .with_children(|parent| {
+                        parent.spawn(background);
+                    });
+            }
             Object::Head => {
+                let mesh = self.assets.worker_mesh.clone();
+                let background = self.background_bundle(team_material.clone(), mesh.clone());
                 let mut entity_commands = self.commands.spawn((
                     ZooidHead,
                     Consumer::new(3),
                     ObjectBundle {
-                        mesh: self.assets.worker_mesh.clone(),
+                        mesh: mesh.clone(),
                         material: team_material.primary,
                         ..ObjectBundle::new(config, spec, &self.time)
                     },
@@ -121,11 +140,13 @@ impl ObjectCommands<'_, '_> {
                 entity_commands.insert(Objectives::new(Objective::FollowEntity(entity)));
             }
             Object::Plankton => {
+                let mesh = self.assets.worker_mesh.clone();
+                let background = self.background_bundle(team_material.clone(), mesh.clone());
                 self.commands
                     .spawn((
                         Plankton,
                         ObjectBundle {
-                            mesh: self.assets.worker_mesh.clone(),
+                            mesh: mesh.clone(),
                             material: team_material.primary,
                             ..ObjectBundle::new(config, spec, &self.time)
                         },
@@ -155,11 +176,15 @@ impl ObjectCommands<'_, '_> {
         self.despawn_events.send(DespawnEvent(entity));
     }
 
-    pub fn background_bundle(&self, team_material: TeamMaterials) -> impl Bundle {
+    pub fn background_bundle(
+        &self,
+        team_material: TeamMaterials,
+        mesh: Handle<Mesh>,
+    ) -> impl Bundle {
         (
             ObjectBackground,
             PbrBundle {
-                mesh: self.assets.worker_mesh.clone(),
+                mesh,
                 transform: Transform::default().with_scale(Vec3::splat(1.5)),
                 material: team_material.background,
                 ..default()

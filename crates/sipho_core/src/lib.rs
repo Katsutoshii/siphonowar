@@ -26,7 +26,7 @@ pub mod prelude {
         cursor::{Cursor, CursorAssets, CursorParam},
         despawn::DespawnEvent,
         error::Error,
-        game_state::{AssetLoadState, GameState},
+        game_state::{AssetLoadState, DebugState, GameState},
         grid::{
             EntityGridEvent, EntitySet, Grid2, Grid2Plugin, GridEntity, GridSize, GridSpec,
             Obstacle, RowCol, RowColDistance, SparseGrid2, TeamEntitySets, VisibilityUpdate,

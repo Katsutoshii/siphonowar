@@ -65,6 +65,9 @@ impl Elastic {
                         Selected::Unselected => {}
                     }
                 }
+                if entities.is_empty() {
+                    return;
+                }
                 for i in 0..entities.len() - 1 {
                     let pair = (entities[i], entities[i + 1]);
                     commands.spawn(ElasticBundle {

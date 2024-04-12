@@ -33,7 +33,8 @@ impl Plugin for InputActionPlugin {
                 Update,
                 (InputEvent::update, ControlEvent::update)
                     .chain()
-                    .in_set(SystemStage::Input),
+                    .in_set(SystemStage::Input)
+                    .run_if(in_state(DebugState::NoDebug)),
             );
     }
 }

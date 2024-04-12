@@ -14,7 +14,8 @@ impl Plugin for CustomConsolePlugin {
             .add_console_command::<DespawnCommand, _>(
                 DespawnCommand::update.in_set(SystemStage::Death),
             )
-            .add_console_command::<SaveCommand, _>(SaveCommand::update.in_set(SystemStage::Spawn));
+            .add_console_command::<SaveCommand, _>(SaveCommand::update.in_set(SystemStage::Spawn))
+            .add_systems(Update, update_debug_state);
     }
 }
 
@@ -154,5 +155,20 @@ impl SaveCommand {
             reply!(log, "saving to {}", path);
             events.send(SaveEvent { path });
         }
+    }
+}
+
+// Toggle debug state.
+fn update_debug_state(
+    keyboard: Res<ButtonInput<KeyCode>>,
+    state: Res<State<DebugState>>,
+    mut next_state: ResMut<NextState<DebugState>>,
+) {
+    if keyboard.just_pressed(KeyCode::Backquote) {
+        let next = match state.get() {
+            DebugState::DebugConsole => DebugState::NoDebug,
+            DebugState::NoDebug => DebugState::DebugConsole,
+        };
+        next_state.set(next);
     }
 }

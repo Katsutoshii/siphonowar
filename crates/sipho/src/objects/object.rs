@@ -52,9 +52,16 @@ pub enum Object {
     Head,
     Plankton,
     Food,
+    Shocker,
 }
 impl Object {
-    pub const ALL: [Object; 4] = [Self::Worker, Self::Head, Self::Plankton, Self::Food];
+    pub const ALL: [Object; 5] = [
+        Self::Worker,
+        Self::Head,
+        Self::Plankton,
+        Self::Food,
+        Self::Shocker,
+    ];
 }
 
 #[derive(QueryData)]
@@ -99,6 +106,7 @@ impl Object {
             Self::Head => zindex::ZOOID_HEAD,
             Self::Food => zindex::FOOD,
             Self::Plankton => zindex::PLANKTON,
+            Self::Shocker => zindex::ZOOIDS_MIN,
         }
     }
     pub fn update_acceleration(
@@ -235,7 +243,7 @@ impl Object {
     /// Returns true if an object can attack.
     pub fn can_attack(self) -> bool {
         match self {
-            Self::Worker => true,
+            Self::Worker | Self::Shocker => true,
             Self::Food | Self::Head | Self::Plankton => false,
         }
     }
@@ -243,7 +251,7 @@ impl Object {
     /// Returns true if an object can be attacked.
     pub fn can_be_attacked(self) -> bool {
         match self {
-            Self::Worker | Self::Head | Self::Plankton => true,
+            Self::Worker | Self::Shocker | Self::Head | Self::Plankton => true,
             Self::Food => true,
         }
     }
@@ -252,7 +260,7 @@ impl Object {
     pub fn can_carry(self) -> bool {
         match self {
             Self::Worker => true,
-            Self::Food | Self::Head | Self::Plankton => false,
+            Self::Shocker | Self::Food | Self::Head | Self::Plankton => false,
         }
     }
 
@@ -260,7 +268,7 @@ impl Object {
     pub fn can_be_carried(self) -> bool {
         match self {
             Self::Food => true,
-            Self::Worker | Self::Head | Self::Plankton => false,
+            Self::Shocker | Self::Worker | Self::Head | Self::Plankton => false,
         }
     }
 
