@@ -121,6 +121,22 @@ impl ObjectCommands<'_, '_> {
                         parent.spawn(background);
                     });
             }
+            Object::Armor => {
+                let mesh = self.assets.armor_mesh.clone();
+                let background = self.background_bundle(team_material.clone(), mesh.clone());
+                self.commands
+                    .spawn((
+                        NearestZooidHead::default(),
+                        ObjectBundle {
+                            mesh: mesh.clone(),
+                            material: team_material.primary,
+                            ..ObjectBundle::new(config, spec, &self.time)
+                        },
+                    ))
+                    .with_children(|parent| {
+                        parent.spawn(background);
+                    });
+            }
             Object::Head => {
                 let mesh = self.assets.worker_mesh.clone();
                 let background = self.background_bundle(team_material.clone(), mesh.clone());

@@ -5,6 +5,7 @@ use crate::prelude::*;
 pub struct ObjectAssets {
     pub worker_mesh: Handle<Mesh>,
     pub shocker_mesh: Handle<Mesh>,
+    pub armor_mesh: Handle<Mesh>,
     pub connector_mesh: Handle<Mesh>,
     team_materials: Vec<TeamMaterials>,
 }
@@ -23,6 +24,10 @@ impl FromWorld for ObjectAssets {
             shocker_mesh: {
                 let asset_server = world.get_resource_mut::<AssetServer>().unwrap();
                 asset_server.load("models/zooids/shocker/shocker.glb#Mesh0/Primitive0")
+            },
+            armor_mesh: {
+                let asset_server = world.get_resource_mut::<AssetServer>().unwrap();
+                asset_server.load("models/zooids/armor/armor.glb#Mesh0/Primitive0")
             },
             connector_mesh: {
                 let asset_server = world.get_resource_mut::<AssetServer>().unwrap();

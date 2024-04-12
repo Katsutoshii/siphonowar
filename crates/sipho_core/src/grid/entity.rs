@@ -69,7 +69,6 @@ impl GridEntity {
             let (entity, grid_entity, team) = query.get(despawn_event.0).unwrap();
             if let Some(rowcol) = grid_entity.rowcol {
                 if let Some(grid_event) = grid.remove(entity, *team, rowcol) {
-                    dbg!(&grid_event);
                     grid_events.send(grid_event);
                 } else {
                     error!("No rowcol for {:?}", entity)

@@ -27,6 +27,7 @@ pub enum DashAttackerState {
 /// When attacking,
 #[derive(Component, Reflect, Debug)]
 #[reflect(Component)]
+#[component(storage = "SparseSet")]
 pub struct DashAttacker {
     pub target: Vec2,
     pub timer: Timer,

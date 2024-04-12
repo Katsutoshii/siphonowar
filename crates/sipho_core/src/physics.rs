@@ -143,6 +143,7 @@ pub enum PhysicsMaterialType {
     Default,
     Zooid,
     SlowZooid,
+    ArmorZooid,
     Plankton,
 }
 #[derive(Clone, Reflect, Debug)]

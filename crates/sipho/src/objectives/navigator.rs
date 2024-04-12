@@ -18,6 +18,7 @@ impl Plugin for NavigatorPlugin {
 
 #[derive(Component, Reflect, Debug)]
 #[reflect(Component)]
+#[component(storage = "SparseSet")]
 pub struct Navigator {
     pub target: Vec2,
     pub slow_factor: f32,
@@ -62,6 +63,7 @@ impl Navigator {
             &Object,
             &Navigator,
             &GlobalTransform,
+            &mut Transform,
             &Velocity,
             &mut Acceleration,
         )>,
@@ -69,7 +71,9 @@ impl Navigator {
         configs: Res<ObjectConfigs>,
         spec: Res<GridSpec>,
     ) {
-        for (object, navigator, global_transform, velocity, mut acceleration) in query.iter_mut() {
+        for (object, navigator, global_transform, mut transform, velocity, mut acceleration) in
+            query.iter_mut()
+        {
             let config = configs.get(object).unwrap();
             let position = global_transform.translation().xy();
             let target_rowcol = spec.to_rowcol(navigator.target);
@@ -84,7 +88,13 @@ impl Navigator {
                     target_cell_center,
                     flow_acceleration,
                 ) * navigator.slow_factor;
+
                 *acceleration += flow_acceleration + slow_force;
+
+                if velocity.length_squared() > 2. {
+                    let angle = transform.rotation.z;
+                    transform.rotate_z(0.01 * (velocity.to_angle() - angle));
+                }
             }
         }
     }

@@ -14,6 +14,10 @@
           max_velocity: 4.5,
           velocity_smoothing: 0.5,
         ),
+        ArmorZooid: PhysicsMaterial(
+          max_velocity: 3.5,
+          velocity_smoothing: 0.5,
+        ),
         Plankton: PhysicsMaterial(
           max_velocity: 1.0,
           velocity_smoothing: 0.5,
@@ -87,7 +91,6 @@
             separation_acceleration: 3.0,
             cohesion_acceleration: 0.0,
             alignment_factor: 0.5,
-            slow_factor: 0.0,
             damage_amount: 1,
           ),
           Shocker: InteractionConfig(
@@ -95,7 +98,13 @@
             separation_acceleration: 3.0,
             cohesion_acceleration: 0.0,
             alignment_factor: 0.5,
-            slow_factor: 0.0,
+            damage_amount: 1,
+          ),
+          Armor: InteractionConfig(
+            separation_radius: 20.0,
+            separation_acceleration: 3.0,
+            cohesion_acceleration: 0.0,
+            alignment_factor: 0.5,
             damage_amount: 1,
           ),
           Head: InteractionConfig(
@@ -103,7 +112,6 @@
             separation_acceleration: 5.,
             cohesion_acceleration: 0.0,
             alignment_factor: 0.05,
-            slow_factor: 0.1,
             damage_amount: 1,
           ),
           Plankton: InteractionConfig(
@@ -111,7 +119,6 @@
             separation_acceleration: 0.1,
             cohesion_acceleration: 0.0,
             alignment_factor: 0.0,
-            slow_factor: 0.0,
             damage_amount: 1,
           )
         })
@@ -137,7 +144,6 @@
             separation_acceleration: 3.0,
             cohesion_acceleration: 0.0,
             alignment_factor: 0.5,
-            slow_factor: 0.0,
             damage_amount: 1,
           ),
           Shocker: InteractionConfig(
@@ -145,7 +151,13 @@
             separation_acceleration: 3.0,
             cohesion_acceleration: 0.0,
             alignment_factor: 0.5,
-            slow_factor: 0.0,
+            damage_amount: 1,
+          ),
+          Armor: InteractionConfig(
+            separation_radius: 20.0,
+            separation_acceleration: 3.0,
+            cohesion_acceleration: 0.0,
+            alignment_factor: 0.5,
             damage_amount: 1,
           ),
           Head: InteractionConfig(
@@ -153,7 +165,6 @@
             separation_acceleration: 5.,
             cohesion_acceleration: 0.0,
             alignment_factor: 0.05,
-            slow_factor: 0.1,
             damage_amount: 1,
           ),
           Plankton: InteractionConfig(
@@ -161,7 +172,59 @@
             separation_acceleration: 0.1,
             cohesion_acceleration: 0.0,
             alignment_factor: 0.0,
-            slow_factor: 0.0,
+            damage_amount: 1,
+          )
+        })
+      ),
+      Armor: ObjectConfig(
+        physics_material: ArmorZooid,
+        neighbor_radius: 128.0,
+        nav_flow_factor: 1.0,
+        attack_velocity: 20.,
+        attack_radius: 128.0,
+        spawn_velocity: 10.0,
+        spawn_cost: 4,
+        objective: ObjectiveConfig(
+          repell_radius: 32.0,
+          slow_factor: 0.2,
+        ),
+        radius: 18.0,
+        health: 10,
+        idle_speed: 0.2,
+        interactions: InteractionConfigs({
+          Worker: InteractionConfig(
+            separation_radius: 20.0,
+            separation_acceleration: 3.0,
+            cohesion_acceleration: 0.0,
+            alignment_factor: 0.5,
+            damage_amount: 1,
+          ),
+          Shocker: InteractionConfig(
+            separation_radius: 20.0,
+            separation_acceleration: 3.0,
+            cohesion_acceleration: 0.0,
+            alignment_factor: 0.5,
+            damage_amount: 1,
+          ),
+          Armor: InteractionConfig(
+            separation_radius: 20.0,
+            separation_acceleration: 3.0,
+            cohesion_acceleration: 0.0,
+            alignment_factor: 0.5,
+            damage_amount: 1,
+          ),
+          Head: InteractionConfig(
+            separation_radius: 20.0,
+            separation_acceleration: 5.,
+            cohesion_acceleration: 0.0,
+            alignment_factor: 0.05,
+            damage_amount: 1,
+          ),
+          Plankton: InteractionConfig(
+            separation_radius: 10.0,
+            separation_acceleration: 0.1,
+            cohesion_acceleration: 0.0,
+            alignment_factor: 0.0,
             damage_amount: 1,
           )
         })
@@ -187,7 +250,6 @@
             separation_acceleration: 1.,
             cohesion_acceleration: 0.0,
             alignment_factor: 0.1,
-            slow_factor: 0.0,
             damage_amount: 0,
           ),
           Head: InteractionConfig(
@@ -195,7 +257,6 @@
             separation_acceleration: 2.,
             cohesion_acceleration: 0.0,
             alignment_factor: 0.0,
-            slow_factor: 0.0,
             damage_amount: 0,
           ),
           Plankton: InteractionConfig(
@@ -203,7 +264,6 @@
             separation_acceleration: 0.5,
             cohesion_acceleration: 0.1,
             alignment_factor: 0.0,
-            slow_factor: 0.0,
             damage_amount: 0,
           )
         })
@@ -229,7 +289,6 @@
             separation_acceleration: 0.05,
             cohesion_acceleration: 0.0,
             alignment_factor: 0.0,
-            slow_factor: 0.0,
             damage_amount: 0,
           ),
           Head: InteractionConfig(
@@ -237,7 +296,6 @@
             separation_acceleration: 0.05,
             cohesion_acceleration: 0.0,
             alignment_factor: 0.0,
-            slow_factor: 0.0,
             damage_amount: 0,
           ),
           Plankton: InteractionConfig(
@@ -245,7 +303,6 @@
             separation_acceleration: 1.00,
             cohesion_acceleration: 0.00,
             alignment_factor: 0.2,
-            slow_factor: 0.0,
             damage_amount: 0,
           )
         })

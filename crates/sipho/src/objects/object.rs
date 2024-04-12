@@ -53,14 +53,16 @@ pub enum Object {
     Plankton,
     Food,
     Shocker,
+    Armor,
 }
 impl Object {
-    pub const ALL: [Object; 5] = [
+    pub const ALL: [Object; 6] = [
         Self::Worker,
         Self::Head,
         Self::Plankton,
         Self::Food,
         Self::Shocker,
+        Self::Armor,
     ];
 }
 
@@ -107,6 +109,7 @@ impl Object {
             Self::Food => zindex::FOOD,
             Self::Plankton => zindex::PLANKTON,
             Self::Shocker => zindex::ZOOIDS_MIN,
+            Self::Armor => zindex::ZOOIDS_MIN,
         }
     }
     pub fn update_acceleration(
@@ -130,7 +133,6 @@ impl Object {
                     separation_acceleration += Self::separation_acceleration(
                         -neighbor.delta,
                         neighbor.distance_squared,
-                        *object.velocity,
                         interaction,
                         separation_radius_factor,
                     );
@@ -149,7 +151,6 @@ impl Object {
                 separation_acceleration += Self::separation_acceleration(
                     -neighbor.delta,
                     neighbor.distance_squared,
-                    *object.velocity,
                     &config.interactions[other_object],
                     separation_radius_factor,
                 );
@@ -219,17 +220,10 @@ impl Object {
 
     pub fn update_collisions(
         mut objects: Query<(Entity, &Object, &CollidingNeighbors, Option<&Parent>)>,
-        // others: Query<(&Object, Option<&DashAttacker>, &Velocity)>,
-        // configs: Res<ObjectConfigs>,
-        // mut damage_events: EventWriter<DamageEvent>,
         mut carry_events: EventWriter<CarryEvent>,
     ) {
         for (entity, object, collisions, parent) in objects.iter_mut() {
-            // let config = configs.get(object).unwrap();
             for neighbor in collisions.iter() {
-                // let (other_object, other_attacker, other_velocity) =
-                //     others.get(neighbor.entity).unwrap();
-
                 if object.can_carry() && neighbor.object.can_be_carried() && parent.is_none() {
                     carry_events.send(CarryEvent {
                         carrier: entity,
@@ -242,34 +236,22 @@ impl Object {
 
     /// Returns true if an object can attack.
     pub fn can_attack(self) -> bool {
-        match self {
-            Self::Worker | Self::Shocker => true,
-            Self::Food | Self::Head | Self::Plankton => false,
-        }
+        matches!(self, Self::Worker | Self::Shocker)
     }
 
     /// Returns true if an object can be attacked.
     pub fn can_be_attacked(self) -> bool {
-        match self {
-            Self::Worker | Self::Shocker | Self::Head | Self::Plankton => true,
-            Self::Food => true,
-        }
+        true
     }
 
     /// Returns true if an object can carry.
     pub fn can_carry(self) -> bool {
-        match self {
-            Self::Worker => true,
-            Self::Shocker | Self::Food | Self::Head | Self::Plankton => false,
-        }
+        matches!(self, Self::Worker)
     }
 
     /// Returns true if an object can carry.
     pub fn can_be_carried(self) -> bool {
-        match self {
-            Self::Food => true,
-            Self::Shocker | Self::Worker | Self::Head | Self::Plankton => false,
-        }
+        matches!(self, Self::Food)
     }
 
     /// System for objects dying.
@@ -304,20 +286,11 @@ impl Object {
     fn separation_acceleration(
         position_delta: Vec2,
         distance_squared: f32,
-        velocity: Velocity,
         interaction: &InteractionConfig,
         radius_factor: f32,
     ) -> Acceleration {
         let radius = radius_factor * interaction.separation_radius;
         let radius_squared = radius * radius;
-
-        let slow_force = interaction.slow_factor
-            * if distance_squared < radius_squared {
-                Vec2::ZERO
-            } else {
-                -1.0 * velocity.0
-            };
-
         let magnitude =
             interaction.separation_acceleration * (-distance_squared / (radius_squared) + 1.);
         Acceleration(
@@ -325,8 +298,7 @@ impl Object {
                 * magnitude.clamp(
                     -interaction.cohesion_acceleration,
                     interaction.separation_acceleration,
-                )
-                + slow_force,
+                ),
         )
     }
 
@@ -349,12 +321,15 @@ pub struct ObjectBackground;
 impl ObjectBackground {
     pub fn update(
         mut query: Query<(Entity, &mut Transform, Option<&Parent>), With<Self>>,
-        parent_velocities: Query<&Velocity, With<Children>>,
+        parents: Query<(&GlobalTransform, &Velocity), With<Children>>,
     ) {
         for (entity, mut transform, parent) in &mut query {
             if let Some(parent) = parent {
-                if let Ok(parent_velocity) = parent_velocities.get(parent.get()) {
-                    transform.translation = -0.1 * parent_velocity.extend(0.);
+                if let Ok((parent_transform, parent_velocity)) = parents.get(parent.get()) {
+                    let offset = -0.1 * parent_velocity.extend(0.);
+                    let inverse = parent_transform.compute_transform().rotation.inverse();
+                    let result = inverse.mul_vec3(offset);
+                    transform.translation = result;
                 }
             } else {
                 info!("No parent, despawn background! {:?}", entity);

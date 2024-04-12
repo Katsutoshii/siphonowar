@@ -28,7 +28,6 @@ pub struct InteractionConfig {
     pub separation_acceleration: f32,
     pub cohesion_acceleration: f32,
     pub alignment_factor: f32,
-    pub slow_factor: f32,
     pub damage_amount: i32,
 }
 impl Default for InteractionConfig {
@@ -38,7 +37,6 @@ impl Default for InteractionConfig {
             separation_acceleration: 0.0,
             cohesion_acceleration: 0.0,
             alignment_factor: 0.0,
-            slow_factor: 0.0,
             damage_amount: 0,
         }
     }
