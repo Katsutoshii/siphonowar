@@ -24,7 +24,7 @@ pub mod prelude {
         aabb::Aabb2,
         camera::{CameraController, CameraMoveEvent, MainCamera},
         cursor::{Cursor, CursorAssets, CursorParam},
-        despawn::DespawnEvent,
+        despawn::{DespawnEvent, ScheduleDespawn},
         error::Error,
         game_state::{AssetLoadState, DebugState, GameState},
         grid::{

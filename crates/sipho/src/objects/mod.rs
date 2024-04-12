@@ -21,7 +21,7 @@ pub use {
     consumer::Consumer,
     damage::{DamageEvent, Health},
     elastic::{AttachedTo, Elastic, ElasticPlugin},
-    neighbors::CollidingNeighbors,
+    neighbors::{AlliedNeighbors, CollidingNeighbors, EnemyNeighbors},
     object::Object,
 };
 

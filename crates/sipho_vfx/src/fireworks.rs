@@ -10,8 +10,7 @@ impl Plugin for FireworkPlugin {
             .init_resource::<EffectAssets>()
             .init_resource::<ParticleEffectPool<TEAM_BLUE>>()
             .init_resource::<ParticleEffectPool<TEAM_RED>>()
-            .add_systems(Startup, EffectCommands::startup)
-            .add_systems(FixedUpdate, ScheduleDespawn::despawn);
+            .add_systems(Startup, EffectCommands::startup);
     }
 }
 
@@ -114,24 +113,6 @@ pub struct FireworkSpec {
     pub team: Team,
     pub transform: Transform,
     pub size: VfxSize,
-}
-
-/// Schedule despawn for a particle.
-#[derive(Component, DerefMut, Deref)]
-pub struct ScheduleDespawn(pub Timer);
-impl ScheduleDespawn {
-    pub fn despawn(
-        mut query: Query<(Entity, &mut ScheduleDespawn)>,
-        time: Res<Time>,
-        mut commands: Commands,
-    ) {
-        for (entity, mut timer) in &mut query {
-            timer.tick(time.delta());
-            if timer.finished() {
-                commands.entity(entity).despawn_recursive();
-            }
-        }
-    }
 }
 
 pub const POOL_SIZE: usize = 128;

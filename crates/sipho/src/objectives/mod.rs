@@ -8,6 +8,7 @@ pub mod dash_attacker;
 pub mod debug;
 pub mod navigator;
 pub mod objective;
+pub mod shock_attacker;
 
 pub use {
     config::ObjectiveConfig,
@@ -34,6 +35,7 @@ impl Plugin for ObjectivePlugin {
             .add_plugins((
                 navigator::NavigatorPlugin,
                 dash_attacker::DashAttackerPlugin,
+                shock_attacker::ShockAttackerPlugin,
             ));
     }
 }

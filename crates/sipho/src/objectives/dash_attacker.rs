@@ -4,6 +4,8 @@ use rand::Rng;
 
 use crate::{objects::CollidingNeighbors, prelude::*};
 
+use super::Navigator;
+
 pub struct DashAttackerPlugin;
 impl Plugin for DashAttackerPlugin {
     fn build(&self, app: &mut App) {
@@ -29,14 +31,12 @@ pub enum DashAttackerState {
 #[reflect(Component)]
 #[component(storage = "SparseSet")]
 pub struct DashAttacker {
-    pub target: Vec2,
     pub timer: Timer,
     pub state: DashAttackerState,
 }
 impl Default for DashAttacker {
     fn default() -> Self {
         Self {
-            target: Vec2::ZERO,
             timer: Timer::new(Self::attack_delay(), TimerMode::Repeating),
             state: DashAttackerState::Cooldown,
         }
@@ -78,11 +78,13 @@ impl DashAttacker {
 
     /// Check cooldown timers and accelerate when in state Attacking.
     /// Stop attacking after the first hit.
+    #[allow(clippy::type_complexity)]
     pub fn update(
         mut query: Query<(
             Entity,
             &Object,
             &Velocity,
+            &Navigator,
             &mut DashAttacker,
             &mut Acceleration,
             &GlobalTransform,
@@ -92,14 +94,22 @@ impl DashAttacker {
         configs: Res<ObjectConfigs>,
         mut damage_events: EventWriter<DamageEvent>,
     ) {
-        for (entity, object, velocity, mut attacker, mut acceleration, transform, collisions) in
-            query.iter_mut()
+        for (
+            entity,
+            object,
+            velocity,
+            navigator,
+            mut attacker,
+            mut acceleration,
+            transform,
+            collisions,
+        ) in query.iter_mut()
         {
             let config = configs.get(object).unwrap();
 
             attacker.timer.tick(time.delta());
 
-            let delta = attacker.target - transform.translation().xy();
+            let delta = navigator.target - transform.translation().xy();
 
             if attacker.timer.finished() {
                 attacker.timer.reset();

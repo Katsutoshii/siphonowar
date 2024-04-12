@@ -6,14 +6,13 @@ use std::slice::Iter;
 use crate::prelude::*;
 use bevy::ecs::query::QueryData;
 
-use super::{dash_attacker::DashAttacker, navigator::Navigator};
+use super::{dash_attacker::DashAttacker, navigator::Navigator, shock_attacker::ShockAttacker};
 
 #[derive(QueryData)]
 #[query_data(mutable)]
 pub struct ObjectivesQueryData {
     entity: Entity,
     navigator: Option<&'static mut Navigator>,
-    dash_attacker: Option<&'static mut DashAttacker>,
 }
 
 /// Represents the objective of the owning entity.
@@ -34,37 +33,54 @@ impl Objective {
     /// When this objective is added, remove existing components.
     pub fn try_add_components(
         &self,
+        object: Object,
         components: &mut ObjectivesQueryDataItem,
-        targets: &Query<(&GlobalTransform, &Velocity, &CarriedBy)>,
+        targets: &Query<(&GlobalTransform, &CarriedBy)>,
         commands: &mut Commands,
+        config: &ObjectConfig,
     ) -> Result<(), Error> {
         let mut commands = commands.entity(components.entity);
-        commands.remove::<(DashAttacker, Navigator)>();
+        commands.remove::<(DashAttacker, ShockAttacker, Navigator)>();
         match self {
             Self::None => {}
             Self::FollowEntity(entity) | Self::AttackFollowEntity(entity) => {
-                let (transform, _velocity, _carried_by) = targets.get(*entity)?;
+                let (transform, _carried_by) = targets.get(*entity)?;
                 commands.insert(Navigator {
                     target: transform.translation().xy(),
                     slow_factor: 1.0,
+                    target_radius: config.objective.repell_radius,
                 });
             }
             Self::AttackEntity(entity) => {
-                let (transform, velocity, carried_by) = targets.get(*entity)?;
+                let (transform, carried_by) = targets.get(*entity)?;
                 if !carried_by.is_empty() {
                     return Err(Error::Default);
                 }
-                let target_position = transform.translation().xy() + velocity.0;
-                commands.insert((
-                    Navigator {
-                        target: transform.translation().xy(),
-                        slow_factor: 1.0,
-                    },
-                    DashAttacker {
-                        target: target_position,
-                        ..default()
-                    },
-                ));
+                match object {
+                    Object::Shocker => {
+                        commands.insert((
+                            Navigator {
+                                target: transform.translation().xy(),
+                                slow_factor: 1.0,
+                                target_radius: config.attack_radius,
+                            },
+                            ShockAttacker { ..default() },
+                        ));
+                    }
+                    Object::Worker => {
+                        commands.insert((
+                            Navigator {
+                                target: transform.translation().xy(),
+                                slow_factor: 0.0,
+                                target_radius: config.attack_radius,
+                            },
+                            DashAttacker { ..default() },
+                        ));
+                    }
+                    _ => {
+                        unreachable!()
+                    }
+                }
             }
         };
         Ok(())
@@ -74,27 +90,23 @@ impl Objective {
     pub fn try_update_components(
         &self,
         components: &mut ObjectivesQueryDataItem,
-        targets: &Query<(&GlobalTransform, &Velocity, &CarriedBy)>,
+        targets: &Query<(&GlobalTransform, &CarriedBy)>,
     ) -> Result<(), Error> {
         match self {
             Self::None => {}
             Self::FollowEntity(entity) | Self::AttackFollowEntity(entity) => {
-                let (transform, _velocity, _carried_by) = targets.get(*entity)?;
+                let (transform, _carried_by) = targets.get(*entity)?;
                 if let Some(ref mut navigator) = components.navigator {
                     navigator.target = transform.translation().xy();
                 }
             }
             Self::AttackEntity(entity) => {
-                let (transform, velocity, carried_by) = targets.get(*entity)?;
+                let (transform, carried_by) = targets.get(*entity)?;
                 if !carried_by.is_empty() {
                     return Err(Error::Default);
                 }
-                let target_position = transform.translation().xy() + velocity.0;
                 if let Some(ref mut navigator) = components.navigator {
-                    navigator.target = target_position;
-                }
-                if let Some(ref mut dash_attacker) = components.dash_attacker {
-                    dash_attacker.target = target_position;
+                    navigator.target = transform.translation().xy();
                 }
             }
         };
@@ -123,16 +135,22 @@ impl Default for Objectives {
 }
 impl Objectives {
     pub fn update_components(
-        mut query: Query<(&mut Objectives, ObjectivesQueryData)>,
-        targets: Query<(&GlobalTransform, &Velocity, &CarriedBy)>,
+        mut query: Query<(&mut Objectives, &Object, ObjectivesQueryData)>,
+        targets: Query<(&GlobalTransform, &CarriedBy)>,
         mut commands: Commands,
+        configs: Res<ObjectConfigs>,
     ) {
-        for (mut objectives, mut components) in query.iter_mut() {
+        for (mut objectives, object, mut components) in query.iter_mut() {
+            let config = configs.get(object).unwrap();
             loop {
                 let result = if objectives.is_changed() {
-                    objectives
-                        .last()
-                        .try_add_components(&mut components, &targets, &mut commands)
+                    objectives.last().try_add_components(
+                        *object,
+                        &mut components,
+                        &targets,
+                        &mut commands,
+                        config,
+                    )
                 } else {
                     objectives
                         .last()
