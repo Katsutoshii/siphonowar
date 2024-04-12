@@ -1,7 +1,7 @@
 use rand::Rng;
 use std::time::Duration;
 
-use crate::{objects::ObjectAssets, prelude::*};
+use crate::prelude::*;
 
 use super::Navigator;
 
@@ -90,8 +90,8 @@ impl ShockAttacker {
         time: Res<Time>,
         configs: Res<ObjectConfigs>,
         mut damage_events: EventWriter<DamageEvent>,
-        mut commands: Commands,
-        assets: Res<ObjectAssets>,
+        mut lightning: LightningCommands,
+        mut fireworks: FireworkCommands,
     ) {
         for (entity, object, mut velocity, navigator, mut attacker, transform, enemies) in
             query.iter_mut()
@@ -121,60 +121,15 @@ impl ShockAttacker {
                         amount: interaction.damage_amount,
                         velocity: *velocity,
                     });
-
-                    // Set transform.
-                    let width = 2.;
                     let depth = transform.translation().z;
-                    let magnitude = delta.length();
-                    commands
-                        .spawn(LightningBundle {
-                            despawn: ScheduleDespawn(Timer::from_seconds(0.1, TimerMode::Once)),
-                            pbr: PbrBundle {
-                                mesh: assets.connector_mesh.clone(),
-                                material: assets.lightning_material.clone(),
-                                transform: {
-                                    Transform {
-                                        translation: ((position + navigator.target) / 2.)
-                                            .extend(depth),
-                                        scale: Vec3::new(magnitude / 2., width, width),
-                                        rotation: Quat::from_axis_angle(Vec3::Z, delta.to_angle()),
-                                    }
-                                },
-                                ..default()
-                            },
-                        })
-                        .with_children(|parent| {
-                            let point_light = PointLight {
-                                color: Color::WHITE,
-                                intensity: 2_000_000_000.,
-                                range: 1000.,
-                                ..default()
-                            };
-                            parent.spawn(PointLightBundle {
-                                point_light,
-                                transform: Transform {
-                                    translation: -Vec3::X + Vec3::Z * -10.,
-                                    ..default()
-                                },
-                                ..default()
-                            });
-                            parent.spawn(PointLightBundle {
-                                point_light,
-                                transform: Transform {
-                                    translation: Vec3::X + Vec3::Z * -10.,
-                                    ..default()
-                                },
-                                ..default()
-                            });
-                        });
+                    lightning.make_lightning(position, navigator.target, depth);
+                    fireworks.make_fireworks(FireworkSpec {
+                        position: navigator.target.extend(depth),
+                        color: FireworkColor::White,
+                        size: VfxSize::Medium,
+                    })
                 }
             }
         }
     }
-}
-
-#[derive(Bundle, Default)]
-pub struct LightningBundle {
-    pub despawn: ScheduleDespawn,
-    pub pbr: PbrBundle,
 }

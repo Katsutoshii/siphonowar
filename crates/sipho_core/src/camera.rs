@@ -101,7 +101,8 @@ impl MainCamera {
                 .with_rotation(Quat::from_axis_angle(Vec3::ONE, -PI / 6.)),
             directional_light: DirectionalLight {
                 color: Color::ANTIQUE_WHITE,
-                illuminance: 3000.,
+                illuminance: 3500.,
+                shadows_enabled: true,
                 ..default()
             },
             ..default()

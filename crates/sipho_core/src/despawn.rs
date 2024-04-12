@@ -9,9 +9,9 @@ impl Plugin for DespawnPlugin {
                 DespawnEvent::update
                     .run_if(on_event::<DespawnEvent>())
                     .in_set(SystemStage::Despawn),
-                ScheduleDespawn::despawn
-                    .in_set(SystemStage::Despawn)
-                    .in_set(GameStateSet::Running),
+                // ScheduleDespawn::despawn
+                //     .in_set(SystemStage::Despawn)
+                //     .in_set(GameStateSet::Running),
             ),
         );
     }
@@ -29,7 +29,7 @@ impl DespawnEvent {
 }
 
 /// Schedule despawn for a particle.
-#[derive(Component, DerefMut, Deref, Default)]
+#[derive(Component, Deref, DerefMut, Default)]
 pub struct ScheduleDespawn(pub Timer);
 impl ScheduleDespawn {
     pub fn despawn(

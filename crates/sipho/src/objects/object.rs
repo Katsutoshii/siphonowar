@@ -9,7 +9,7 @@ use super::{
 use crate::prelude::*;
 use bevy::{ecs::query::QueryData, prelude::*};
 use rand::Rng;
-use sipho_vfx::fireworks::EffectCommands;
+use sipho_vfx::fireworks::FireworkCommands;
 /// Plugin for running zooids simulation.
 pub struct ObjectPlugin;
 impl Plugin for ObjectPlugin {
@@ -258,15 +258,15 @@ impl Object {
     pub fn death(
         mut objects: Query<(Entity, &Self, &Health, &GlobalTransform, &Team)>,
         mut object_commands: ObjectCommands,
-        mut effect_commands: EffectCommands,
+        mut effect_commands: FireworkCommands,
     ) {
         for (entity, object, health, &transform, team) in &mut objects {
             if health.health <= 0 {
                 object_commands.despawn(entity);
                 effect_commands.make_fireworks(FireworkSpec {
                     size: VfxSize::Medium,
-                    transform: transform.into(),
-                    team: *team,
+                    position: transform.translation(),
+                    color: (*team).into(),
                 });
                 if object == &Object::Plankton {
                     object_commands.spawn(ObjectSpec {

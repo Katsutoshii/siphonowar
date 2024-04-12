@@ -89,7 +89,7 @@ impl Navigator {
                     position,
                     target_cell_center,
                     flow_acceleration,
-                ) * navigator.slow_factor;
+                );
 
                 *acceleration += flow_acceleration + slow_force;
 
@@ -124,6 +124,6 @@ impl Navigator {
                     Vec2::ZERO
                 }
                 + flow_acceleration.0 * radius_diff.clamp(-1., 0.),
-        ) * self.slow_factor
+        )
     }
 }

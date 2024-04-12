@@ -60,7 +60,7 @@ impl DamageEvent {
             &GlobalTransform,
         )>,
         mut events: EventReader<DamageEvent>,
-        mut effects: EffectCommands,
+        mut effects: FireworkCommands,
     ) {
         for event in events.read() {
             let knockback_amount = 3.;
@@ -86,8 +86,8 @@ impl DamageEvent {
                 };
                 effects.make_fireworks(FireworkSpec {
                     size,
-                    team,
-                    transform: transform.into(),
+                    color: team.into(),
+                    position: transform.translation(),
                 });
             }
         }

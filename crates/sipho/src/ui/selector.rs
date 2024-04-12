@@ -160,7 +160,12 @@ impl FromWorld for SelectorAssets {
                 let mut materials = world
                     .get_resource_mut::<Assets<StandardMaterial>>()
                     .unwrap();
-                materials.add(StandardMaterial::from(Color::BLUE.with_a(0.04)))
+                materials.add(StandardMaterial {
+                    base_color: Color::rgba(0.3, 0.3, 1.0, 0.04),
+                    alpha_mode: AlphaMode::Blend,
+                    unlit: true,
+                    ..default()
+                })
             },
             white_material: {
                 let mut materials = world

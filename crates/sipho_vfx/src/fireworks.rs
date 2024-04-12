@@ -8,38 +8,24 @@ impl Plugin for FireworkPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(HanabiPlugin)
             .init_resource::<EffectAssets>()
-            .init_resource::<ParticleEffectPool<TEAM_BLUE>>()
-            .init_resource::<ParticleEffectPool<TEAM_RED>>()
-            .add_systems(Startup, EffectCommands::startup);
+            .init_resource::<ParticleEffectPool<FIREWORK_COLOR_BLUE>>()
+            .init_resource::<ParticleEffectPool<FIREWORK_COLOR_RED>>()
+            .init_resource::<ParticleEffectPool<FIREWORK_COLOR_WHITE>>()
+            .add_systems(Startup, FireworkCommands::startup);
     }
 }
 
-// pub const FIREWORK_COLOR: Color = Color::rgb(1.0, 1.0, 0.25);
-
-fn color_gradient_from_team(team: Team) -> Gradient<Vec4> {
+fn get_standard_color_gradient(color: Color) -> Gradient<Vec4> {
     let mut color_gradient = Gradient::new();
-    match team {
-        Team::Blue | Team::None => {
-            let color = Color::TEAL.rgba_to_vec4();
-            color_gradient.add_key(0.0, color + Vec4::new(0.0, 0.0, 0.0, 0.5));
-            color_gradient.add_key(0.1, color);
-            color_gradient.add_key(0.7, color * 0.5);
-            color_gradient.add_key(1.0, Vec4::new(0.0, 0.0, 0.0, 1.0));
-        }
-        Team::Red => {
-            let color = Color::TOMATO.rgba_to_vec4();
-            color_gradient.add_key(0.0, color + Vec4::new(0.0, 0.0, 0.0, 0.5));
-            color_gradient.add_key(0.1, color);
-            color_gradient.add_key(0.7, color * 0.5);
-            color_gradient.add_key(1.0, Vec4::new(0.1, 0.1, 0.1, 1.0));
-        }
-    };
+    let color = color.rgba_to_vec4();
+    color_gradient.add_key(0.0, color + Vec4::new(0.0, 0.0, 0.0, 0.5));
+    color_gradient.add_key(0.1, color);
+    color_gradient.add_key(0.7, color * 0.5);
+    color_gradient.add_key(1.0, Vec4::new(0.1, 0.1, 0.1, 1.0));
     color_gradient
 }
 
-pub fn firework_effect(team: Team, n: f32) -> EffectAsset {
-    let color_gradient = color_gradient_from_team(team);
-
+pub fn firework_effect(color_gradient: Gradient<Vec4>, n: f32) -> EffectAsset {
     let mut size_gradient1 = Gradient::new();
     size_gradient1.add_key(0.0, Vec2::splat(5.0 * n.powf(0.25)));
     size_gradient1.add_key(0.3, Vec2::splat(2.0));
@@ -96,13 +82,55 @@ pub fn firework_effect(team: Team, n: f32) -> EffectAsset {
 
 #[derive(Resource)]
 pub struct EffectAssets {
-    fireworks: [Handle<EffectAsset>; Team::COUNT],
+    fireworks: [Handle<EffectAsset>; FireworkColor::COUNT],
 }
 impl FromWorld for EffectAssets {
     fn from_world(world: &mut World) -> Self {
         let mut assets = world.get_resource_mut::<Assets<EffectAsset>>().unwrap();
         Self {
-            fireworks: Team::ALL.map(|team| assets.add(firework_effect(team, 4.))),
+            fireworks: [
+                FireworkColor::Blue,
+                FireworkColor::Red,
+                FireworkColor::White,
+            ]
+            .map(|color| {
+                assets.add(firework_effect(
+                    get_standard_color_gradient(color.into()),
+                    4.,
+                ))
+            }),
+        }
+    }
+}
+
+#[derive(Debug)]
+#[repr(u8)]
+pub enum FireworkColor {
+    Blue,
+    Red,
+    White,
+}
+pub const FIREWORK_COLOR_BLUE: u8 = FireworkColor::Blue as u8;
+pub const FIREWORK_COLOR_RED: u8 = FireworkColor::Red as u8;
+pub const FIREWORK_COLOR_WHITE: u8 = FireworkColor::White as u8;
+impl FireworkColor {
+    pub const COUNT: usize = 3;
+}
+impl From<FireworkColor> for Color {
+    fn from(value: FireworkColor) -> Self {
+        match value {
+            FireworkColor::Blue => Team::COLORS[Team::Blue as usize],
+            FireworkColor::Red => Team::COLORS[Team::Red as usize],
+            FireworkColor::White => Color::WHITE,
+        }
+    }
+}
+impl From<Team> for FireworkColor {
+    fn from(value: Team) -> Self {
+        match value {
+            Team::None => Self::White,
+            Team::Blue => Self::Blue,
+            Team::Red => Self::Red,
         }
     }
 }
@@ -110,8 +138,8 @@ impl FromWorld for EffectAssets {
 /// Describes a firework to create.
 #[derive(Debug)]
 pub struct FireworkSpec {
-    pub team: Team,
-    pub transform: Transform,
+    pub color: FireworkColor,
+    pub position: Vec3,
     pub size: VfxSize,
 }
 
@@ -121,16 +149,18 @@ pub struct ParticleEffectPool<const T: u8>(EntityPool<POOL_SIZE>);
 
 /// System param to allow spawning effects.
 #[derive(SystemParam)]
-pub struct EffectCommands<'w, 's> {
+pub struct FireworkCommands<'w, 's> {
     commands: Commands<'w, 's>,
     assets: ResMut<'w, EffectAssets>,
-    blue_pool: ResMut<'w, ParticleEffectPool<{ Team::Blue as u8 }>>,
-    red_pool: ResMut<'w, ParticleEffectPool<{ Team::Red as u8 }>>,
-    effects: Query<'w, 's, (&'static mut Transform, &'static mut EffectSpawner)>,
+    blue_pool: ResMut<'w, ParticleEffectPool<FIREWORK_COLOR_BLUE>>,
+    red_pool: ResMut<'w, ParticleEffectPool<FIREWORK_COLOR_RED>>,
+    white_pool: ResMut<'w, ParticleEffectPool<FIREWORK_COLOR_WHITE>>,
+    effects:
+        Query<'w, 's, (&'static mut Transform, &'static mut EffectSpawner), Without<Lightning>>,
 }
 
-impl EffectCommands<'_, '_> {
-    pub fn startup(mut commands: EffectCommands) {
+impl FireworkCommands<'_, '_> {
+    pub fn startup(mut commands: FireworkCommands) {
         let blue_parent = commands
             .commands
             .spawn((Name::new("ParticlePool<Blue>"), SpatialBundle::default()))
@@ -142,25 +172,32 @@ impl EffectCommands<'_, '_> {
         for i in 0..POOL_SIZE {
             commands.blue_pool[i] = commands
                 .commands
-                .spawn((
-                    Name::new("Particles"),
-                    ParticleEffectBundle {
-                        effect: ParticleEffect::new(commands.assets.fireworks[Team::Blue].clone()),
-                        ..default()
-                    },
-                ))
+                .spawn(ParticleEffectBundle {
+                    effect: ParticleEffect::new(
+                        commands.assets.fireworks[FireworkColor::Blue as usize].clone(),
+                    ),
+                    ..default()
+                })
                 .set_parent_in_place(blue_parent)
                 .id();
-
             commands.red_pool[i] = commands
                 .commands
-                .spawn((
-                    Name::new("Particles"),
-                    ParticleEffectBundle {
-                        effect: ParticleEffect::new(commands.assets.fireworks[Team::Red].clone()),
-                        ..default()
-                    },
-                ))
+                .spawn(ParticleEffectBundle {
+                    effect: ParticleEffect::new(
+                        commands.assets.fireworks[FireworkColor::Red as usize].clone(),
+                    ),
+                    ..default()
+                })
+                .set_parent_in_place(red_parent)
+                .id();
+            commands.white_pool[i] = commands
+                .commands
+                .spawn(ParticleEffectBundle {
+                    effect: ParticleEffect::new(
+                        commands.assets.fireworks[FireworkColor::White as usize].clone(),
+                    ),
+                    ..default()
+                })
                 .set_parent_in_place(red_parent)
                 .id();
         }
@@ -171,12 +208,13 @@ impl EffectCommands<'_, '_> {
             VfxSize::Medium => 2,
         };
         for _ in 0..count {
-            let entity = match spec.team {
-                Team::None | Team::Blue => self.blue_pool.take(),
-                Team::Red => self.red_pool.take(),
+            let entity = match spec.color {
+                FireworkColor::Blue => self.blue_pool.take(),
+                FireworkColor::Red => self.red_pool.take(),
+                FireworkColor::White => self.white_pool.take(),
             };
             let (mut transform, mut spawner) = self.effects.get_mut(entity).unwrap();
-            *transform = spec.transform;
+            transform.translation = spec.position;
             spawner.set_active(true);
             spawner.reset();
         }
