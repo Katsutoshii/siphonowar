@@ -134,13 +134,18 @@ impl Grid2<TeamEntitySets> {
         None
     }
 
-    pub fn get_entities_in_radius(&self, position: Vec2, radius: f32) -> HashSet<Entity> {
+    pub fn get_entities_in_radius(
+        &self,
+        position: Vec2,
+        radius: f32,
+        teams: &[Team],
+    ) -> HashSet<Entity> {
         let mut other_entities: HashSet<Entity> = HashSet::default();
         let positions = self.get_in_radius(position, radius);
         for rowcol in positions {
             if self.in_bounds(rowcol) {
-                for team_entities in self[rowcol].iter() {
-                    other_entities.extend(team_entities.iter());
+                for &team in teams {
+                    other_entities.extend(self[rowcol][team].iter());
                 }
             }
         }

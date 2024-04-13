@@ -1,4 +1,4 @@
-use bevy::utils::FloatOrd;
+use bevy::utils::{FloatOrd, HashSet};
 
 use crate::prelude::*;
 
@@ -45,6 +45,43 @@ pub struct NeighborsBundle {
     grid_entity: GridEntity,
 }
 
+pub fn get_neighbors(
+    entity: Entity,
+    position: Vec2,
+    other_entities: &HashSet<Entity>,
+    others: &Query<(&Object, &Team, &GlobalTransform)>,
+    config: &ObjectConfig,
+) -> Vec<Neighbor> {
+    let mut neighbors: Vec<Neighbor> = Vec::with_capacity(other_entities.len());
+
+    for &other_entity in other_entities.iter() {
+        if entity == other_entity {
+            continue;
+        }
+        if let Ok((other_object, other_team, other_transform)) = others.get(other_entity) {
+            let other_position = other_transform.translation().xy();
+            let delta = other_position - position;
+            let distance_squared = delta.length_squared();
+            if distance_squared > config.neighbor_radius * config.neighbor_radius {
+                continue;
+            }
+            neighbors.push(Neighbor {
+                entity: other_entity,
+                object: *other_object,
+                team: *other_team,
+                delta,
+                distance_squared,
+            });
+        } else {
+            warn!("Missing entity! {:?}", other_entity);
+        }
+    }
+
+    neighbors.sort_by_key(|neighbor| FloatOrd(neighbor.distance_squared));
+    neighbors.truncate(MAX_NEIGHBORS);
+    neighbors
+}
+
 pub fn update(
     mut query: Query<(
         Entity,
@@ -72,44 +109,18 @@ pub fn update(
             let config = configs.get(object).unwrap();
             let position = transform.translation().xy();
             let other_entities_prefetch =
-                grid.get_entities_in_radius(position, config.neighbor_radius / 2.);
+                grid.get_entities_in_radius(position, config.neighbor_radius / 2., &Team::ALL);
             let other_entities = if other_entities_prefetch.len() >= MAX_NEIGHBORS {
                 other_entities_prefetch
             } else {
-                grid.get_entities_in_radius(position, config.neighbor_radius)
+                grid.get_entities_in_radius(position, config.neighbor_radius, &Team::ALL)
             };
 
             enemy_neighbors.clear();
             allied_neighbors.clear();
             colliding_neighbors.clear();
 
-            let mut all_neighbors: Vec<Neighbor> = Vec::with_capacity(other_entities.len());
-
-            for &other_entity in other_entities.iter() {
-                if entity == other_entity {
-                    continue;
-                }
-                if let Ok((other_object, other_team, other_transform)) = others.get(other_entity) {
-                    let other_position = other_transform.translation().xy();
-                    let delta = other_position - position;
-                    let distance_squared = delta.length_squared();
-                    if distance_squared > config.neighbor_radius * config.neighbor_radius {
-                        continue;
-                    }
-                    all_neighbors.push(Neighbor {
-                        entity: other_entity,
-                        object: *other_object,
-                        team: *other_team,
-                        delta,
-                        distance_squared,
-                    });
-                } else {
-                    warn!("Missing entity! {:?}", other_entity);
-                }
-            }
-
-            all_neighbors.sort_by_key(|neighbor| FloatOrd(neighbor.distance_squared));
-            all_neighbors.truncate(MAX_NEIGHBORS);
+            let all_neighbors = get_neighbors(entity, position, &other_entities, &others, config);
 
             for neighbor in all_neighbors.into_iter() {
                 if *team == neighbor.team {
