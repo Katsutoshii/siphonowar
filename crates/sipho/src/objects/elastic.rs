@@ -106,7 +106,7 @@ impl Elastic {
                 let delta = position2 - position1;
                 let direction = delta.normalize_or_zero();
                 let magnitude = delta.length();
-                let force = magnitude * magnitude * 0.0005;
+                let force = magnitude * magnitude * 0.0001;
                 *accel_query.get_mut(entity1).unwrap() += Acceleration(direction * force);
                 *accel_query.get_mut(entity2).unwrap() -= Acceleration(direction * force);
 

@@ -16,18 +16,18 @@ pub struct ObjectivesQueryData {
 }
 
 /// Represents the objective of the owning entity.
-#[derive(Component, Default, Debug, Clone, PartialEq, Reflect)]
-#[reflect(Component)]
+#[derive(Default, Debug, Clone, PartialEq, Reflect)]
 pub enum Objective {
     /// Entity has no objective.
     #[default]
-    None,
+    Idle,
     /// Entity follows the transform of another entity.
     FollowEntity(Entity),
     /// Entity follows the transform of another entity, or attacks
     AttackFollowEntity(Entity),
     /// Attack Entity
     AttackEntity(Entity),
+    Stunned(Timer),
 }
 impl Objective {
     /// When this objective is added, remove existing components.
@@ -42,7 +42,8 @@ impl Objective {
         let mut commands = commands.entity(components.entity);
         commands.remove::<(DashAttacker, ShockAttacker, Navigator)>();
         match self {
-            Self::None => {}
+            Self::Stunned(_) => {}
+            Self::Idle => {}
             Self::FollowEntity(entity) | Self::AttackFollowEntity(entity) => {
                 let (transform, _carried_by) = targets.get(*entity)?;
                 commands.insert(Navigator {
@@ -93,7 +94,8 @@ impl Objective {
         targets: &Query<(&GlobalTransform, &CarriedBy)>,
     ) -> Result<(), Error> {
         match self {
-            Self::None => {}
+            Self::Stunned(_) => {}
+            Self::Idle => {}
             Self::FollowEntity(entity) | Self::AttackFollowEntity(entity) => {
                 let (transform, _carried_by) = targets.get(*entity)?;
                 if let Some(ref mut navigator) = components.navigator {
@@ -119,7 +121,7 @@ impl Objective {
             Self::AttackEntity(entity)
             | Self::AttackFollowEntity(entity)
             | Self::FollowEntity(entity) => Some(*entity),
-            Self::None => None,
+            Self::Idle | Self::Stunned(_) => None,
         }
     }
 }
@@ -130,15 +132,16 @@ impl Objective {
 pub struct Objectives(Vec<Objective>);
 impl Default for Objectives {
     fn default() -> Self {
-        Self(vec![Objective::None])
+        Self(vec![Objective::Idle])
     }
 }
 impl Objectives {
-    pub fn update_components(
+    pub fn update(
         mut query: Query<(&mut Objectives, &Object, ObjectivesQueryData)>,
         targets: Query<(&GlobalTransform, &CarriedBy)>,
         mut commands: Commands,
         configs: Res<ObjectConfigs>,
+        time: Res<Time>,
     ) {
         for (mut objectives, object, mut components) in query.iter_mut() {
             let config = configs.get(object).unwrap();
@@ -163,6 +166,9 @@ impl Objectives {
                     objectives.pop();
                 }
             }
+            // if let Objective::Stunned(timer) = objectives.bypass_change_detection().last_mut() {
+            //     timer.tick(time.delta());
+            // }
         }
     }
 
@@ -180,7 +186,7 @@ impl Objectives {
 
     /// Construct an objective with default to None (idle).
     pub fn new(objective: Objective) -> Self {
-        Self(vec![Objective::None, objective])
+        Self(vec![Objective::Idle, objective])
     }
     /// Get the last objective.
     pub fn last(&self) -> &Objective {

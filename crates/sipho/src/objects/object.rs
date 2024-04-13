@@ -163,7 +163,7 @@ impl Object {
             *object.acceleration += separation_acceleration;
 
             // When idle, slow down.
-            if *object.objectives.last() == Objective::None
+            if *object.objectives.last() == Objective::Idle
                 && object.carried_by.is_empty()
                 && object.attached_to.is_empty()
             {
@@ -206,12 +206,12 @@ impl Object {
                         Objective::AttackEntity(entity) => {
                             *entity = neighbor.entity;
                         }
-                        Objective::AttackFollowEntity(_) | Objective::None => {
+                        Objective::AttackFollowEntity(_) | Objective::Idle => {
                             object
                                 .objectives
                                 .push(Objective::AttackEntity(neighbor.entity));
                         }
-                        Objective::FollowEntity(_) => {}
+                        Objective::FollowEntity(_) | Objective::Stunned(_) => {}
                     }
                 }
             }

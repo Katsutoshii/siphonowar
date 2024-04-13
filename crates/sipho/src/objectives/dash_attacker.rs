@@ -127,6 +127,7 @@ impl DashAttacker {
                         damaged: collision.entity,
                         amount: interaction.damage_amount,
                         velocity: *velocity,
+                        stun: false,
                     });
                 } else {
                     *acceleration +=

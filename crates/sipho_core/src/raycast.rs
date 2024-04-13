@@ -49,9 +49,17 @@ impl RaycastCommands<'_, '_> {
         None
     }
     pub fn raycast(&self, ray: Ray3d) -> Option<RaycastEvent> {
-        if let Some(event) = self.ui_raycast() {
+        let worldcast = self.world_raycast(ray);
+        if let Some(mut event) = self.ui_raycast() {
+            if let Some(worldcast) = worldcast {
+                event.world_position = worldcast.world_position;
+            }
             return Some(event);
         }
+        worldcast
+    }
+
+    pub fn world_raycast(&self, ray: Ray3d) -> Option<RaycastEvent> {
         let mut hits = Vec::default();
         for (entity, &target, mesh_handle, transform) in self.meshes.iter() {
             let mesh = self.assets.get(mesh_handle).unwrap();

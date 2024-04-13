@@ -120,6 +120,7 @@ impl ShockAttacker {
                         damaged: enemy.entity,
                         amount: interaction.damage_amount,
                         velocity: *velocity,
+                        stun: true,
                     });
                     let depth = transform.translation().z;
                     lightning.make_lightning(position, navigator.target, depth);

@@ -27,7 +27,7 @@ impl Plugin for ObjectivePlugin {
             .register_type::<Objective>()
             .add_systems(
                 FixedUpdate,
-                (Objectives::update_components, ObjectiveDebugger::update)
+                (Objectives::update, ObjectiveDebugger::update)
                     .chain()
                     .in_set(SystemStage::PostApply)
                     .in_set(GameStateSet::Running),

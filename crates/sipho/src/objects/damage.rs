@@ -49,6 +49,7 @@ pub struct DamageEvent {
     pub damaged: Entity,
     pub amount: i32,
     pub velocity: Velocity,
+    pub stun: bool,
 }
 impl DamageEvent {
     pub fn update(
@@ -58,6 +59,7 @@ impl DamageEvent {
             &mut Health,
             &Team,
             &GlobalTransform,
+            &mut Objectives,
         )>,
         mut events: EventReader<DamageEvent>,
         mut effects: FireworkCommands,
@@ -65,14 +67,20 @@ impl DamageEvent {
         for event in events.read() {
             let knockback_amount = 3.;
             // Knock back the damager
-            if let Ok((_, mut acceleration, _health, _team, _transform)) =
+            if let Ok((_, mut acceleration, _health, _team, _transform, _)) =
                 query.get_mut(event.damager)
             {
                 *acceleration += Acceleration(*event.velocity * -1. * knockback_amount);
             }
             // Reduce health and set off firework for the damaged.
-            if let Ok((mut attacker, mut _acceleration, mut health, &team, &transform)) =
-                query.get_mut(event.damaged)
+            if let Ok((
+                mut attacker,
+                mut _acceleration,
+                mut health,
+                &team,
+                &transform,
+                mut objectives,
+            )) = query.get_mut(event.damaged)
             {
                 let size = if health.damageable {
                     if let Some(attacker) = attacker.as_deref_mut() {
@@ -89,6 +97,15 @@ impl DamageEvent {
                     color: team.into(),
                     position: transform.translation(),
                 });
+                // if event.stun {
+                //     if let Objective::Stunned(_) = objectives.last() {
+                //     } else {
+                //         objectives.push(Objective::Stunned(Timer::from_seconds(
+                //             0.5,
+                //             TimerMode::Once,
+                //         )));
+                //     }
+                // }
             }
         }
     }

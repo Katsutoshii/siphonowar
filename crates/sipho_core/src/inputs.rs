@@ -221,9 +221,10 @@ impl ControlEvent {
                         state: ButtonState::Pressed,
                         mode: ControlMode::Normal,
                         position: match raycast_event.target {
-                            RaycastTarget::Minimap => {
-                                grid_spec.uv_to_world_position(raycast_event.position)
-                            }
+                            RaycastTarget::Minimap => match action {
+                                ControlAction::Select => raycast_event.world_position,
+                                _ => grid_spec.uv_to_world_position(raycast_event.position),
+                            },
                             RaycastTarget::WorldGrid => raycast_event.world_position,
                             RaycastTarget::None => raycast_event.position,
                         },

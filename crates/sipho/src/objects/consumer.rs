@@ -37,6 +37,7 @@ impl Consumer {
                         damaged: neighbor.entity,
                         amount: 1,
                         velocity: Velocity::ZERO,
+                        stun: false,
                     });
                 }
             }

@@ -36,7 +36,7 @@ impl ObjectiveDebugger {
     #[allow(dead_code)]
     pub fn update(
         mut query: Query<(&mut Text, &Parent), With<Self>>,
-        objectives: Query<&Objective, Without<Self>>,
+        objectives: Query<&Objectives, Without<Self>>,
     ) {
         for (mut text, parent) in query.iter_mut() {
             let objective = objectives.get(parent.get()).unwrap();
