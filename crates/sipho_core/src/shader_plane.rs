@@ -1,3 +1,5 @@
+use bevy::pbr::NotShadowCaster;
+
 use crate::prelude::*;
 use std::marker::PhantomData;
 
@@ -76,6 +78,7 @@ impl<M: ShaderPlaneMaterial> ShaderPlane<M> {
                 material,
                 ..default()
             },
+            NotShadowCaster,
             Name::new(std::any::type_name::<Self>()),
             self,
         )

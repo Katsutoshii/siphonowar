@@ -152,6 +152,22 @@ impl Grid2<TeamEntitySets> {
         other_entities
     }
 
+    /// Get entities in radius, first checking half radius and returning early if that gives enough entities.
+    pub fn get_n_entities_in_radius(
+        &self,
+        position: Vec2,
+        radius: f32,
+        teams: &[Team],
+        n: usize,
+    ) -> HashSet<Entity> {
+        let prefetch = self.get_entities_in_radius(position, radius / 2., teams);
+        if prefetch.len() >= n {
+            prefetch
+        } else {
+            self.get_entities_in_radius(position, radius, teams)
+        }
+    }
+
     /// Remove an entity from the grid entirely.
     pub fn remove(
         &mut self,

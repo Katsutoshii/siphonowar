@@ -62,16 +62,15 @@ pub fn get_neighbors(
             let other_position = other_transform.translation().xy();
             let delta = other_position - position;
             let distance_squared = delta.length_squared();
-            if distance_squared > config.neighbor_radius * config.neighbor_radius {
-                continue;
+            if config.in_radius(distance_squared) {
+                neighbors.push(Neighbor {
+                    entity: other_entity,
+                    object: *other_object,
+                    team: *other_team,
+                    delta,
+                    distance_squared,
+                });
             }
-            neighbors.push(Neighbor {
-                entity: other_entity,
-                object: *other_object,
-                team: *other_team,
-                delta,
-                distance_squared,
-            });
         } else {
             warn!("Missing entity! {:?}", other_entity);
         }
@@ -106,33 +105,47 @@ pub fn update(
             team,
             transform,
         )| {
-            let config = configs.get(object).unwrap();
-            let position = transform.translation().xy();
-            let other_entities_prefetch =
-                grid.get_entities_in_radius(position, config.neighbor_radius / 2., &Team::ALL);
-            let other_entities = if other_entities_prefetch.len() >= MAX_NEIGHBORS {
-                other_entities_prefetch
-            } else {
-                grid.get_entities_in_radius(position, config.neighbor_radius, &Team::ALL)
-            };
-
             enemy_neighbors.clear();
             allied_neighbors.clear();
             colliding_neighbors.clear();
 
-            let all_neighbors = get_neighbors(entity, position, &other_entities, &others, config);
+            let config = configs.get(object).unwrap();
+            let position = transform.translation().xy();
 
-            for neighbor in all_neighbors.into_iter() {
-                if *team == neighbor.team {
-                    allied_neighbors.push(neighbor);
-                } else {
-                    enemy_neighbors.push(neighbor);
-                    let other_config = configs.get(&neighbor.object).unwrap();
-                    if neighbor.distance_squared
-                        < config.radius.powi(2) + other_config.radius.powi(2)
-                    {
-                        colliding_neighbors.push(neighbor);
-                    }
+            let ally_entities = grid.get_n_entities_in_radius(
+                position,
+                config.neighbor_radius,
+                &[*team],
+                MAX_NEIGHBORS,
+            );
+            for neighbor in
+                get_neighbors(entity, position, &ally_entities, &others, config).into_iter()
+            {
+                allied_neighbors.push(neighbor);
+                let other_config = configs.get(&neighbor.object).unwrap();
+                if config.is_colliding(other_config, neighbor.distance_squared) {
+                    colliding_neighbors.push(neighbor);
+                }
+            }
+
+            let enemy_teams: Vec<Team> = Team::ALL
+                .iter()
+                .copied()
+                .filter(|other_team| team != other_team)
+                .collect();
+            let enemy_entities = grid.get_n_entities_in_radius(
+                position,
+                config.neighbor_radius,
+                &enemy_teams,
+                MAX_NEIGHBORS,
+            );
+            for neighbor in
+                get_neighbors(entity, position, &enemy_entities, &others, config).into_iter()
+            {
+                enemy_neighbors.push(neighbor);
+                let other_config = configs.get(&neighbor.object).unwrap();
+                if config.is_colliding(other_config, neighbor.distance_squared) {
+                    colliding_neighbors.push(neighbor);
                 }
             }
         },

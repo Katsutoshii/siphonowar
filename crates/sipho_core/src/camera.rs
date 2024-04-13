@@ -7,6 +7,7 @@ use bevy::{
     },
     input::{mouse::MouseWheel, ButtonState},
     prelude::*,
+    render::view::RenderLayers,
     window::PrimaryWindow,
 };
 
@@ -94,6 +95,7 @@ impl MainCamera {
             },
             CameraController::default(),
             InheritedVisibility::default(),
+            RenderLayers::from_layers(&[0, 1]),
             MainCamera,
         ));
         commands.spawn(DirectionalLightBundle {

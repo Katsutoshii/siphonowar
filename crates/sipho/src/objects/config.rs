@@ -88,8 +88,11 @@ impl Default for ObjectConfig {
     }
 }
 impl ObjectConfig {
-    pub fn is_colliding(&self, distance_squared: f32) -> bool {
-        distance_squared < self.radius * self.radius
+    pub fn is_colliding(&self, other: &Self, distance_squared: f32) -> bool {
+        distance_squared <= self.radius * self.radius + other.radius * other.radius
+    }
+    pub fn in_radius(&self, distance_squared: f32) -> bool {
+        distance_squared <= self.neighbor_radius * self.neighbor_radius
     }
 }
 

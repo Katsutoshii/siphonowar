@@ -10,7 +10,12 @@ impl Plugin for LightningPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<LightningAssets>()
             .init_resource::<LightningEffectPool>()
-            .add_systems(FixedUpdate, Lightning::update)
+            .add_systems(
+                FixedUpdate,
+                Lightning::update
+                    .in_set(GameStateSet::Running)
+                    .in_set(SystemStage::PostCompute),
+            )
             .add_systems(Startup, LightningCommands::setup);
     }
 }
@@ -55,26 +60,21 @@ impl LightningCommands<'_, '_> {
                 .with_children(|parent| {
                     let point_light = PointLight {
                         color: Color::WHITE,
-                        intensity: 2_000_000_000.,
+                        intensity: 100_000_000.,
                         range: 1000.,
                         ..default()
                     };
-                    parent.spawn(PointLightBundle {
-                        point_light,
-                        transform: Transform {
-                            translation: -Vec3::X + Vec3::Z * -10.,
+                    let depth = 3.;
+                    for offset in [-0.7, -0.2, 0.2, 0.7] {
+                        parent.spawn(PointLightBundle {
+                            point_light,
+                            transform: Transform {
+                                translation: offset * Vec3::X + Vec3::Z * -depth,
+                                ..default()
+                            },
                             ..default()
-                        },
-                        ..default()
-                    });
-                    parent.spawn(PointLightBundle {
-                        point_light,
-                        transform: Transform {
-                            translation: Vec3::X + Vec3::Z * -10.,
-                            ..default()
-                        },
-                        ..default()
-                    });
+                        });
+                    }
                 })
                 .set_parent_in_place(parent)
                 .id();
@@ -104,8 +104,11 @@ pub struct Lightning {
     pub timer: Timer,
 }
 impl Lightning {
-    pub fn update(mut query: Query<(&mut Lightning, &mut Visibility)>, time: Res<Time>) {
-        for (mut lightning, mut visibility) in &mut query {
+    pub fn update(
+        mut query: Query<(&mut Lightning, &mut Visibility, &mut Transform)>,
+        time: Res<Time>,
+    ) {
+        for (mut lightning, mut visibility, mut transform) in &mut query {
             if *visibility == Visibility::Hidden {
                 continue;
             }
@@ -113,6 +116,7 @@ impl Lightning {
             if lightning.timer.finished() {
                 *visibility = Visibility::Hidden;
             }
+            transform.rotation *= Quat::from_rotation_x(PI / 4.);
         }
     }
 }
