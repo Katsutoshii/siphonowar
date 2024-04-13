@@ -70,6 +70,9 @@ impl Elastic {
                 }
                 for i in 0..entities.len() - 1 {
                     let pair = (entities[i], entities[i + 1]);
+                    if attachments[i].contains(&pair.1) {
+                        continue;
+                    }
                     commands.spawn(ElasticBundle {
                         elastic: Elastic(pair),
                         pbr: PbrBundle {
