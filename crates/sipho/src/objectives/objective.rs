@@ -166,9 +166,9 @@ impl Objectives {
                     objectives.pop();
                 }
             }
-            // if let Objective::Stunned(timer) = objectives.bypass_change_detection().last_mut() {
-            //     timer.tick(time.delta());
-            // }
+            if let Objective::Stunned(timer) = objectives.bypass_change_detection().last_mut() {
+                timer.tick(time.delta());
+            }
         }
     }
 

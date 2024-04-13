@@ -97,15 +97,15 @@ impl DamageEvent {
                     color: team.into(),
                     position: transform.translation(),
                 });
-                // if event.stun {
-                //     if let Objective::Stunned(_) = objectives.last() {
-                //     } else {
-                //         objectives.push(Objective::Stunned(Timer::from_seconds(
-                //             0.5,
-                //             TimerMode::Once,
-                //         )));
-                //     }
-                // }
+                if event.stun {
+                    if let Objective::Stunned(_) = objectives.last() {
+                    } else {
+                        objectives.push(Objective::Stunned(Timer::from_seconds(
+                            0.5,
+                            TimerMode::Once,
+                        )));
+                    }
+                }
             }
         }
     }

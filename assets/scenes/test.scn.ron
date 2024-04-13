@@ -72,7 +72,7 @@
     "sipho::objects::config::ObjectConfigs": ObjectConfigs({
       Worker: ObjectConfig(
         physics_material: Zooid,
-        neighbor_radius: 128.0,
+        neighbor_radius: 256.0,
         nav_flow_factor: 1.0,
         attack_velocity: 20.,
         attack_radius: 128.0,
