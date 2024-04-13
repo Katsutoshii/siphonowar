@@ -82,16 +82,15 @@ impl DamageEvent {
                 mut objectives,
             )) = query.get_mut(event.damaged)
             {
-                let size = if health.damageable {
+                if health.damageable {
                     if let Some(attacker) = attacker.as_deref_mut() {
                         attacker.state = DashAttackerState::Stunned;
                         attacker.timer.set_duration(Duration::from_secs(0));
                     }
                     health.damage(event.amount);
-                    VfxSize::Small
-                } else {
-                    VfxSize::Tiny
                 };
+                let size = VfxSize::Small;
+
                 effects.make_fireworks(FireworkSpec {
                     size,
                     color: team.into(),

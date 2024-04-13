@@ -1,7 +1,7 @@
-use bevy::utils::smallvec::SmallVec;
-use sipho_core::grid::fog::FogConfig;
-
 use crate::prelude::*;
+use bevy::utils::smallvec::SmallVec;
+use bevy::utils::FloatOrd;
+use sipho_core::grid::fog::FogConfig;
 
 use super::ObjectAssets;
 
@@ -10,7 +10,7 @@ impl Plugin for ElasticPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<Elastic>().add_systems(
             FixedUpdate,
-            (Elastic::tie_together, Elastic::update)
+            (Elastic::tie_cursor, Elastic::tie_selection, Elastic::update)
                 .chain()
                 .in_set(SystemStage::PostCompute)
                 .in_set(GameStateSet::Running),
@@ -44,7 +44,59 @@ pub struct ElasticBundle {
     pub pbr: PbrBundle,
 }
 impl Elastic {
-    pub fn tie_together(
+    pub fn tie_cursor(
+        mut commands: Commands,
+        mut control_events: EventReader<ControlEvent>,
+        mut query: Query<(&mut AttachedTo, &GlobalTransform)>,
+        config: Res<FogConfig>,
+        grid: Res<Grid2<TeamEntitySets>>,
+        mut last_entity: Local<Option<Entity>>,
+        assets: Res<ObjectAssets>,
+    ) {
+        for control_event in control_events.read() {
+            if control_event.is_pressed(ControlAction::TieCursor) {
+                control_event.position;
+                let entities = grid.get_entities_in_radius(
+                    control_event.position,
+                    32.0,
+                    &[config.player_team],
+                );
+                let mut dudes: Vec<Entity> = entities.iter().copied().collect();
+
+                dudes.sort_by_key(|entity| {
+                    let entity_pos = query.get(*entity).unwrap().1.translation();
+                    FloatOrd(Vec2::distance(control_event.position, entity_pos.xy()))
+                });
+                if let Some(&dude) = dudes.first() {
+                    if let Some(last_entity) = *last_entity {
+                        if last_entity != dude {
+                            {
+                                let (mut attached, _) = query.get_mut(last_entity).unwrap();
+                                attached.push(dude);
+                            }
+                            {
+                                let (mut attached, _) = query.get_mut(dude).unwrap();
+                                attached.push(last_entity);
+                            }
+                        }
+                        commands.spawn(ElasticBundle {
+                            elastic: Elastic((last_entity, dude)),
+                            pbr: PbrBundle {
+                                mesh: assets.connector_mesh.clone(),
+                                material: assets.get_team_material(config.player_team).background,
+                                ..default()
+                            },
+                        });
+                    }
+                    *last_entity = Some(dude);
+                }
+            }
+            if control_event.is_released(ControlAction::TieCursor) {
+                *last_entity = None;
+            }
+        }
+    }
+    pub fn tie_selection(
         mut commands: Commands,
         mut control_events: EventReader<ControlEvent>,
         mut query: Query<(Entity, &Selected, &mut AttachedTo)>,
@@ -52,7 +104,7 @@ impl Elastic {
         config: Res<FogConfig>,
     ) {
         for control_event in control_events.read() {
-            if control_event.is_pressed(ControlAction::TieWorkers) {
+            if control_event.is_pressed(ControlAction::TieSelection) {
                 // Collect entities to tie together.
                 let mut entities = vec![];
                 let mut attachments = vec![];

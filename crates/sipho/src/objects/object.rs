@@ -211,7 +211,13 @@ impl Object {
                                 .objectives
                                 .push(Objective::AttackEntity(neighbor.entity));
                         }
-                        Objective::FollowEntity(_) | Objective::Stunned(_) => {}
+                        Objective::FollowEntity(_) => {}
+                        Objective::Stunned(timer) => {
+                            if timer.finished() {
+                                object.objectives.pop();
+                                object.objectives.push(Objective::Idle);
+                            }
+                        }
                     }
                 }
             }

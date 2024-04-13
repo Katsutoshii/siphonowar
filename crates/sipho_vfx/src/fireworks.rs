@@ -204,7 +204,7 @@ impl FireworkCommands<'_, '_> {
     }
     pub fn make_fireworks(&mut self, spec: FireworkSpec) {
         let count = match spec.size {
-            VfxSize::Tiny | VfxSize::Small => 1,
+            VfxSize::Small => 1,
             VfxSize::Medium => 2,
         };
         for _ in 0..count {
