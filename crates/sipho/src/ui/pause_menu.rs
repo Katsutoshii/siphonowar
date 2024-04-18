@@ -224,7 +224,6 @@ impl PauseMenu {
     }
 
     // Handle changing all buttons color based on mouse interaction
-    #[allow(clippy::type_complexity)]
     fn button_system(
         mut interaction_query: Query<
             (&Interaction, &mut BackgroundColor, Option<&SelectedOption>),

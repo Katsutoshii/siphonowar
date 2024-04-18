@@ -77,7 +77,7 @@
         nav_flow_factor: 1.0,
         attack_velocity: 20.,
         attack_radius: 128.0,
-        spawn_velocity: 10.0,
+        spawn_velocity: 2.0,
         spawn_cost: 4,
         objective: ObjectiveConfig(
           repell_radius: 32.0,
@@ -130,7 +130,7 @@
         nav_flow_factor: 1.0,
         attack_velocity: 20.,
         attack_radius: 256.0,
-        spawn_velocity: 10.0,
+        spawn_velocity: 2.0,
         spawn_cost: 4,
         objective: ObjectiveConfig(
           repell_radius: 32.0,
@@ -183,7 +183,7 @@
         nav_flow_factor: 1.0,
         attack_velocity: 20.,
         attack_radius: 128.0,
-        spawn_velocity: 10.0,
+        spawn_velocity: 2.0,
         spawn_cost: 4,
         objective: ObjectiveConfig(
           repell_radius: 32.0,
@@ -240,11 +240,11 @@
         spawn_cost: 4,
         objective: ObjectiveConfig(
           repell_radius: 32.0,
-          slow_factor: 0.2,
+          slow_factor: 0.05,
         ),
         radius: 30.0,
         health: 10,
-        idle_speed: 0.2,
+        idle_speed: 0.3,
         interactions: InteractionConfigs({
           Worker: InteractionConfig(
             separation_radius: 16.0,

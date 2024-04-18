@@ -22,7 +22,8 @@ impl Plugin for SystemSetPlugin {
 pub enum SystemStage {
     /// Process input from the user.
     Input,
-    /// Spawn entities for this frame.
+    /// Spawn entities that are not objects.
+    /// Can reference transforms from objects spawned in last frame's ObjectSpawn.
     Spawn,
     /// Operations before computation of forces.
     PreCompute,
@@ -42,6 +43,8 @@ pub enum SystemStage {
     Cleanup,
     /// Despawn dead or orphaned entities.
     Despawn,
+    // Spawn objects.
+    ObjectSpawn,
 }
 impl SystemStage {
     pub fn get_config() -> SystemSetConfigs {
@@ -57,6 +60,7 @@ impl SystemStage {
             Self::Death,
             Self::Cleanup,
             Self::Despawn,
+            Self::ObjectSpawn,
         )
             .chain()
     }

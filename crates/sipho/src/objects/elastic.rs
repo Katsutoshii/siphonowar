@@ -1,4 +1,6 @@
 use crate::prelude::*;
+use bevy::ecs::system::{EntityCommands, QueryLens, SystemParam};
+use bevy::transform::TransformSystem;
 use bevy::utils::smallvec::SmallVec;
 use bevy::utils::FloatOrd;
 use sipho_core::grid::fog::FogConfig;
@@ -8,13 +10,38 @@ use super::ObjectAssets;
 pub struct ElasticPlugin;
 impl Plugin for ElasticPlugin {
     fn build(&self, app: &mut App) {
-        app.register_type::<Elastic>().add_systems(
-            FixedUpdate,
-            (Elastic::tie_cursor, Elastic::tie_selection, Elastic::update)
-                .chain()
-                .in_set(SystemStage::PostCompute)
-                .in_set(GameStateSet::Running),
-        );
+        app.add_event::<SpawnElasticEvent>()
+            .register_type::<Elastic>()
+            .add_systems(
+                FixedUpdate,
+                (
+                    (Elastic::tie_cursor, Elastic::tie_selection)
+                        .chain()
+                        .in_set(SystemStage::Input),
+                    (Elastic::update).in_set(SystemStage::PreCompute),
+                )
+                    .in_set(GameStateSet::Running),
+            )
+            .add_systems(
+                PostUpdate,
+                (SpawnElasticEvent::update)
+                    .after(TransformSystem::TransformPropagate)
+                    .in_set(GameStateSet::Running),
+            );
+    }
+}
+
+#[derive(Event)]
+pub struct SpawnElasticEvent {
+    pub elastic: Elastic,
+    pub team: Team,
+}
+impl SpawnElasticEvent {
+    pub fn update(mut events: EventReader<SpawnElasticEvent>, mut commands: ElasticCommands) {
+        for event in events.read() {
+            let Elastic((entity1, entity2)) = event.elastic;
+            commands.tie(entity1, entity2, event.team);
+        }
     }
 }
 
@@ -23,7 +50,7 @@ pub struct AttachedTo(pub SmallVec<[Entity; 8]>);
 
 #[derive(Component, Reflect, Debug, Deref, DerefMut)]
 #[reflect(Component)]
-pub struct Elastic((Entity, Entity));
+pub struct Elastic(pub (Entity, Entity));
 impl Default for Elastic {
     fn default() -> Self {
         Self((Entity::PLACEHOLDER, Entity::PLACEHOLDER))
@@ -38,24 +65,93 @@ impl Elastic {
     }
 }
 
-#[derive(Bundle, Default)]
+#[derive(SystemParam)]
+pub struct ElasticCommands<'w, 's> {
+    commands: Commands<'w, 's>,
+    attachments: Query<'w, 's, &'static mut AttachedTo>,
+    transforms: Query<'w, 's, &'static GlobalTransform>,
+    assets: Res<'w, ObjectAssets>,
+}
+impl ElasticCommands<'_, '_> {
+    pub fn attachments(&mut self) -> QueryLens<&AttachedTo> {
+        self.attachments.transmute_lens()
+    }
+    pub fn tie(&mut self, entity1: Entity, entity2: Entity, team: Team) -> Option<EntityCommands> {
+        for pair in [(entity1, entity2), (entity2, entity1)] {
+            let (entity1, entity2) = pair;
+            if let Ok(ref mut attached_to) = self.attachments.get_mut(entity1) {
+                if attached_to.contains(&entity2) {
+                    info!("Already attached");
+                    return None;
+                }
+                attached_to.push(entity2);
+            }
+        }
+
+        let position1 = self.transforms.get(entity1).unwrap().translation();
+        let position2 = self.transforms.get(entity2).unwrap().translation();
+        let magnitude = position1.xy().distance(position2.xy());
+
+        let commands = self.commands.spawn(ElasticBundle {
+            elastic: Elastic((entity1, entity2)),
+            pbr: PbrBundle {
+                mesh: self.assets.connector_mesh.clone(),
+                material: self.assets.get_team_material(team).background,
+                visibility: Visibility::Hidden,
+                transform: Elastic::get_transform(
+                    position1.xy(),
+                    position2.xy(),
+                    magnitude,
+                    position1.z,
+                ),
+                ..default()
+            },
+            ..default()
+        });
+        Some(commands)
+    }
+}
+
+#[derive(Bundle)]
 pub struct ElasticBundle {
     pub elastic: Elastic,
     pub pbr: PbrBundle,
+    pub name: Name,
+}
+impl Default for ElasticBundle {
+    fn default() -> Self {
+        Self {
+            name: Name::new("Elastic"),
+            pbr: PbrBundle::default(),
+            elastic: Elastic::default(),
+        }
+    }
 }
 impl Elastic {
+    pub fn get_transform(
+        position1: Vec2,
+        position2: Vec2,
+        magnitude: f32,
+        depth: f32,
+    ) -> Transform {
+        let width = 4.;
+        let delta = position2 - position1;
+        Transform {
+            translation: ((position1 + position2) / 2.).extend(depth),
+            scale: Vec3::new(magnitude / 2., width, width),
+            rotation: Quat::from_axis_angle(Vec3::Z, delta.to_angle()),
+        }
+    }
     pub fn tie_cursor(
-        mut commands: Commands,
         mut control_events: EventReader<ControlEvent>,
-        mut query: Query<(&mut AttachedTo, &GlobalTransform)>,
+        transforms: Query<&GlobalTransform>,
         config: Res<FogConfig>,
         grid: Res<Grid2<TeamEntitySets>>,
         mut last_entity: Local<Option<Entity>>,
-        assets: Res<ObjectAssets>,
+        mut events: EventWriter<SpawnElasticEvent>,
     ) {
         for control_event in control_events.read() {
             if control_event.is_pressed(ControlAction::TieCursor) {
-                control_event.position;
                 let entities = grid.get_entities_in_radius(
                     control_event.position,
                     32.0,
@@ -63,30 +159,18 @@ impl Elastic {
                 );
                 let mut dudes: Vec<Entity> = entities.iter().copied().collect();
 
-                dudes.sort_by_key(|entity| {
-                    let entity_pos = query.get(*entity).unwrap().1.translation();
-                    FloatOrd(Vec2::distance(control_event.position, entity_pos.xy()))
+                dudes.sort_by_key(|&entity| {
+                    let position = transforms.get(entity).unwrap().translation().xy();
+                    FloatOrd(Vec2::distance_squared(control_event.position, position))
                 });
                 if let Some(&dude) = dudes.first() {
                     if let Some(last_entity) = *last_entity {
                         if last_entity != dude {
-                            {
-                                let (mut attached, _) = query.get_mut(last_entity).unwrap();
-                                attached.push(dude);
-                            }
-                            {
-                                let (mut attached, _) = query.get_mut(dude).unwrap();
-                                attached.push(last_entity);
-                            }
+                            events.send(SpawnElasticEvent {
+                                elastic: Elastic((last_entity, dude)),
+                                team: config.player_team,
+                            });
                         }
-                        commands.spawn(ElasticBundle {
-                            elastic: Elastic((last_entity, dude)),
-                            pbr: PbrBundle {
-                                mesh: assets.connector_mesh.clone(),
-                                material: assets.get_team_material(config.player_team).background,
-                                ..default()
-                            },
-                        });
                     }
                     *last_entity = Some(dude);
                 }
@@ -97,22 +181,19 @@ impl Elastic {
         }
     }
     pub fn tie_selection(
-        mut commands: Commands,
         mut control_events: EventReader<ControlEvent>,
-        mut query: Query<(Entity, &Selected, &mut AttachedTo)>,
-        assets: Res<ObjectAssets>,
+        mut query: Query<(Entity, &Selected)>,
         config: Res<FogConfig>,
+        mut events: EventWriter<SpawnElasticEvent>,
     ) {
         for control_event in control_events.read() {
             if control_event.is_pressed(ControlAction::TieSelection) {
                 // Collect entities to tie together.
                 let mut entities = vec![];
-                let mut attachments = vec![];
-                for (entity, selected, attached_to) in query.iter_mut() {
+                for (entity, selected) in query.iter_mut() {
                     match selected {
                         Selected::Selected { .. } => {
                             entities.push(entity);
-                            attachments.push(attached_to);
                         }
                         Selected::Unselected => {}
                     }
@@ -121,20 +202,10 @@ impl Elastic {
                     return;
                 }
                 for i in 0..entities.len() - 1 {
-                    let pair = (entities[i], entities[i + 1]);
-                    if attachments[i].contains(&pair.1) {
-                        continue;
-                    }
-                    commands.spawn(ElasticBundle {
-                        elastic: Elastic(pair),
-                        pbr: PbrBundle {
-                            mesh: assets.connector_mesh.clone(),
-                            material: assets.get_team_material(config.player_team).background,
-                            ..default()
-                        },
+                    events.send(SpawnElasticEvent {
+                        elastic: Elastic((entities[i], entities[i + 1])),
+                        team: config.player_team,
                     });
-                    attachments[i].push(pair.1);
-                    attachments[i + 1].push(pair.0);
                 }
                 break;
             }
@@ -142,15 +213,19 @@ impl Elastic {
     }
     pub fn update(
         mut commands: Commands,
-        mut elastic_query: Query<(Entity, &Elastic, &mut Transform)>,
-        worker_query: Query<(Entity, &GlobalTransform)>,
+        mut elastic_query: Query<(Entity, &Elastic, &mut Transform, &mut Visibility)>,
+        object_query: Query<(Entity, &GlobalTransform)>,
         mut accel_query: Query<&mut Acceleration>,
         mut attachments: Query<&mut AttachedTo>,
     ) {
-        for (entity, elastic, mut transform) in elastic_query.iter_mut() {
+        for (entity, elastic, mut transform, mut visibility) in elastic_query.iter_mut() {
+            if *visibility.bypass_change_detection() == Visibility::Hidden {
+                *visibility = Visibility::Visible;
+                continue;
+            }
             if let (Ok((entity1, transform1)), Ok((entity2, transform2))) = (
-                worker_query.get(elastic.first()),
-                worker_query.get(elastic.second()),
+                object_query.get(elastic.first()),
+                object_query.get(elastic.second()),
             ) {
                 let position1 = transform1.translation().xy();
                 let position2 = transform2.translation().xy();
@@ -163,11 +238,8 @@ impl Elastic {
                 *accel_query.get_mut(entity2).unwrap() -= Acceleration(direction * force);
 
                 // Set transform.
-                let width = 4.;
                 let depth = transform1.translation().z;
-                transform.translation = ((position1 + position2) / 2.).extend(depth);
-                transform.scale = Vec3::new(magnitude / 2., width, width);
-                transform.rotation = Quat::from_axis_angle(Vec3::Z, delta.to_angle())
+                *transform = Self::get_transform(position1, position2, magnitude, depth);
             } else {
                 // Clean up invalid connections.
                 commands.entity(entity).despawn();

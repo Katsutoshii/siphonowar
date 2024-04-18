@@ -7,11 +7,18 @@ pub struct FireworkPlugin;
 impl Plugin for FireworkPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(HanabiPlugin)
+            .add_event::<FireworkSpec>()
             .init_resource::<EffectAssets>()
             .init_resource::<ParticleEffectPool<FIREWORK_COLOR_BLUE>>()
             .init_resource::<ParticleEffectPool<FIREWORK_COLOR_RED>>()
             .init_resource::<ParticleEffectPool<FIREWORK_COLOR_WHITE>>()
-            .add_systems(Startup, FireworkCommands::startup);
+            .add_systems(Startup, FireworkCommands::startup)
+            .add_systems(
+                FixedUpdate,
+                FireworkSpec::update
+                    .in_set(GameStateSet::Running)
+                    .in_set(SystemStage::PostApply),
+            );
     }
 }
 
@@ -103,7 +110,7 @@ impl FromWorld for EffectAssets {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[repr(u8)]
 pub enum FireworkColor {
     Blue,
@@ -136,11 +143,18 @@ impl From<Team> for FireworkColor {
 }
 
 /// Describes a firework to create.
-#[derive(Debug)]
+#[derive(Debug, Event, Clone)]
 pub struct FireworkSpec {
     pub color: FireworkColor,
     pub position: Vec3,
     pub size: VfxSize,
+}
+impl FireworkSpec {
+    pub fn update(mut events: EventReader<Self>, mut commands: FireworkCommands) {
+        for event in events.read() {
+            commands.make_fireworks(event);
+        }
+    }
 }
 
 pub const POOL_SIZE: usize = 128;
@@ -155,8 +169,7 @@ pub struct FireworkCommands<'w, 's> {
     blue_pool: ResMut<'w, ParticleEffectPool<FIREWORK_COLOR_BLUE>>,
     red_pool: ResMut<'w, ParticleEffectPool<FIREWORK_COLOR_RED>>,
     white_pool: ResMut<'w, ParticleEffectPool<FIREWORK_COLOR_WHITE>>,
-    effects:
-        Query<'w, 's, (&'static mut Transform, &'static mut EffectSpawner), Without<Lightning>>,
+    effects: Query<'w, 's, (&'static mut Transform, &'static mut EffectSpawner)>,
 }
 
 impl FireworkCommands<'_, '_> {
@@ -202,7 +215,7 @@ impl FireworkCommands<'_, '_> {
                 .id();
         }
     }
-    pub fn make_fireworks(&mut self, spec: FireworkSpec) {
+    pub fn make_fireworks(&mut self, spec: &FireworkSpec) {
         let count = match spec.size {
             VfxSize::Small => 1,
             VfxSize::Medium => 2,

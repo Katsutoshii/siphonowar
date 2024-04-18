@@ -13,7 +13,7 @@ pub mod prelude {
 }
 
 /// Represents size of an effect.
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum VfxSize {
     Small,
     Medium,

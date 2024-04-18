@@ -9,6 +9,7 @@ mod damage;
 mod elastic;
 mod neighbors;
 mod object;
+mod path_to_head;
 mod plankton;
 mod zooid_head;
 mod zooid_worker;
@@ -20,9 +21,10 @@ pub use {
     config::{InteractionConfig, InteractionConfigs, ObjectConfig, ObjectConfigs},
     consumer::Consumer,
     damage::{DamageEvent, Health},
-    elastic::{AttachedTo, Elastic, ElasticPlugin},
+    elastic::{AttachedTo, Elastic, ElasticCommands, ElasticPlugin},
     neighbors::{AlliedNeighbors, CollidingNeighbors, EnemyNeighbors},
     object::Object,
+    path_to_head::{PathToHead, PathToHeadFollower},
 };
 
 /// Plugin for running zooids simulation.
@@ -39,6 +41,7 @@ impl Plugin for ObjectsPlugin {
             elastic::ElasticPlugin,
             plankton::PlanktonPlugin,
             object::ObjectPlugin,
+            path_to_head::PathToHeadPlugin,
             damage::DamagePlugin,
         ))
         .init_resource::<ObjectAssets>();

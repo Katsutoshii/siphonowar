@@ -2,14 +2,15 @@ use std::f32::consts::PI;
 use strum_macros::IntoStaticStr;
 
 use super::{
-    carry::{CarriedBy, CarryEvent},
+    carry::CarriedBy,
     neighbors::{AlliedNeighbors, CollidingNeighbors, EnemyNeighbors},
+    path_to_head::PathToHeadFollower,
     InteractionConfig, ObjectSpec,
 };
 use crate::prelude::*;
 use bevy::{ecs::query::QueryData, prelude::*};
 use rand::Rng;
-use sipho_vfx::fireworks::FireworkCommands;
+
 /// Plugin for running zooids simulation.
 pub struct ObjectPlugin;
 impl Plugin for ObjectPlugin {
@@ -64,6 +65,26 @@ impl Object {
         Self::Shocker,
         Self::Armor,
     ];
+
+    /// Returns true if an object can attack.
+    pub fn can_attack(self) -> bool {
+        matches!(self, Self::Worker | Self::Shocker)
+    }
+
+    /// Returns true if an object can be attacked.
+    pub fn can_be_attacked(self) -> bool {
+        true
+    }
+
+    /// Returns true if an object can carry.
+    pub fn can_carry(self) -> bool {
+        matches!(self, Self::Worker)
+    }
+
+    /// Returns true if an object can carry.
+    pub fn can_be_carried(self) -> bool {
+        matches!(self, Self::Food)
+    }
 }
 
 #[derive(QueryData)]
@@ -79,6 +100,7 @@ pub struct UpdateAccelerationQueryData {
     enemy_neighbors: &'static EnemyNeighbors,
     carried_by: &'static CarriedBy,
     attached_to: &'static AttachedTo,
+    path_follower: Option<&'static PathToHeadFollower>,
 }
 
 #[derive(QueryData)]
@@ -91,6 +113,7 @@ pub struct UpdateObjectiveQueryData {
     health: &'static Health,
     enemy_neighbors: &'static EnemyNeighbors,
     allied_neighbors: &'static AlliedNeighbors,
+    attached_to: &'static AttachedTo,
 }
 
 #[derive(QueryData)]
@@ -99,6 +122,7 @@ pub struct UpdateObjectiveNeighborQueryData {
     velocity: &'static Velocity,
     parent: Option<&'static Parent>,
     carried_by: &'static CarriedBy,
+    path_follower: Option<&'static PathToHeadFollower>,
 }
 
 impl Object {
@@ -145,15 +169,19 @@ impl Object {
                     );
                 }
             }
-            for neighbor in object.enemy_neighbors.iter() {
-                let (other_object, _other_velocity) = others.get(neighbor.entity).unwrap();
-                let separation_radius_factor = 3.;
-                separation_acceleration += Self::separation_acceleration(
-                    -neighbor.delta,
-                    neighbor.distance_squared,
-                    &config.interactions[other_object],
-                    separation_radius_factor,
-                );
+
+            // For objects being piped through an organism, skip enemy forces.
+            if object.path_follower.is_none() || object.path_follower.unwrap().target.is_none() {
+                for neighbor in object.enemy_neighbors.iter() {
+                    let (other_object, _other_velocity) = others.get(neighbor.entity).unwrap();
+                    let separation_radius_factor = 3.;
+                    separation_acceleration += Self::separation_acceleration(
+                        -neighbor.delta,
+                        neighbor.distance_squared,
+                        &config.interactions[other_object],
+                        separation_radius_factor,
+                    );
+                }
             }
 
             if !object.neighbors.is_empty() {
@@ -196,9 +224,12 @@ impl Object {
                 let other = others.get(neighbor.entity).unwrap();
                 // An object should only attack a neighbor if that neighbor is not being carried.
                 if object.object.can_attack()
+                    && object.attached_to.len() < 2
                     && neighbor.object.can_be_attacked()
                     && object.parent.is_none()
                     && other.carried_by.is_empty()
+                    && (other.path_follower.is_none()
+                        || other.path_follower.unwrap().target.is_none())
                 {
                     // If already attacking an entity but we are now closer to different entity, attack the new closest
                     // entity.
@@ -225,51 +256,53 @@ impl Object {
     }
 
     pub fn update_collisions(
-        mut objects: Query<(Entity, &Object, &CollidingNeighbors, Option<&Parent>)>,
-        mut carry_events: EventWriter<CarryEvent>,
+        mut objects: Query<(
+            Entity,
+            &Object,
+            &CollidingNeighbors,
+            Option<&mut PathToHeadFollower>,
+            Option<&Parent>,
+        )>,
+        // mut carry_events: EventWriter<CarryEvent>,
+        path_to_head: Query<&PathToHead>,
     ) {
-        for (entity, object, collisions, parent) in objects.iter_mut() {
+        for (_entity, object, collisions, mut path_follower, parent) in objects.iter_mut() {
             for neighbor in collisions.iter() {
-                if object.can_carry() && neighbor.object.can_be_carried() && parent.is_none() {
-                    carry_events.send(CarryEvent {
-                        carrier: entity,
-                        carried: neighbor.entity,
-                    });
+                if let Some(ref mut path_follower) = path_follower {
+                    // If already following a path, don't go collide with others.
+                    if let Some(target) = path_follower.target {
+                        if target != neighbor.entity {
+                            continue;
+                        }
+                    }
+                    if let Ok(path) = path_to_head.get(neighbor.entity) {
+                        path_follower.target = if path.next.is_some() {
+                            path.next
+                        } else {
+                            path.head
+                        };
+                    }
+                } else if object.can_carry() && neighbor.object.can_be_carried() && parent.is_none()
+                {
+                    // carry_events.send(CarryEvent {
+                    //     carrier: entity,
+                    //     carried: neighbor.entity,
+                    // });
                 }
             }
         }
-    }
-
-    /// Returns true if an object can attack.
-    pub fn can_attack(self) -> bool {
-        matches!(self, Self::Worker | Self::Shocker)
-    }
-
-    /// Returns true if an object can be attacked.
-    pub fn can_be_attacked(self) -> bool {
-        true
-    }
-
-    /// Returns true if an object can carry.
-    pub fn can_carry(self) -> bool {
-        matches!(self, Self::Worker)
-    }
-
-    /// Returns true if an object can carry.
-    pub fn can_be_carried(self) -> bool {
-        matches!(self, Self::Food)
     }
 
     /// System for objects dying.
     pub fn death(
         mut objects: Query<(Entity, &Self, &Health, &GlobalTransform, &Team)>,
         mut object_commands: ObjectCommands,
-        mut effect_commands: FireworkCommands,
+        mut firework_events: EventWriter<FireworkSpec>,
     ) {
         for (entity, object, health, &transform, team) in &mut objects {
             if health.health <= 0 {
                 object_commands.despawn(entity);
-                effect_commands.make_fireworks(FireworkSpec {
+                firework_events.send(FireworkSpec {
                     size: VfxSize::Medium,
                     position: transform.translation(),
                     color: (*team).into(),
@@ -279,7 +312,7 @@ impl Object {
                         object: Object::Food,
                         position: transform.translation().xy(),
                         ..default()
-                    })
+                    });
                 }
             }
         }

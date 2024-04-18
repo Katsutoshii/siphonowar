@@ -7,9 +7,11 @@ pub struct CustomConsolePlugin;
 impl Plugin for CustomConsolePlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(ConsolePlugin)
-            .add_console_command::<SpawnCommand, _>(SpawnCommand::update.in_set(SystemStage::Spawn))
+            .add_console_command::<SpawnCommand, _>(
+                SpawnCommand::update.in_set(SystemStage::ObjectSpawn),
+            )
             .add_console_command::<BattleCommand, _>(
-                BattleCommand::update.in_set(SystemStage::Spawn),
+                BattleCommand::update.in_set(SystemStage::ObjectSpawn),
             )
             .add_console_command::<DespawnCommand, _>(
                 DespawnCommand::update.in_set(SystemStage::Death),
@@ -32,7 +34,6 @@ impl SpawnCommand {
         mut commands: ObjectCommands,
         cursor: CursorParam,
         raycast: RaycastCommands,
-        obstacles: ResMut<Grid2<Obstacle>>,
     ) {
         if let Some(Ok(SpawnCommand {
             object,
@@ -51,14 +52,12 @@ impl SpawnCommand {
                                     x: (i * 40) as f32,
                                     y: (j * 40) as f32,
                                 };
-                            if obstacles[obstacles.to_rowcol(position)] == Obstacle::Empty {
-                                commands.spawn(ObjectSpec {
-                                    object,
-                                    team,
-                                    position,
-                                    ..default()
-                                })
-                            }
+                            commands.spawn(ObjectSpec {
+                                object,
+                                team,
+                                position,
+                                ..default()
+                            });
                         }
                     }
                 }
@@ -78,7 +77,6 @@ impl BattleCommand {
         mut commands: ObjectCommands,
         cursor: CursorParam,
         raycast: RaycastCommands,
-        obstacles: ResMut<Grid2<Obstacle>>,
     ) {
         if let Some(Ok(BattleCommand { count })) = log.take() {
             reply!(log, "spawning battle {}", count);
@@ -93,27 +91,23 @@ impl BattleCommand {
                                     x: (i * stride) as f32,
                                     y: (j * stride) as f32,
                                 };
-                            if obstacles[obstacles.to_rowcol(blue_position)] == Obstacle::Empty {
-                                commands.spawn(ObjectSpec {
-                                    object: Object::Worker,
-                                    team: Team::Blue,
-                                    position: blue_position,
-                                    ..default()
-                                })
-                            }
+                            commands.spawn(ObjectSpec {
+                                object: Object::Worker,
+                                team: Team::Blue,
+                                position: blue_position,
+                                ..default()
+                            });
                             let red_position = raycast_event.world_position
                                 + Vec2 {
                                     x: (i * stride + stride / 2) as f32,
                                     y: (j * stride + stride / 2) as f32,
                                 };
-                            if obstacles[obstacles.to_rowcol(red_position)] == Obstacle::Empty {
-                                commands.spawn(ObjectSpec {
-                                    object: Object::Worker,
-                                    team: Team::Red,
-                                    position: red_position,
-                                    ..default()
-                                })
-                            }
+                            commands.spawn(ObjectSpec {
+                                object: Object::Worker,
+                                team: Team::Red,
+                                position: red_position,
+                                ..default()
+                            });
                         }
                     }
                 }

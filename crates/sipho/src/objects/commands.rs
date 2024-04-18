@@ -1,5 +1,8 @@
 use crate::prelude::*;
-use bevy::{ecs::system::SystemParam, prelude::*};
+use bevy::{
+    ecs::system::{EntityCommands, SystemParam},
+    prelude::*,
+};
 
 use super::{
     neighbors::NeighborsBundle,
@@ -17,6 +20,7 @@ pub struct ObjectSpec {
     pub team: Team,
     pub velocity: Option<Velocity>,
     pub objectives: Objectives,
+    pub selected: Selected,
 }
 
 #[derive(Bundle, Default)]
@@ -36,6 +40,7 @@ pub struct ObjectBundle {
     pub health: Health,
     pub neighbors: NeighborsBundle,
     pub attached_to: AttachedTo,
+    pub path: PathToHead,
     pub carried_by: CarriedBy,
     pub name: Name,
 }
@@ -50,6 +55,7 @@ impl ObjectBundle {
             object: spec.object,
             team: spec.team,
             objectives: spec.objectives,
+            selected: spec.selected,
             transform: Transform {
                 scale: Vec3::splat(config.radius),
                 translation: spec
@@ -74,111 +80,117 @@ impl ObjectBundle {
 /// System param to allow spawning effects.
 #[derive(SystemParam)]
 pub struct ObjectCommands<'w, 's> {
-    assets: ResMut<'w, ObjectAssets>,
+    assets: Res<'w, ObjectAssets>,
     commands: Commands<'w, 's>,
     configs: Res<'w, ObjectConfigs>,
     parents: Query<'w, 's, &'static Children, Without<Parent>>,
-    #[allow(clippy::type_complexity)]
     children: Query<'w, 's, &'static Object, With<Parent>>,
     despawn_events: EventWriter<'w, DespawnEvent>,
     time: Res<'w, Time>,
+    obstacles: Res<'w, Grid2<Obstacle>>,
 }
 impl ObjectCommands<'_, '_> {
-    pub fn spawn(&mut self, spec: ObjectSpec) {
+    pub fn spawn(&mut self, spec: ObjectSpec) -> Option<EntityCommands> {
         let config = &self.configs[&spec.object];
         let team_material = self.assets.get_team_material(spec.team);
-        match spec.object {
+        if self.obstacles[self.obstacles.to_rowcol(spec.position)] != Obstacle::Empty {
+            return None;
+        }
+        let commands = match spec.object {
             Object::Worker => {
                 let mesh = self.assets.worker_mesh.clone();
                 let background = self.background_bundle(team_material.clone(), mesh.clone());
-                self.commands
-                    .spawn((
-                        ZooidWorker::default(),
-                        NearestZooidHead::default(),
-                        ObjectBundle {
-                            mesh: self.assets.worker_mesh.clone(),
-                            material: team_material.primary,
-                            ..ObjectBundle::new(config, spec, &self.time)
-                        },
-                    ))
-                    .with_children(|parent| {
-                        parent.spawn(background);
-                    });
+                let mut commands = self.commands.spawn((
+                    ZooidWorker::default(),
+                    NearestZooidHead::default(),
+                    ObjectBundle {
+                        mesh: self.assets.worker_mesh.clone(),
+                        material: team_material.primary,
+                        ..ObjectBundle::new(config, spec, &self.time)
+                    },
+                ));
+                commands.with_children(|parent| {
+                    parent.spawn(background);
+                });
+                commands
             }
             Object::Shocker => {
                 let mesh = self.assets.shocker_mesh.clone();
                 let background = self.background_bundle(team_material.clone(), mesh.clone());
-                self.commands
-                    .spawn((
-                        NearestZooidHead::default(),
-                        ObjectBundle {
-                            mesh: mesh.clone(),
-                            material: team_material.primary,
-                            ..ObjectBundle::new(config, spec, &self.time)
-                        },
-                    ))
-                    .with_children(|parent| {
-                        parent.spawn(background);
-                    });
-            }
-            Object::Armor => {
-                let mesh = self.assets.armor_mesh.clone();
-                let background = self.background_bundle(team_material.clone(), mesh.clone());
-                self.commands
-                    .spawn((
-                        NearestZooidHead::default(),
-                        ObjectBundle {
-                            mesh: mesh.clone(),
-                            material: team_material.primary,
-                            ..ObjectBundle::new(config, spec, &self.time)
-                        },
-                    ))
-                    .with_children(|parent| {
-                        parent.spawn(background);
-                    });
-            }
-            Object::Head => {
-                let mesh = self.assets.worker_mesh.clone();
-                let background = self.background_bundle(team_material.clone(), mesh.clone());
-                let mut entity_commands = self.commands.spawn((
-                    ZooidHead,
-                    Consumer::new(3),
+                let mut commands = self.commands.spawn((
+                    NearestZooidHead::default(),
                     ObjectBundle {
                         mesh: mesh.clone(),
                         material: team_material.primary,
                         ..ObjectBundle::new(config, spec, &self.time)
                     },
                 ));
-                entity_commands.with_children(|parent| {
+                commands.with_children(|parent| {
                     parent.spawn(background);
                 });
-                let entity = entity_commands.id();
-                entity_commands.insert(Objectives::new(Objective::FollowEntity(entity)));
+                commands
+            }
+            Object::Armor => {
+                let mesh = self.assets.armor_mesh.clone();
+                let background = self.background_bundle(team_material.clone(), mesh.clone());
+                let mut commands = self.commands.spawn((
+                    NearestZooidHead::default(),
+                    ObjectBundle {
+                        mesh: mesh.clone(),
+                        material: team_material.primary,
+                        ..ObjectBundle::new(config, spec, &self.time)
+                    },
+                ));
+                commands.with_children(|parent| {
+                    parent.spawn(background);
+                });
+                commands
+            }
+            Object::Head => {
+                let mesh = self.assets.worker_mesh.clone();
+                let background = self.background_bundle(team_material.clone(), mesh.clone());
+                let mut commands = self.commands.spawn((
+                    ZooidHead::default(),
+                    Consumer::new(100),
+                    ObjectBundle {
+                        mesh: mesh.clone(),
+                        material: team_material.primary,
+                        ..ObjectBundle::new(config, spec, &self.time)
+                    },
+                ));
+                commands.with_children(|parent| {
+                    parent.spawn(background);
+                });
+                let entity = commands.id();
+                commands.insert(Objectives::new(Objective::FollowEntity(entity)));
+                commands
             }
             Object::Plankton => {
                 let mesh = self.assets.worker_mesh.clone();
                 let background = self.background_bundle(team_material.clone(), mesh.clone());
-                self.commands
-                    .spawn((
-                        Plankton,
-                        ObjectBundle {
-                            mesh: mesh.clone(),
-                            material: team_material.primary,
-                            ..ObjectBundle::new(config, spec, &self.time)
-                        },
-                    ))
-                    .with_children(|parent| {
-                        parent.spawn(background);
-                    });
+                let mut commands = self.commands.spawn((
+                    Plankton,
+                    ObjectBundle {
+                        mesh: mesh.clone(),
+                        material: team_material.primary,
+                        ..ObjectBundle::new(config, spec, &self.time)
+                    },
+                ));
+                commands.with_children(|parent| {
+                    parent.spawn(background);
+                });
+                commands
             }
-            Object::Food => {
-                self.commands.spawn(ObjectBundle {
+            Object::Food => self.commands.spawn((
+                PathToHeadFollower::default(),
+                ObjectBundle {
                     mesh: self.assets.worker_mesh.clone(),
                     material: team_material.secondary,
                     ..ObjectBundle::new(config, spec, &self.time)
-                });
-            }
-        }
+                },
+            )),
+        };
+        Some(commands)
     }
 
     pub fn despawn(&mut self, entity: Entity) {

@@ -35,7 +35,7 @@ impl Objective {
         &self,
         object: Object,
         components: &mut ObjectivesQueryDataItem,
-        targets: &Query<(&GlobalTransform, &CarriedBy)>,
+        targets: &Query<(&GlobalTransform, &CarriedBy, Option<&PathToHeadFollower>)>,
         commands: &mut Commands,
         config: &ObjectConfig,
     ) -> Result<(), Error> {
@@ -45,7 +45,7 @@ impl Objective {
             Self::Stunned(_) => {}
             Self::Idle => {}
             Self::FollowEntity(entity) | Self::AttackFollowEntity(entity) => {
-                let (transform, _carried_by) = targets.get(*entity)?;
+                let (transform, _carried_by, _path_follower) = targets.get(*entity)?;
                 commands.insert(Navigator {
                     target: transform.translation().xy(),
                     slow_factor: 1.0,
@@ -53,9 +53,14 @@ impl Objective {
                 });
             }
             Self::AttackEntity(entity) => {
-                let (transform, carried_by) = targets.get(*entity)?;
+                let (transform, carried_by, path_follower) = targets.get(*entity)?;
                 if !carried_by.is_empty() {
                     return Err(Error::Default);
+                }
+                if let Some(path_follower) = path_follower {
+                    if path_follower.target.is_some() {
+                        return Err(Error::Default);
+                    }
                 }
                 match object {
                     Object::Shocker => {
@@ -91,21 +96,26 @@ impl Objective {
     pub fn try_update_components(
         &self,
         components: &mut ObjectivesQueryDataItem,
-        targets: &Query<(&GlobalTransform, &CarriedBy)>,
+        targets: &Query<(&GlobalTransform, &CarriedBy, Option<&PathToHeadFollower>)>,
     ) -> Result<(), Error> {
         match self {
             Self::Stunned(_) => {}
             Self::Idle => {}
             Self::FollowEntity(entity) | Self::AttackFollowEntity(entity) => {
-                let (transform, _carried_by) = targets.get(*entity)?;
+                let (transform, _carried_by, _path_follower) = targets.get(*entity)?;
                 if let Some(ref mut navigator) = components.navigator {
                     navigator.target = transform.translation().xy();
                 }
             }
             Self::AttackEntity(entity) => {
-                let (transform, carried_by) = targets.get(*entity)?;
+                let (transform, carried_by, path_follower) = targets.get(*entity)?;
                 if !carried_by.is_empty() {
                     return Err(Error::Default);
+                }
+                if let Some(path_follower) = path_follower {
+                    if path_follower.target.is_some() {
+                        return Err(Error::Default);
+                    }
                 }
                 if let Some(ref mut navigator) = components.navigator {
                     navigator.target = transform.translation().xy();
@@ -138,7 +148,7 @@ impl Default for Objectives {
 impl Objectives {
     pub fn update(
         mut query: Query<(&mut Objectives, &Object, ObjectivesQueryData)>,
-        targets: Query<(&GlobalTransform, &CarriedBy)>,
+        targets: Query<(&GlobalTransform, &CarriedBy, Option<&PathToHeadFollower>)>,
         mut commands: Commands,
         configs: Res<ObjectConfigs>,
         time: Res<Time>,

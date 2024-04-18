@@ -78,7 +78,6 @@ impl DashAttacker {
 
     /// Check cooldown timers and accelerate when in state Attacking.
     /// Stop attacking after the first hit.
-    #[allow(clippy::type_complexity)]
     pub fn update(
         mut query: Query<(
             Entity,

@@ -26,6 +26,9 @@ members = [
   "crates/*",
 ]
 
+[lints]
+workspace = true
+
 [workspace.lints.clippy]
 type_complexity = "allow"
 

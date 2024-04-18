@@ -62,7 +62,7 @@ impl DamageEvent {
             &mut Objectives,
         )>,
         mut events: EventReader<DamageEvent>,
-        mut effects: FireworkCommands,
+        mut firework_events: EventWriter<FireworkSpec>,
     ) {
         for event in events.read() {
             let knockback_amount = 3.;
@@ -91,7 +91,7 @@ impl DamageEvent {
                 };
                 let size = VfxSize::Small;
 
-                effects.make_fireworks(FireworkSpec {
+                firework_events.send(FireworkSpec {
                     size,
                     color: team.into(),
                     position: transform.translation(),

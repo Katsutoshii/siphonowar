@@ -10,8 +10,7 @@ impl Plugin for NavigatorPlugin {
             (Navigator::update, Navigator::update_acceleration)
                 .chain()
                 .in_set(SystemStage::PostApply)
-                .in_set(GameStateSet::Running)
-                .after(Waypoint::update),
+                .in_set(GameStateSet::Running),
         );
     }
 }

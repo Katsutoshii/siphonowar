@@ -91,7 +91,7 @@ impl ShockAttacker {
         configs: Res<ObjectConfigs>,
         mut damage_events: EventWriter<DamageEvent>,
         mut lightning: LightningCommands,
-        mut fireworks: FireworkCommands,
+        mut firework_events: EventWriter<FireworkSpec>,
     ) {
         for (entity, object, mut velocity, navigator, mut attacker, transform, enemies) in
             query.iter_mut()
@@ -124,11 +124,11 @@ impl ShockAttacker {
                     });
                     let depth = transform.translation().z;
                     lightning.make_lightning(position, navigator.target, depth);
-                    fireworks.make_fireworks(FireworkSpec {
+                    firework_events.send(FireworkSpec {
                         position: navigator.target.extend(depth),
                         color: FireworkColor::White,
                         size: VfxSize::Small,
-                    })
+                    });
                 }
             }
         }

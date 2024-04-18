@@ -6,7 +6,7 @@ impl Plugin for PlanktonPlugin {
         app.add_systems(
             FixedUpdate,
             (Plankton::spawn
-                .in_set(SystemStage::Spawn)
+                .in_set(SystemStage::ObjectSpawn)
                 .in_set(GameStateSet::Running),),
         );
     }
@@ -23,7 +23,7 @@ impl Plankton {
                     team: Team::None,
                     position: control_event.position,
                     ..default()
-                })
+                });
             }
         }
     }

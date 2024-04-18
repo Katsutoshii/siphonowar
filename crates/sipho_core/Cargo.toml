@@ -13,3 +13,6 @@ clap = "4.5.2"
 derive_more = "0.99.17"
 rand = "0.8.5"
 serde = "1.0.192"
+
+[lints]
+workspace = true

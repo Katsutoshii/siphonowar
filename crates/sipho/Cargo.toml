@@ -14,3 +14,6 @@ strum_macros = "0.26.2"
 
 sipho_core = {path = "../sipho_core"}
 sipho_vfx = {path = "../sipho_vfx"}
+
+[lints]
+workspace = true

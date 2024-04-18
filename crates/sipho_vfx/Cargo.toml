@@ -14,3 +14,6 @@ profiling-procmacros = "1.0.15"
 rand = "0.8.5"
 serde = "1.0.192"
 sipho_core = {path = "../sipho_core"}
+
+[lints]
+workspace = true

@@ -1,6 +1,10 @@
-use crate::prelude::*;
-use bevy::utils::{Entry, HashMap};
+use std::collections::VecDeque;
 
+use crate::prelude::*;
+use bevy::utils::{Entry, HashMap, HashSet};
+use sipho_core::grid::fog::FogConfig;
+
+use super::elastic::SpawnElasticEvent;
 use super::zooid_worker::ZooidWorker;
 use super::Object;
 use super::{ObjectCommands, ObjectSpec, Team};
@@ -10,7 +14,7 @@ impl Plugin for ZooidHeadPlugin {
         app.add_systems(
             FixedUpdate,
             (
-                (ZooidHead::spawn, ZooidHead::spawn_zooids).in_set(SystemStage::Spawn),
+                (ZooidHead::spawn, ZooidHead::spawn_zooids).in_set(SystemStage::ObjectSpawn),
                 NearestZooidHead::update.in_set(SystemStage::PreCompute),
             )
                 .in_set(GameStateSet::Running),
@@ -21,7 +25,9 @@ impl Plugin for ZooidHeadPlugin {
 /// State for a head.
 #[derive(Component, Reflect, Default, Clone, Copy)]
 #[reflect(Component)]
-pub struct ZooidHead;
+pub struct ZooidHead {
+    pub spawn_index: usize,
+}
 impl ZooidHead {
     pub fn spawn(
         mut commands: ObjectCommands,
@@ -36,6 +42,7 @@ impl ZooidHead {
                     object: Object::Head,
                     position: control_event.position,
                     team: config.player_team,
+                    selected: Selected::Selected,
                     ..default()
                 });
             }
@@ -64,44 +71,98 @@ impl ZooidHead {
         }
     }
 
+    // Runs BFS to find the last entity of the shortest limb.
+    pub fn get_next_limb(&mut self, entity: Entity, attached_to: &Query<&AttachedTo>) -> Entity {
+        let head_attached_to = attached_to.get(entity).unwrap();
+        self.spawn_index = (self.spawn_index + 1) % (head_attached_to.len() + 1);
+        if self.spawn_index == head_attached_to.len() {
+            self.spawn_index = 0;
+            return entity;
+        }
+        let start = head_attached_to[self.spawn_index];
+
+        // BFS to find the first leaf on this limb.
+        let mut visited = HashSet::<Entity>::new();
+        let mut queue = VecDeque::<Entity>::new();
+        queue.push_front(start);
+
+        while let Some(entity) = queue.pop_back() {
+            if !visited.insert(entity) {
+                continue;
+            }
+            let attached_to = attached_to.get(entity).unwrap();
+            let next: VecDeque<Entity> = attached_to
+                .iter()
+                .filter(|&entity| !visited.contains(entity))
+                .copied()
+                .collect();
+            if next.is_empty() {
+                return entity;
+            } else {
+                queue.extend(next.into_iter());
+            }
+        }
+        entity
+    }
+
     /// System to spawn zooids on Z key.
+    #[allow(clippy::too_many_arguments)]
     pub fn spawn_zooids(
         mut query: Query<(
-            &Self,
+            &mut Self,
             Entity,
-            &GlobalTransform,
             &Velocity,
             &Team,
             &Selected,
             &mut Consumer,
         )>,
+        attachments: Query<&AttachedTo>,
+        transforms: Query<&GlobalTransform>,
         mut commands: ObjectCommands,
         configs: Res<ObjectConfigs>,
+        fog_config: Res<FogConfig>,
         mut control_events: EventReader<ControlEvent>,
+        mut elastic_events: EventWriter<SpawnElasticEvent>,
     ) {
         let config = configs.get(&Object::Worker).unwrap();
         for control_event in control_events.read() {
             if !control_event.is_pressed(ControlAction::SpawnZooid) {
                 continue;
             }
-            for (_head, head_id, transform, velocity, team, selected, mut consumer) in
-                query.iter_mut()
-            {
+            for (mut head, head_id, velocity, team, selected, mut consumer) in query.iter_mut() {
                 if !selected.is_selected() {
                     continue;
                 }
+
+                // Find the shortest leg to spawn an entity onto.
+                // Spawn first entity.
+                let entity = head.get_next_limb(head_id, &attachments);
+
+                let transform = transforms.get(entity).unwrap();
+
                 if consumer.consumed > 0 {
                     consumer.consumed -= 1;
-                    let velocity: Vec2 = Vec2::Y * config.spawn_velocity + velocity.0;
-                    commands.spawn(ObjectSpec {
-                        position: transform.translation().xy() + velocity,
-                        velocity: Some(Velocity(velocity)),
+                    let direction = if let Some(normalized) = velocity.try_normalize() {
+                        normalized
+                    } else {
+                        Vec2::Y
+                    };
+                    let spawn_velocity: Vec2 = direction * config.spawn_velocity;
+                    if let Some(entity_commands) = commands.spawn(ObjectSpec {
+                        position: transform.translation().xy() + spawn_velocity,
+                        velocity: Some(Velocity(spawn_velocity)),
                         team: *team,
                         objectives: Objectives::new(Objective::FollowEntity(head_id)),
                         ..default()
-                    });
+                    }) {
+                        elastic_events.send(SpawnElasticEvent {
+                            elastic: Elastic((entity, entity_commands.id())),
+                            team: fog_config.player_team,
+                        });
+                    }
                 }
             }
+            break;
         }
     }
 }

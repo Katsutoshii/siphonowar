@@ -2,7 +2,7 @@ use bevy::{input::ButtonState, prelude::*};
 
 use crate::prelude::*;
 
-#[derive(Component, Default, PartialEq, Clone)]
+#[derive(Component, Default, PartialEq, Debug, Clone)]
 pub enum Selected {
     #[default]
     Unselected,
