@@ -24,24 +24,26 @@ pub struct Neighbor {
 }
 
 pub const MAX_NEIGHBORS: usize = 16;
+pub const MAX_COLLISIONS: usize = 4;
 
-/// Max neighbors: 16
 #[derive(Component, Deref, DerefMut, Default)]
 pub struct EnemyNeighbors(pub ArrayVec<Neighbor, MAX_NEIGHBORS>);
 
-/// Max neighbors: 16
 #[derive(Component, Deref, DerefMut, Default)]
 pub struct AlliedNeighbors(pub ArrayVec<Neighbor, MAX_NEIGHBORS>);
 
-/// Max neighbors: 16
 #[derive(Component, Deref, DerefMut, Default)]
-pub struct CollidingNeighbors(pub ArrayVec<Neighbor, MAX_NEIGHBORS>);
+pub struct AlliedCollisions(pub ArrayVec<Neighbor, MAX_COLLISIONS>);
+
+#[derive(Component, Deref, DerefMut, Default)]
+pub struct EnemyCollisions(pub ArrayVec<Neighbor, MAX_COLLISIONS>);
 
 #[derive(Bundle, Default)]
 pub struct NeighborsBundle {
     allies: AlliedNeighbors,
     enemies: EnemyNeighbors,
-    collisions: CollidingNeighbors,
+    ally_collisions: AlliedCollisions,
+    enemy_collisions: EnemyCollisions,
     grid_entity: GridEntity,
 }
 
@@ -86,7 +88,7 @@ pub fn update(
         Entity,
         &mut EnemyNeighbors,
         &mut AlliedNeighbors,
-        &mut CollidingNeighbors,
+        &mut EnemyCollisions,
         &Object,
         &Team,
         &GlobalTransform,
@@ -122,10 +124,10 @@ pub fn update(
                 get_neighbors(entity, position, &ally_entities, &others, config).into_iter()
             {
                 allied_neighbors.push(neighbor);
-                let other_config = configs.get(&neighbor.object).unwrap();
-                if config.is_colliding(other_config, neighbor.distance_squared) {
-                    colliding_neighbors.push(neighbor);
-                }
+                // let other_config = configs.get(&neighbor.object).unwrap();
+                // if config.is_colliding(other_config, neighbor.distance_squared) {
+                //     colliding_neighbors.push(neighbor);
+                // }
             }
 
             let enemy_teams: Vec<Team> = Team::ALL

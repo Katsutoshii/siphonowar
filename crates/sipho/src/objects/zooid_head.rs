@@ -72,14 +72,17 @@ impl ZooidHead {
     }
 
     // Runs BFS to find the last entity of the shortest limb.
+    // Index goes from [0, len]. When 0, we spawn off of the head.
     pub fn get_next_limb(&mut self, entity: Entity, attached_to: &Query<&AttachedTo>) -> Entity {
         let head_attached_to = attached_to.get(entity).unwrap();
-        self.spawn_index = (self.spawn_index + 1) % (head_attached_to.len() + 1);
-        if self.spawn_index == head_attached_to.len() {
-            self.spawn_index = 0;
+        let spawn_index = self.spawn_index % (head_attached_to.len() + 1);
+        self.spawn_index = (spawn_index + 1) % (head_attached_to.len() + 1);
+
+        if spawn_index < 1 {
             return entity;
         }
-        let start = head_attached_to[self.spawn_index];
+
+        let start = head_attached_to[spawn_index - 1];
 
         // BFS to find the first leaf on this limb.
         let mut visited = HashSet::<Entity>::new();

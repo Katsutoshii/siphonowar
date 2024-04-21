@@ -22,7 +22,7 @@ pub use {
     consumer::Consumer,
     damage::{DamageEvent, Health},
     elastic::{AttachedTo, Elastic, ElasticCommands, ElasticPlugin},
-    neighbors::{AlliedNeighbors, CollidingNeighbors, EnemyNeighbors},
+    neighbors::{AlliedCollisions, AlliedNeighbors, EnemyCollisions, EnemyNeighbors},
     object::Object,
     path_to_head::{PathToHead, PathToHeadFollower},
 };

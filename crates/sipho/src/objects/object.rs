@@ -3,7 +3,7 @@ use strum_macros::IntoStaticStr;
 
 use super::{
     carry::CarriedBy,
-    neighbors::{AlliedNeighbors, CollidingNeighbors, EnemyNeighbors},
+    neighbors::{AlliedNeighbors, EnemyCollisions, EnemyNeighbors},
     path_to_head::PathToHeadFollower,
     InteractionConfig, ObjectSpec,
 };
@@ -259,7 +259,7 @@ impl Object {
         mut objects: Query<(
             Entity,
             &Object,
-            &CollidingNeighbors,
+            &EnemyCollisions,
             Option<&mut PathToHeadFollower>,
             Option<&Parent>,
         )>,

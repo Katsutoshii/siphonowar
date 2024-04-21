@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use rand::Rng;
 
-use crate::{objects::CollidingNeighbors, prelude::*};
+use crate::{objects::EnemyCollisions, prelude::*};
 
 use super::Navigator;
 
@@ -45,13 +45,12 @@ impl Default for DashAttacker {
 impl DashAttacker {
     /// Gets a random attack cooldown.
     pub fn attack_cooldown() -> Duration {
-        Duration::from_millis(rand::thread_rng().gen_range(500..1000))
-        // Duration::from_millis(800)
+        Duration::from_millis(rand::thread_rng().gen_range(500..600))
     }
 
     /// Gets the attack duration.
     pub fn attack_delay() -> Duration {
-        Duration::from_millis(rand::thread_rng().gen_range(300..1000))
+        Duration::from_millis(rand::thread_rng().gen_range(0..100))
     }
 
     /// Gets the attack duration.
@@ -87,7 +86,7 @@ impl DashAttacker {
             &mut DashAttacker,
             &mut Acceleration,
             &GlobalTransform,
-            &CollidingNeighbors,
+            &EnemyCollisions,
         )>,
         time: Res<Time>,
         configs: Res<ObjectConfigs>,

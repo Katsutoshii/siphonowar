@@ -1,6 +1,6 @@
 use crate::prelude::*;
 
-use super::neighbors::CollidingNeighbors;
+use super::neighbors::EnemyCollisions;
 
 pub struct ConsumerPlugin;
 impl Plugin for ConsumerPlugin {
@@ -25,7 +25,7 @@ impl Consumer {
         Self { consumed }
     }
     pub fn update(
-        mut query: Query<(Entity, &mut Consumer, &CollidingNeighbors)>,
+        mut query: Query<(Entity, &mut Consumer, &EnemyCollisions)>,
         mut damage_events: EventWriter<DamageEvent>,
     ) {
         for (entity, mut consumer, colliders) in query.iter_mut() {
