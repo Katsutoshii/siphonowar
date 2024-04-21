@@ -19,8 +19,9 @@ impl Plugin for ElasticPlugin {
                         Elastic::tie_selection,
                         SpawnElasticEvent::update,
                     )
-                        .chain(),
-                    (Elastic::update).in_set(FixedUpdateStage::PostSpawn),
+                        .chain()
+                        .in_set(FixedUpdateStage::PostSpawn),
+                    (Elastic::update).in_set(FixedUpdateStage::AccumulateForces),
                 )
                     .in_set(GameStateSet::Running),
             );
