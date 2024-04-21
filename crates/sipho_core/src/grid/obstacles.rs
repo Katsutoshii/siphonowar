@@ -112,21 +112,15 @@ impl Grid2<Obstacle> {
     /// Bounce simulated objects off obstacles.
     pub fn bounce_off_obstacles(
         obstacles: Res<Self>,
-        mut query: Query<(
-            &GlobalTransform,
-            &mut Transform,
-            &mut Velocity,
-            &mut Acceleration,
-        )>,
+        mut query: Query<(&mut Position, &mut Velocity, &mut Acceleration)>,
     ) {
-        for (global_transform, mut transform, mut velocity, mut acceleration) in query.iter_mut() {
-            let obstacle_acceleration =
-                obstacles.acceleration(global_transform.translation().xy(), *velocity) * 6.;
+        for (mut position, mut velocity, mut acceleration) in query.iter_mut() {
+            let obstacle_acceleration = obstacles.acceleration(position.0, *velocity) * 6.;
             *acceleration += obstacle_acceleration;
 
-            if obstacles[obstacles.to_rowcol(transform.translation.xy())] != Obstacle::Empty {
+            if obstacles[obstacles.to_rowcol(position.0)] != Obstacle::Empty {
                 velocity.0 *= -1.0;
-                transform.translation += velocity.0.extend(0.);
+                position.0 += velocity.0;
             }
         }
     }

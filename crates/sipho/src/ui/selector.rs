@@ -42,13 +42,7 @@ impl Selector {
         mut query: Query<(&mut Self, &mut Transform, &mut Visibility)>,
         highlights: Query<Entity, With<Highlight>>,
         mut objects: Query<
-            (
-                &Object,
-                &GlobalTransform,
-                &Team,
-                &mut Selected,
-                &Handle<Mesh>,
-            ),
+            (&Object, &Position, &Team, &mut Selected, &Handle<Mesh>),
             Without<Self>,
         >,
         grid: Res<Grid2<TeamEntitySets>>,
@@ -91,8 +85,8 @@ impl Selector {
                     // Check the grid for entities in this bounding box.
                     for entity in grid.get_entities_in_aabb(&aabb) {
                         if let Ok(mut_obj) = objects.get_mut(entity) {
-                            let (_object, transform, team, mut selected, mesh) = mut_obj;
-                            if aabb.contains(transform.translation().xy()) {
+                            let (_object, position, team, mut selected, mesh) = mut_obj;
+                            if aabb.contains(position.0) {
                                 if selected.is_selected() || *team != config.player_team {
                                     continue;
                                 }

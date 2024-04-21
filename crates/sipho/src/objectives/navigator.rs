@@ -25,15 +25,15 @@ pub struct Navigator {
 }
 impl Navigator {
     pub fn update(
-        query: Query<(&Navigator, &GlobalTransform)>,
+        query: Query<(&Navigator, &Position)>,
         mut grid: ResMut<NavigationGrid2>,
         spec: Res<GridSpec>,
         obstacles: Res<Grid2<Obstacle>>,
         mut event_writer: EventWriter<NavigationCostEvent>,
     ) {
         let mut destinations: HashMap<RowCol, Vec<RowCol>> = HashMap::new();
-        for (navigator, transform) in query.iter() {
-            let source = spec.to_rowcol(transform.translation().xy());
+        for (navigator, position) in query.iter() {
+            let source = spec.to_rowcol(position.0);
             let destination = spec.to_rowcol(navigator.target);
             match destinations.entry(destination) {
                 Entry::Occupied(o) => o.into_mut(),
@@ -62,8 +62,8 @@ impl Navigator {
         mut query: Query<(
             &Object,
             &Navigator,
-            &GlobalTransform,
             &mut Transform,
+            &Position,
             &Velocity,
             &mut Acceleration,
         )>,
@@ -71,21 +71,19 @@ impl Navigator {
         configs: Res<ObjectConfigs>,
         spec: Res<GridSpec>,
     ) {
-        for (object, navigator, global_transform, mut transform, velocity, mut acceleration) in
+        for (object, navigator, mut transform, position, velocity, mut acceleration) in
             query.iter_mut()
         {
             let config = configs.get(object).unwrap();
-            let position = global_transform.translation().xy();
-
             let target_rowcol = spec.to_rowcol(navigator.target);
 
             if let Some(flow_grid) = grid.get(&target_rowcol) {
                 let target_cell_center = flow_grid.grid.to_world_position(target_rowcol);
                 let flow_acceleration =
-                    flow_grid.grid.flow_acceleration5(position) * config.nav_flow_factor;
+                    flow_grid.grid.flow_acceleration5(position.0) * config.nav_flow_factor;
                 let slow_force = navigator.slow_force(
                     *velocity,
-                    position,
+                    position.0,
                     target_cell_center,
                     flow_acceleration,
                 );

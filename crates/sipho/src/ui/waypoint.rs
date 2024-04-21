@@ -76,11 +76,8 @@ impl Waypoint {
             }
 
             // Spawn a new waypoint.
-            let waypoint_bundle = Waypoint::default().bundle(
-                &assets,
-                control.position.extend(zindex::WAYPOINT),
-                control.mode,
-            );
+            let waypoint_bundle =
+                Waypoint::default().bundle(&assets, control.position, control.mode);
             let waypoint_entity = commands.spawn(waypoint_bundle).id();
 
             for (entity, selected, object, attached_to) in selection.iter() {
@@ -118,12 +115,7 @@ impl Waypoint {
         }
     }
 
-    pub fn bundle(
-        self,
-        assets: &WaypointAssets,
-        translation: Vec3,
-        mode: ControlMode,
-    ) -> impl Bundle {
+    pub fn bundle(self, assets: &WaypointAssets, position: Vec2, mode: ControlMode) -> impl Bundle {
         (
             Name::new("Waypoint"),
             PbrBundle {
@@ -131,7 +123,7 @@ impl Waypoint {
                 transform: Transform::default()
                     .with_scale(Vec2::splat(self.size).extend(1.))
                     // .with_rotation(Quat::from_axis_angle(Vec3::Y, PI / 2.))
-                    .with_translation(translation),
+                    .with_translation(position.extend(zindex::WAYPOINT)),
                 material: match mode {
                     ControlMode::Normal => assets.blue_material.clone(),
                     ControlMode::Attack => assets.red_material.clone(),
@@ -139,7 +131,10 @@ impl Waypoint {
                 ..default()
             },
             CarriedBy::default(),
-            Velocity::ZERO,
+            PhysicsBundle {
+                position: Position(position),
+                ..default()
+            },
             self,
         )
     }

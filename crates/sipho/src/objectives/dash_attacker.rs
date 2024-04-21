@@ -45,7 +45,7 @@ impl Default for DashAttacker {
 impl DashAttacker {
     /// Gets a random attack cooldown.
     pub fn attack_cooldown() -> Duration {
-        Duration::from_millis(rand::thread_rng().gen_range(500..600))
+        Duration::from_millis(rand::thread_rng().gen_range(600..700))
     }
 
     /// Gets the attack duration.
@@ -85,7 +85,7 @@ impl DashAttacker {
             &Navigator,
             &mut DashAttacker,
             &mut Acceleration,
-            &GlobalTransform,
+            &Position,
             &EnemyCollisions,
         )>,
         time: Res<Time>,
@@ -99,7 +99,7 @@ impl DashAttacker {
             navigator,
             mut attacker,
             mut acceleration,
-            transform,
+            position,
             collisions,
         ) in query.iter_mut()
         {
@@ -107,7 +107,7 @@ impl DashAttacker {
 
             attacker.timer.tick(time.delta());
 
-            let delta = navigator.target - transform.translation().xy();
+            let delta = navigator.target - position.0;
 
             if attacker.timer.finished() {
                 attacker.timer.reset();

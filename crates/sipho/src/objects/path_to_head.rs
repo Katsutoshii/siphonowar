@@ -76,19 +76,19 @@ pub struct PathToHeadFollower {
 impl PathToHeadFollower {
     pub fn update(
         mut query: Query<(
-            &GlobalTransform,
+            &Position,
             &Velocity,
             &mut Acceleration,
             &mut PathToHeadFollower,
         )>,
-        others: Query<&GlobalTransform>,
+        others: Query<&Position>,
     ) {
         // Get the path using follower.
         // Get the target transform using path.
-        for (transform, velocity, mut acceleration, mut follower) in query.iter_mut() {
+        for (position, velocity, mut acceleration, mut follower) in query.iter_mut() {
             if let Some(target) = follower.target {
-                if let Ok(target_transform) = others.get(target) {
-                    let delta = target_transform.translation().xy() - transform.translation().xy();
+                if let Ok(target_position) = others.get(target) {
+                    let delta = target_position.0 - position.0;
                     let magnitude = 0.4;
                     *acceleration += Acceleration(delta * magnitude - velocity.0);
                 } else {

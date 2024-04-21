@@ -120,7 +120,7 @@ impl ZooidHead {
             &mut Consumer,
         )>,
         attachments: Query<&AttachedTo>,
-        transforms: Query<&GlobalTransform>,
+        positions: Query<&Position>,
         mut commands: ObjectCommands,
         configs: Res<ObjectConfigs>,
         fog_config: Res<FogConfig>,
@@ -141,7 +141,7 @@ impl ZooidHead {
                 // Spawn first entity.
                 let entity = head.get_next_limb(head_id, &attachments);
 
-                let transform = transforms.get(entity).unwrap();
+                let position = positions.get(entity).unwrap();
 
                 if consumer.consumed > 0 {
                     consumer.consumed -= 1;
@@ -152,7 +152,7 @@ impl ZooidHead {
                     };
                     let spawn_velocity: Vec2 = direction * config.spawn_velocity;
                     if let Some(entity_commands) = commands.spawn(ObjectSpec {
-                        position: transform.translation().xy() + spawn_velocity,
+                        position: position.0 + spawn_velocity,
                         velocity: Some(Velocity(spawn_velocity)),
                         team: *team,
                         objectives: Objectives::new(Objective::FollowEntity(head_id)),
@@ -178,25 +178,24 @@ pub struct NearestZooidHead {
 impl NearestZooidHead {
     /// Each worker tracks its nearest head.
     pub fn update(
-        mut query: Query<(&mut Self, &Team, &GlobalTransform), Without<ZooidHead>>,
-        heads: Query<(Entity, &Team, &GlobalTransform), With<ZooidHead>>,
+        mut query: Query<(&mut Self, &Team, &Position), Without<ZooidHead>>,
+        heads: Query<(Entity, &Team, &Position), With<ZooidHead>>,
     ) {
         let mut team_heads: HashMap<Team, HashMap<Entity, Vec2>> = HashMap::default();
-        for (entity, team, transform) in &heads {
+        for (entity, team, position) in &heads {
             let entry = match team_heads.entry(*team) {
                 Entry::Occupied(o) => o.into_mut(),
                 Entry::Vacant(v) => v.insert(HashMap::default()),
             };
-            entry.insert(entity, transform.translation().xy());
+            entry.insert(entity, position.0);
         }
-        for (mut nearest_head, team, transform) in &mut query {
+        for (mut nearest_head, team, position) in &mut query {
             if let Some(heads) = team_heads.get(team) {
                 if let Some(entity) = nearest_head.entity {
                     if !heads.contains_key(&entity) {
                         nearest_head.entity = None;
                     }
                 } else {
-                    let position = transform.translation().xy();
                     let (entity, _) = heads
                         .iter()
                         .max_by(|(_, p1), (_, p2)| {

@@ -84,7 +84,7 @@ impl ShockAttacker {
             &mut Velocity,
             &Navigator,
             &mut ShockAttacker,
-            &GlobalTransform,
+            &Position,
             &EnemyNeighbors,
         )>,
         time: Res<Time>,
@@ -93,15 +93,14 @@ impl ShockAttacker {
         mut lightning: LightningCommands,
         mut firework_events: EventWriter<FireworkSpec>,
     ) {
-        for (entity, object, mut velocity, navigator, mut attacker, transform, enemies) in
+        for (entity, object, mut velocity, navigator, mut attacker, position, enemies) in
             query.iter_mut()
         {
             let config = configs.get(object).unwrap();
 
             attacker.timer.tick(time.delta());
 
-            let position = transform.translation().xy();
-            let delta = navigator.target - position;
+            let delta = navigator.target - position.0;
 
             if attacker.timer.finished() {
                 attacker.timer.reset();
@@ -122,10 +121,9 @@ impl ShockAttacker {
                         velocity: *velocity,
                         stun: true,
                     });
-                    let depth = transform.translation().z;
-                    lightning.make_lightning(position, navigator.target, depth);
+                    lightning.make_lightning(position.0, navigator.target, zindex::ZOOIDS_MAX);
                     firework_events.send(FireworkSpec {
-                        position: navigator.target.extend(depth),
+                        position: navigator.target.extend(zindex::ZOOIDS_MAX),
                         color: FireworkColor::White,
                         size: VfxSize::Small,
                     });

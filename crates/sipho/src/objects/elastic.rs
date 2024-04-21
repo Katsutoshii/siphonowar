@@ -1,6 +1,5 @@
 use crate::prelude::*;
 use bevy::ecs::system::{EntityCommands, QueryLens, SystemParam};
-use bevy::transform::TransformSystem;
 use bevy::utils::smallvec::SmallVec;
 use bevy::utils::FloatOrd;
 use sipho_core::grid::fog::FogConfig;
@@ -19,13 +18,8 @@ impl Plugin for ElasticPlugin {
                         .chain()
                         .in_set(SystemStage::Input),
                     (Elastic::update).in_set(SystemStage::PreCompute),
+                    (SpawnElasticEvent::update.in_set(SystemStage::Spawn)),
                 )
-                    .in_set(GameStateSet::Running),
-            )
-            .add_systems(
-                PostUpdate,
-                (SpawnElasticEvent::update)
-                    .after(TransformSystem::TransformPropagate)
                     .in_set(GameStateSet::Running),
             );
     }
@@ -69,7 +63,7 @@ impl Elastic {
 pub struct ElasticCommands<'w, 's> {
     commands: Commands<'w, 's>,
     attachments: Query<'w, 's, &'static mut AttachedTo>,
-    transforms: Query<'w, 's, &'static GlobalTransform>,
+    positions: Query<'w, 's, &'static Position>,
     assets: Res<'w, ObjectAssets>,
 }
 impl ElasticCommands<'_, '_> {
@@ -88,9 +82,9 @@ impl ElasticCommands<'_, '_> {
             }
         }
 
-        let position1 = self.transforms.get(entity1).unwrap().translation();
-        let position2 = self.transforms.get(entity2).unwrap().translation();
-        let magnitude = position1.xy().distance(position2.xy());
+        let position1 = self.positions.get(entity1).unwrap();
+        let position2 = self.positions.get(entity2).unwrap();
+        let magnitude = position1.distance(position2.0);
 
         let commands = self.commands.spawn(ElasticBundle {
             elastic: Elastic((entity1, entity2)),
@@ -99,10 +93,10 @@ impl ElasticCommands<'_, '_> {
                 material: self.assets.get_team_material(team).background,
                 visibility: Visibility::Hidden,
                 transform: Elastic::get_transform(
-                    position1.xy(),
-                    position2.xy(),
+                    position1.0,
+                    position2.0,
                     magnitude,
-                    position1.z,
+                    zindex::ZOOIDS_MIN,
                 ),
                 ..default()
             },
@@ -144,7 +138,7 @@ impl Elastic {
     }
     pub fn tie_cursor(
         mut control_events: EventReader<ControlEvent>,
-        transforms: Query<&GlobalTransform>,
+        positions: Query<&Position>,
         config: Res<FogConfig>,
         grid: Res<Grid2<TeamEntitySets>>,
         mut last_entity: Local<Option<Entity>>,
@@ -160,8 +154,8 @@ impl Elastic {
                 let mut dudes: Vec<Entity> = entities.iter().copied().collect();
 
                 dudes.sort_by_key(|&entity| {
-                    let position = transforms.get(entity).unwrap().translation().xy();
-                    FloatOrd(Vec2::distance_squared(control_event.position, position))
+                    let position = positions.get(entity).unwrap();
+                    FloatOrd(Vec2::distance_squared(control_event.position, position.0))
                 });
                 if let Some(&dude) = dudes.first() {
                     if let Some(last_entity) = *last_entity {
@@ -214,7 +208,7 @@ impl Elastic {
     pub fn update(
         mut commands: Commands,
         mut elastic_query: Query<(Entity, &Elastic, &mut Transform, &mut Visibility)>,
-        object_query: Query<(Entity, &GlobalTransform)>,
+        object_query: Query<(Entity, &Position)>,
         mut accel_query: Query<&mut Acceleration>,
         mut attachments: Query<&mut AttachedTo>,
     ) {
@@ -223,14 +217,11 @@ impl Elastic {
                 *visibility = Visibility::Visible;
                 continue;
             }
-            if let (Ok((entity1, transform1)), Ok((entity2, transform2))) = (
+            if let (Ok((entity1, position1)), Ok((entity2, position2))) = (
                 object_query.get(elastic.first()),
                 object_query.get(elastic.second()),
             ) {
-                let position1 = transform1.translation().xy();
-                let position2 = transform2.translation().xy();
-
-                let delta = position2 - position1;
+                let delta = position2.0 - position1.0;
                 let direction = delta.normalize_or_zero();
                 let magnitude = delta.length();
                 let force = magnitude * magnitude * 0.0001;
@@ -238,8 +229,8 @@ impl Elastic {
                 *accel_query.get_mut(entity2).unwrap() -= Acceleration(direction * force);
 
                 // Set transform.
-                let depth = transform1.translation().z;
-                *transform = Self::get_transform(position1, position2, magnitude, depth);
+                *transform =
+                    Self::get_transform(position1.0, position2.0, magnitude, zindex::ZOOIDS_MIN);
             } else {
                 // Clean up invalid connections.
                 commands.entity(entity).despawn();

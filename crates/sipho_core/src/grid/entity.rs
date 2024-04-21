@@ -1,7 +1,7 @@
 use std::ops::{Index, IndexMut};
 
 use crate::prelude::*;
-use bevy::{prelude::*, transform::TransformSystem, utils::HashSet};
+use bevy::{prelude::*, utils::HashSet};
 
 pub struct EntityGridPlugin;
 impl Plugin for EntityGridPlugin {
@@ -9,14 +9,9 @@ impl Plugin for EntityGridPlugin {
         app.add_plugins(Grid2Plugin::<TeamEntitySets>::default())
             .add_systems(
                 FixedUpdate,
-                GridEntity::cleanup
+                (GridEntity::update, GridEntity::cleanup)
+                    .chain()
                     .in_set(SystemStage::Cleanup)
-                    .in_set(GameStateSet::Running),
-            )
-            .add_systems(
-                PostUpdate,
-                GridEntity::update
-                    .after(TransformSystem::TransformPropagate)
                     .in_set(GameStateSet::Running),
             );
     }
@@ -47,12 +42,12 @@ pub struct GridEntity {
 }
 impl GridEntity {
     pub fn update(
-        mut query: Query<(Entity, &mut Self, &Team, &GlobalTransform)>,
+        mut query: Query<(Entity, &mut Self, &Team, &Position)>,
         mut grid: ResMut<Grid2<TeamEntitySets>>,
         mut event_writer: EventWriter<EntityGridEvent>,
     ) {
         for (entity, mut grid_entity, team, transform) in &mut query {
-            let rowcol = grid.to_rowcol(transform.translation().xy());
+            let rowcol = grid.to_rowcol(transform.0);
             if let Some(event) = grid.update(entity, *team, grid_entity.rowcol, rowcol) {
                 grid_entity.rowcol = event.rowcol;
                 event_writer.send(event);

@@ -295,22 +295,22 @@ impl Object {
 
     /// System for objects dying.
     pub fn death(
-        mut objects: Query<(Entity, &Self, &Health, &GlobalTransform, &Team)>,
+        mut objects: Query<(Entity, &Self, &Health, &Position, &Team)>,
         mut object_commands: ObjectCommands,
         mut firework_events: EventWriter<FireworkSpec>,
     ) {
-        for (entity, object, health, &transform, team) in &mut objects {
+        for (entity, object, health, position, team) in &mut objects {
             if health.health <= 0 {
                 object_commands.despawn(entity);
                 firework_events.send(FireworkSpec {
                     size: VfxSize::Medium,
-                    position: transform.translation(),
+                    position: position.extend(zindex::ZOOIDS_MAX),
                     color: (*team).into(),
                 });
                 if object == &Object::Plankton {
                     object_commands.spawn(ObjectSpec {
                         object: Object::Food,
-                        position: transform.translation().xy(),
+                        position: position.0,
                         ..default()
                     });
                 }

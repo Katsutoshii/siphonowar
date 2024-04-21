@@ -58,7 +58,7 @@ impl DamageEvent {
             &mut Acceleration,
             &mut Health,
             &Team,
-            &GlobalTransform,
+            &Position,
             &mut Objectives,
         )>,
         mut events: EventReader<DamageEvent>,
@@ -78,7 +78,7 @@ impl DamageEvent {
                 mut _acceleration,
                 mut health,
                 &team,
-                &transform,
+                &position,
                 mut objectives,
             )) = query.get_mut(event.damaged)
             {
@@ -94,7 +94,7 @@ impl DamageEvent {
                 firework_events.send(FireworkSpec {
                     size,
                     color: team.into(),
-                    position: transform.translation(),
+                    position: position.extend(zindex::ZOOIDS_MAX),
                 });
                 if event.stun {
                     if let Objective::Stunned(_) = objectives.last() {

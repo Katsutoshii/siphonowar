@@ -65,6 +65,7 @@ impl ObjectBundle {
             },
             physics: PhysicsBundle {
                 material: config.physics_material,
+                position: Position(spec.position),
                 velocity: spec
                     .velocity
                     .unwrap_or(Velocity(Vec2::ONE) * config.spawn_velocity),

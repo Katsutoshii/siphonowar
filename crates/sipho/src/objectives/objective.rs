@@ -35,7 +35,7 @@ impl Objective {
         &self,
         object: Object,
         components: &mut ObjectivesQueryDataItem,
-        targets: &Query<(&GlobalTransform, &CarriedBy, Option<&PathToHeadFollower>)>,
+        targets: &Query<(&Position, &CarriedBy, Option<&PathToHeadFollower>)>,
         commands: &mut Commands,
         config: &ObjectConfig,
     ) -> Result<(), Error> {
@@ -45,15 +45,15 @@ impl Objective {
             Self::Stunned(_) => {}
             Self::Idle => {}
             Self::FollowEntity(entity) | Self::AttackFollowEntity(entity) => {
-                let (transform, _carried_by, _path_follower) = targets.get(*entity)?;
+                let (position, _carried_by, _path_follower) = targets.get(*entity)?;
                 commands.insert(Navigator {
-                    target: transform.translation().xy(),
+                    target: position.0,
                     slow_factor: 1.0,
                     target_radius: config.objective.repell_radius,
                 });
             }
             Self::AttackEntity(entity) => {
-                let (transform, carried_by, path_follower) = targets.get(*entity)?;
+                let (position, carried_by, path_follower) = targets.get(*entity)?;
                 if !carried_by.is_empty() {
                     return Err(Error::Default);
                 }
@@ -66,7 +66,7 @@ impl Objective {
                     Object::Shocker => {
                         commands.insert((
                             Navigator {
-                                target: transform.translation().xy(),
+                                target: position.0,
                                 slow_factor: 1.0,
                                 target_radius: config.attack_radius,
                             },
@@ -76,7 +76,7 @@ impl Objective {
                     Object::Worker => {
                         commands.insert((
                             Navigator {
-                                target: transform.translation().xy(),
+                                target: position.0,
                                 slow_factor: 0.0,
                                 target_radius: config.attack_radius,
                             },
@@ -96,19 +96,19 @@ impl Objective {
     pub fn try_update_components(
         &self,
         components: &mut ObjectivesQueryDataItem,
-        targets: &Query<(&GlobalTransform, &CarriedBy, Option<&PathToHeadFollower>)>,
+        targets: &Query<(&Position, &CarriedBy, Option<&PathToHeadFollower>)>,
     ) -> Result<(), Error> {
         match self {
             Self::Stunned(_) => {}
             Self::Idle => {}
             Self::FollowEntity(entity) | Self::AttackFollowEntity(entity) => {
-                let (transform, _carried_by, _path_follower) = targets.get(*entity)?;
+                let (position, _carried_by, _path_follower) = targets.get(*entity)?;
                 if let Some(ref mut navigator) = components.navigator {
-                    navigator.target = transform.translation().xy();
+                    navigator.target = position.0;
                 }
             }
             Self::AttackEntity(entity) => {
-                let (transform, carried_by, path_follower) = targets.get(*entity)?;
+                let (position, carried_by, path_follower) = targets.get(*entity)?;
                 if !carried_by.is_empty() {
                     return Err(Error::Default);
                 }
@@ -118,7 +118,7 @@ impl Objective {
                     }
                 }
                 if let Some(ref mut navigator) = components.navigator {
-                    navigator.target = transform.translation().xy();
+                    navigator.target = position.0;
                 }
             }
         };
@@ -148,7 +148,7 @@ impl Default for Objectives {
 impl Objectives {
     pub fn update(
         mut query: Query<(&mut Objectives, &Object, ObjectivesQueryData)>,
-        targets: Query<(&GlobalTransform, &CarriedBy, Option<&PathToHeadFollower>)>,
+        targets: Query<(&Position, &CarriedBy, Option<&PathToHeadFollower>)>,
         mut commands: Commands,
         configs: Res<ObjectConfigs>,
         time: Res<Time>,

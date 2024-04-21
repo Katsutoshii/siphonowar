@@ -51,7 +51,7 @@ pub fn get_neighbors(
     entity: Entity,
     position: Vec2,
     other_entities: &HashSet<Entity>,
-    others: &Query<(&Object, &Team, &GlobalTransform)>,
+    others: &Query<(&Object, &Team, &Position)>,
     config: &ObjectConfig,
 ) -> Vec<Neighbor> {
     let mut neighbors: Vec<Neighbor> = Vec::with_capacity(other_entities.len());
@@ -60,9 +60,8 @@ pub fn get_neighbors(
         if entity == other_entity {
             continue;
         }
-        if let Ok((other_object, other_team, other_transform)) = others.get(other_entity) {
-            let other_position = other_transform.translation().xy();
-            let delta = other_position - position;
+        if let Ok((other_object, other_team, other_position)) = others.get(other_entity) {
+            let delta = other_position.0 - position;
             let distance_squared = delta.length_squared();
             if config.in_radius(distance_squared) {
                 neighbors.push(Neighbor {
@@ -91,9 +90,9 @@ pub fn update(
         &mut EnemyCollisions,
         &Object,
         &Team,
-        &GlobalTransform,
+        &Position,
     )>,
-    others: Query<(&Object, &Team, &GlobalTransform)>,
+    others: Query<(&Object, &Team, &Position)>,
     grid: Res<Grid2<TeamEntitySets>>,
     configs: Res<ObjectConfigs>,
 ) {
@@ -105,23 +104,21 @@ pub fn update(
             mut colliding_neighbors,
             object,
             team,
-            transform,
+            position,
         )| {
             enemy_neighbors.clear();
             allied_neighbors.clear();
             colliding_neighbors.clear();
 
             let config = configs.get(object).unwrap();
-            let position = transform.translation().xy();
-
             let ally_entities = grid.get_n_entities_in_radius(
-                position,
+                position.0,
                 config.neighbor_radius,
                 &[*team],
                 MAX_NEIGHBORS,
             );
             for neighbor in
-                get_neighbors(entity, position, &ally_entities, &others, config).into_iter()
+                get_neighbors(entity, position.0, &ally_entities, &others, config).into_iter()
             {
                 allied_neighbors.push(neighbor);
                 // let other_config = configs.get(&neighbor.object).unwrap();
@@ -136,13 +133,13 @@ pub fn update(
                 .filter(|other_team| team != other_team)
                 .collect();
             let enemy_entities = grid.get_n_entities_in_radius(
-                position,
+                position.0,
                 config.neighbor_radius,
                 &enemy_teams,
                 MAX_NEIGHBORS,
             );
             for neighbor in
-                get_neighbors(entity, position, &enemy_entities, &others, config).into_iter()
+                get_neighbors(entity, position.0, &enemy_entities, &others, config).into_iter()
             {
                 enemy_neighbors.push(neighbor);
                 let other_config = configs.get(&neighbor.object).unwrap();
