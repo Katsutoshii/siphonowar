@@ -8,7 +8,7 @@ impl Plugin for ConsumerPlugin {
         app.register_type::<Consumer>().add_systems(
             FixedUpdate,
             Consumer::update
-                .in_set(SystemStage::Compute)
+                .in_set(FixedUpdateStage::AccumulateForces)
                 .in_set(GameStateSet::Running)
                 .before(DamageEvent::update),
         );

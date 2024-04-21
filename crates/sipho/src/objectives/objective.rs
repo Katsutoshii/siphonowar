@@ -146,6 +146,46 @@ impl Default for Objectives {
     }
 }
 impl Objectives {
+    pub fn set_objective(
+        mut query: Query<UpdateObjectiveQueryData>,
+        others: Query<UpdateObjectiveNeighborQueryData>,
+    ) {
+        for mut object in &mut query {
+            if let Some(neighbor) = object.enemy_neighbors.first() {
+                let other = others.get(neighbor.entity).unwrap();
+                // An object should only attack a neighbor if that neighbor is not being carried.
+                if object.object.can_attack()
+                    && object.attached_to.len() < 2
+                    && neighbor.object.can_be_attacked()
+                    && object.parent.is_none()
+                    && other.carried_by.is_empty()
+                    && (other.path_follower.is_none()
+                        || other.path_follower.unwrap().target.is_none())
+                {
+                    // If already attacking an entity but we are now closer to different entity, attack the new closest
+                    // entity.
+                    match object.objectives.bypass_change_detection().last_mut() {
+                        Objective::AttackEntity(entity) => {
+                            *entity = neighbor.entity;
+                        }
+                        Objective::AttackFollowEntity(_) | Objective::Idle => {
+                            object
+                                .objectives
+                                .push(Objective::AttackEntity(neighbor.entity));
+                        }
+                        Objective::FollowEntity(_) => {}
+                        Objective::Stunned(timer) => {
+                            if timer.finished() {
+                                object.objectives.pop();
+                                object.objectives.push(Objective::Idle);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     pub fn update(
         mut query: Query<(&mut Objectives, &Object, ObjectivesQueryData)>,
         targets: Query<(&Position, &CarriedBy, Option<&PathToHeadFollower>)>,
@@ -223,4 +263,26 @@ impl Objectives {
             None
         }
     }
+}
+
+#[derive(QueryData)]
+#[query_data(mutable)]
+pub struct UpdateObjectiveQueryData {
+    entity: Entity,
+    object: &'static Object,
+    objectives: &'static mut Objectives,
+    parent: Option<&'static Parent>,
+    health: &'static Health,
+    enemy_neighbors: &'static EnemyNeighbors,
+    allied_neighbors: &'static AlliedNeighbors,
+    attached_to: &'static AttachedTo,
+}
+
+#[derive(QueryData)]
+pub struct UpdateObjectiveNeighborQueryData {
+    object: &'static Object,
+    velocity: &'static Velocity,
+    parent: Option<&'static Parent>,
+    carried_by: &'static CarriedBy,
+    path_follower: Option<&'static PathToHeadFollower>,
 }

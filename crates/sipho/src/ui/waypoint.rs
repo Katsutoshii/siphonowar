@@ -8,8 +8,8 @@ impl Plugin for WaypointPlugin {
         app.init_resource::<WaypointAssets>().add_systems(
             FixedUpdate,
             (
-                Waypoint::cleanup.in_set(SystemStage::Despawn),
-                Waypoint::update.in_set(SystemStage::Spawn),
+                Waypoint::cleanup.in_set(FixedUpdateStage::Despawn),
+                Waypoint::update.in_set(FixedUpdateStage::Spawn),
             )
                 .in_set(GameStateSet::Running),
         );

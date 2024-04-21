@@ -40,7 +40,7 @@ impl Plugin for CameraPlugin {
                     CameraController::update_control,
                 )
                     .chain()
-                    .in_set(SystemStage::Spawn),
+                    .in_set(FixedUpdateStage::Spawn),
             );
     }
 }

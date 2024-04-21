@@ -4,8 +4,7 @@ use bevy::ecs::schedule::SystemSetConfigs;
 pub struct SystemSetPlugin;
 impl Plugin for SystemSetPlugin {
     fn build(&self, app: &mut App) {
-        app.configure_sets(FixedUpdate, SystemStage::get_config())
-            .configure_sets(Update, SystemStage::get_config())
+        app.configure_sets(FixedUpdate, FixedUpdateStage::get_config())
             .configure_sets(
                 FixedUpdate,
                 GameStateSet::Running.run_if(in_state(GameState::Running)),
@@ -19,48 +18,39 @@ impl Plugin for SystemSetPlugin {
 
 /// Stage of computation for a given frame.
 #[derive(Debug, Hash, PartialEq, Eq, Clone, SystemSet)]
-pub enum SystemStage {
-    /// Process input from the user.
-    Input,
+pub enum FixedUpdateStage {
     /// Spawn entities that are not objects.
     /// Can reference transforms from objects spawned in last frame's ObjectSpawn.
     Spawn,
-    /// Operations before computation of forces.
-    PreCompute,
+    /// Systems after spawning objects.
+    PostSpawn,
     /// Find nearest neighbors.
     FindNeighbors,
+    /// Run AI logic based on neighbors.
+    AI,
     /// Compute forces between objects
-    Compute,
-    /// Operations after computing forces
-    PostCompute,
+    AccumulateForces,
     /// Apply physics integration.
-    Apply,
+    Physics,
     /// Operations after applying physics integration.
-    PostApply,
-    /// Compute which entities died and send events.
-    Death,
-    /// Process death events and clean up references.
-    Cleanup,
+    PostPhysics,
+    /// Process despawn events and clean up references.
+    PreDespawn,
     /// Despawn dead or orphaned entities.
     Despawn,
-    // Spawn objects.
-    ObjectSpawn,
 }
-impl SystemStage {
+impl FixedUpdateStage {
     pub fn get_config() -> SystemSetConfigs {
         (
-            Self::Input,
             Self::Spawn,
-            Self::PreCompute,
+            Self::PostSpawn,
             Self::FindNeighbors,
-            Self::Compute,
-            Self::PostCompute,
-            Self::Apply,
-            Self::PostApply,
-            Self::Death,
-            Self::Cleanup,
+            Self::AI,
+            Self::AccumulateForces,
+            Self::Physics,
+            Self::PostPhysics,
+            Self::PreDespawn,
             Self::Despawn,
-            Self::ObjectSpawn,
         )
             .chain()
     }

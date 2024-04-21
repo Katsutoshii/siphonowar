@@ -11,7 +11,7 @@ impl Plugin for EntityGridPlugin {
                 FixedUpdate,
                 (GridEntity::update, GridEntity::cleanup)
                     .chain()
-                    .in_set(SystemStage::Cleanup)
+                    .in_set(FixedUpdateStage::PreDespawn)
                     .in_set(GameStateSet::Running),
             );
     }

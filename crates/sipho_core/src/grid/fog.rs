@@ -18,7 +18,7 @@ impl Plugin for FogPlugin {
                     Grid2::<TeamVisibility>::update_visibility,
                 )
                     .chain()
-                    .in_set(SystemStage::Cleanup)
+                    .in_set(FixedUpdateStage::PreDespawn)
                     .in_set(GameStateSet::Running)
                     .after(GridEntity::cleanup),
             )

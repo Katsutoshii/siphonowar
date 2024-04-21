@@ -14,8 +14,8 @@ impl Plugin for ZooidHeadPlugin {
         app.add_systems(
             FixedUpdate,
             (
-                (ZooidHead::spawn, ZooidHead::spawn_zooids).in_set(SystemStage::ObjectSpawn),
-                NearestZooidHead::update.in_set(SystemStage::PreCompute),
+                (ZooidHead::spawn, ZooidHead::spawn_zooids).in_set(FixedUpdateStage::Spawn),
+                NearestZooidHead::update.in_set(FixedUpdateStage::PostSpawn),
             )
                 .in_set(GameStateSet::Running),
         );
@@ -62,7 +62,7 @@ impl ZooidHead {
                             ..default()
                         });
                         for entity in killable.into_iter() {
-                            commands.despawn(entity);
+                            commands.deferred_despawn(entity);
                         }
                         break;
                     }

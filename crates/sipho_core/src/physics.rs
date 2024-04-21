@@ -18,7 +18,7 @@ impl Plugin for PhysicsPlugin {
                 FixedUpdate,
                 (fixed_update_children, fixed_update)
                     .chain()
-                    .in_set(SystemStage::Apply)
+                    .in_set(FixedUpdateStage::Physics)
                     .in_set(GameStateSet::Running),
             );
     }

@@ -1,6 +1,6 @@
 use bevy::input::keyboard::KeyboardInput;
 use bevy::input::mouse::MouseButtonInput;
-use bevy::input::ButtonState;
+use bevy::input::{ButtonState, InputSystem};
 use bevy::{prelude::*, utils::HashMap};
 
 use std::hash::Hash;
@@ -30,10 +30,10 @@ impl Plugin for InputActionPlugin {
             .add_event::<ControlEvent>()
             .add_event::<InputEvent>()
             .add_systems(
-                Update,
+                PreUpdate,
                 (InputEvent::update, ControlEvent::update)
                     .chain()
-                    .in_set(SystemStage::Input)
+                    .after(InputSystem)
                     .run_if(in_state(DebugState::NoDebug)),
             );
     }

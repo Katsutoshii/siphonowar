@@ -43,7 +43,7 @@ pub mod prelude {
         raycast::{RaycastCommands, RaycastEvent, RaycastTarget},
         shader_plane::{ShaderPlaneAssets, ShaderPlaneMaterial, ShaderPlanePlugin},
         smallset::SmallSet,
-        system_sets::{GameStateSet, SystemStage},
+        system_sets::{FixedUpdateStage, GameStateSet},
         team::{Team, TeamConfig, TeamMaterials, TEAM_BLUE, TEAM_NONE, TEAM_RED},
         window::{self, ScalableWindow},
         zindex, CorePlugin,

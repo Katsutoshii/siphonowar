@@ -15,7 +15,7 @@ impl Plugin for PathToHeadPlugin {
                 FixedUpdate,
                 (PathToHead::update, PathToHeadFollower::update)
                     .in_set(GameStateSet::Running)
-                    .in_set(SystemStage::Compute),
+                    .in_set(FixedUpdateStage::AccumulateForces),
             );
     }
 }

@@ -17,7 +17,7 @@ impl Plugin for FireworkPlugin {
                 FixedUpdate,
                 FireworkSpec::update
                     .in_set(GameStateSet::Running)
-                    .in_set(SystemStage::PostApply),
+                    .in_set(FixedUpdateStage::PostPhysics),
             );
     }
 }

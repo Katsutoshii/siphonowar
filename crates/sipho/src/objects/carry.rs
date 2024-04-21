@@ -13,7 +13,7 @@ impl Plugin for CarryPlugin {
             FixedUpdate,
             (CarryEvent::update, CarriedBy::update)
                 .chain()
-                .in_set(SystemStage::PostCompute)
+                .in_set(FixedUpdateStage::AccumulateForces)
                 .in_set(GameStateSet::Running),
         );
     }

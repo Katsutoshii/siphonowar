@@ -8,7 +8,7 @@ impl Plugin for NeighborsPlugin {
         app.add_systems(
             FixedUpdate,
             (update
-                .in_set(SystemStage::FindNeighbors)
+                .in_set(FixedUpdateStage::FindNeighbors)
                 .in_set(GameStateSet::Running),),
         );
     }

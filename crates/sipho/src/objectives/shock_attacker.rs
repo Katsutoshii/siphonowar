@@ -11,7 +11,7 @@ impl Plugin for ShockAttackerPlugin {
         app.register_type::<ShockAttacker>().add_systems(
             FixedUpdate,
             ShockAttacker::update
-                .in_set(SystemStage::PostCompute)
+                .in_set(FixedUpdateStage::AccumulateForces)
                 .in_set(GameStateSet::Running),
         );
     }

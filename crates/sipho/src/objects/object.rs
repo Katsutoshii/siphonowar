@@ -5,7 +5,7 @@ use super::{
     carry::CarriedBy,
     neighbors::{AlliedNeighbors, EnemyCollisions, EnemyNeighbors},
     path_to_head::PathToHeadFollower,
-    InteractionConfig, ObjectSpec,
+    InteractionConfig,
 };
 use crate::prelude::*;
 use bevy::{ecs::query::QueryData, prelude::*};
@@ -17,16 +17,12 @@ impl Plugin for ObjectPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<Object>().add_systems(
             FixedUpdate,
-            (
-                (
-                    Object::update_acceleration,
-                    Object::update_objective,
-                    Object::update_collisions,
-                    ObjectBackground::update,
-                )
-                    .in_set(SystemStage::Compute),
-                Object::death.in_set(SystemStage::Death),
+            ((
+                Object::update_acceleration,
+                Object::update_collisions,
+                ObjectBackground::update,
             )
+                .in_set(FixedUpdateStage::AccumulateForces),)
                 .in_set(GameStateSet::Running),
         );
     }
@@ -100,28 +96,6 @@ pub struct UpdateAccelerationQueryData {
     enemy_neighbors: &'static EnemyNeighbors,
     carried_by: &'static CarriedBy,
     attached_to: &'static AttachedTo,
-    path_follower: Option<&'static PathToHeadFollower>,
-}
-
-#[derive(QueryData)]
-#[query_data(mutable)]
-pub struct UpdateObjectiveQueryData {
-    entity: Entity,
-    object: &'static Object,
-    objectives: &'static mut Objectives,
-    parent: Option<&'static Parent>,
-    health: &'static Health,
-    enemy_neighbors: &'static EnemyNeighbors,
-    allied_neighbors: &'static AlliedNeighbors,
-    attached_to: &'static AttachedTo,
-}
-
-#[derive(QueryData)]
-pub struct UpdateObjectiveNeighborQueryData {
-    object: &'static Object,
-    velocity: &'static Velocity,
-    parent: Option<&'static Parent>,
-    carried_by: &'static CarriedBy,
     path_follower: Option<&'static PathToHeadFollower>,
 }
 
@@ -215,46 +189,6 @@ impl Object {
         });
     }
 
-    pub fn update_objective(
-        mut query: Query<UpdateObjectiveQueryData>,
-        others: Query<UpdateObjectiveNeighborQueryData>,
-    ) {
-        for mut object in &mut query {
-            if let Some(neighbor) = object.enemy_neighbors.first() {
-                let other = others.get(neighbor.entity).unwrap();
-                // An object should only attack a neighbor if that neighbor is not being carried.
-                if object.object.can_attack()
-                    && object.attached_to.len() < 2
-                    && neighbor.object.can_be_attacked()
-                    && object.parent.is_none()
-                    && other.carried_by.is_empty()
-                    && (other.path_follower.is_none()
-                        || other.path_follower.unwrap().target.is_none())
-                {
-                    // If already attacking an entity but we are now closer to different entity, attack the new closest
-                    // entity.
-                    match object.objectives.bypass_change_detection().last_mut() {
-                        Objective::AttackEntity(entity) => {
-                            *entity = neighbor.entity;
-                        }
-                        Objective::AttackFollowEntity(_) | Objective::Idle => {
-                            object
-                                .objectives
-                                .push(Objective::AttackEntity(neighbor.entity));
-                        }
-                        Objective::FollowEntity(_) => {}
-                        Objective::Stunned(timer) => {
-                            if timer.finished() {
-                                object.objectives.pop();
-                                object.objectives.push(Objective::Idle);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     pub fn update_collisions(
         mut objects: Query<(
             Entity,
@@ -288,31 +222,6 @@ impl Object {
                     //     carrier: entity,
                     //     carried: neighbor.entity,
                     // });
-                }
-            }
-        }
-    }
-
-    /// System for objects dying.
-    pub fn death(
-        mut objects: Query<(Entity, &Self, &Health, &Position, &Team)>,
-        mut object_commands: ObjectCommands,
-        mut firework_events: EventWriter<FireworkSpec>,
-    ) {
-        for (entity, object, health, position, team) in &mut objects {
-            if health.health <= 0 {
-                object_commands.despawn(entity);
-                firework_events.send(FireworkSpec {
-                    size: VfxSize::Medium,
-                    position: position.extend(zindex::ZOOIDS_MAX),
-                    color: (*team).into(),
-                });
-                if object == &Object::Plankton {
-                    object_commands.spawn(ObjectSpec {
-                        object: Object::Food,
-                        position: position.0,
-                        ..default()
-                    });
                 }
             }
         }

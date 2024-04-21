@@ -10,10 +10,10 @@ impl Plugin for DamagePlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<DamageEvent>().add_systems(
             FixedUpdate,
-            (DamageEvent::update)
-                .in_set(SystemStage::Compute)
-                .in_set(GameStateSet::Running)
-                .after(Object::update_objective),
+            (DamageEvent::update, Health::death)
+                .chain()
+                .in_set(FixedUpdateStage::AccumulateForces)
+                .in_set(GameStateSet::Running),
         );
     }
 }
@@ -40,6 +40,31 @@ impl Health {
     }
     pub fn damage(&mut self, amount: i32) {
         self.health -= amount;
+    }
+
+    /// System for objects dying.
+    pub fn death(
+        mut objects: Query<(Entity, &Object, &Health, &Position, &Team)>,
+        mut object_commands: ObjectCommands,
+        mut firework_events: EventWriter<FireworkSpec>,
+    ) {
+        for (entity, object, health, position, team) in &mut objects {
+            if health.health <= 0 {
+                object_commands.deferred_despawn(entity);
+                firework_events.send(FireworkSpec {
+                    size: VfxSize::Medium,
+                    position: position.extend(zindex::ZOOIDS_MAX),
+                    color: (*team).into(),
+                });
+                if object == &Object::Plankton {
+                    object_commands.spawn(ObjectSpec {
+                        object: Object::Food,
+                        position: position.0,
+                        ..default()
+                    });
+                }
+            }
+        }
     }
 }
 

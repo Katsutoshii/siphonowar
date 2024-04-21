@@ -14,7 +14,7 @@ impl Plugin for LightningPlugin {
                 FixedUpdate,
                 Lightning::update
                     .in_set(GameStateSet::Running)
-                    .in_set(SystemStage::PostCompute),
+                    .in_set(FixedUpdateStage::PostPhysics),
             )
             .add_systems(Startup, LightningCommands::setup);
     }

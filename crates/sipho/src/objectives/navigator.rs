@@ -9,7 +9,7 @@ impl Plugin for NavigatorPlugin {
             FixedUpdate,
             (Navigator::update, Navigator::update_acceleration)
                 .chain()
-                .in_set(SystemStage::PostApply)
+                .in_set(FixedUpdateStage::PostPhysics)
                 .in_set(GameStateSet::Running),
         );
     }

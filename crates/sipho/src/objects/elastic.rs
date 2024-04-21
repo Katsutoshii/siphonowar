@@ -14,11 +14,13 @@ impl Plugin for ElasticPlugin {
             .add_systems(
                 FixedUpdate,
                 (
-                    (Elastic::tie_cursor, Elastic::tie_selection)
-                        .chain()
-                        .in_set(SystemStage::Input),
-                    (Elastic::update).in_set(SystemStage::PreCompute),
-                    (SpawnElasticEvent::update.in_set(SystemStage::Spawn)),
+                    (
+                        Elastic::tie_cursor,
+                        Elastic::tie_selection,
+                        SpawnElasticEvent::update,
+                    )
+                        .chain(),
+                    (Elastic::update).in_set(FixedUpdateStage::PostSpawn),
                 )
                     .in_set(GameStateSet::Running),
             );
@@ -91,7 +93,6 @@ impl ElasticCommands<'_, '_> {
             pbr: PbrBundle {
                 mesh: self.assets.connector_mesh.clone(),
                 material: self.assets.get_team_material(team).background,
-                visibility: Visibility::Hidden,
                 transform: Elastic::get_transform(
                     position1.0,
                     position2.0,
@@ -207,16 +208,12 @@ impl Elastic {
     }
     pub fn update(
         mut commands: Commands,
-        mut elastic_query: Query<(Entity, &Elastic, &mut Transform, &mut Visibility)>,
+        mut elastic_query: Query<(Entity, &Elastic, &mut Transform)>,
         object_query: Query<(Entity, &Position)>,
         mut accel_query: Query<&mut Acceleration>,
         mut attachments: Query<&mut AttachedTo>,
     ) {
-        for (entity, elastic, mut transform, mut visibility) in elastic_query.iter_mut() {
-            if *visibility.bypass_change_detection() == Visibility::Hidden {
-                *visibility = Visibility::Visible;
-                continue;
-            }
+        for (entity, elastic, mut transform) in elastic_query.iter_mut() {
             if let (Ok((entity1, position1)), Ok((entity2, position2))) = (
                 object_query.get(elastic.first()),
                 object_query.get(elastic.second()),

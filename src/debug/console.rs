@@ -8,15 +8,17 @@ impl Plugin for CustomConsolePlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(ConsolePlugin)
             .add_console_command::<SpawnCommand, _>(
-                SpawnCommand::update.in_set(SystemStage::ObjectSpawn),
+                SpawnCommand::update.in_set(FixedUpdateStage::Spawn),
             )
             .add_console_command::<BattleCommand, _>(
-                BattleCommand::update.in_set(SystemStage::ObjectSpawn),
+                BattleCommand::update.in_set(FixedUpdateStage::Spawn),
             )
             .add_console_command::<DespawnCommand, _>(
-                DespawnCommand::update.in_set(SystemStage::Death),
+                DespawnCommand::update.in_set(FixedUpdateStage::Spawn),
             )
-            .add_console_command::<SaveCommand, _>(SaveCommand::update.in_set(SystemStage::Spawn))
+            .add_console_command::<SaveCommand, _>(
+                SaveCommand::update.in_set(FixedUpdateStage::Spawn),
+            )
             .add_systems(Update, update_debug_state);
     }
 }
@@ -132,7 +134,7 @@ impl DespawnCommand {
             reply!(log, "despawn {:?}", team);
             for (entity, object_team) in objects.iter() {
                 if *object_team == team {
-                    commands.despawn(entity);
+                    commands.deferred_despawn(entity);
                 }
             }
         }

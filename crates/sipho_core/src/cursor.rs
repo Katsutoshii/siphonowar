@@ -7,7 +7,10 @@ impl Plugin for CursorPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<CursorAssets>()
             .add_systems(Startup, Cursor::startup)
-            .add_systems(PreUpdate, Cursor::update.in_set(SystemStage::Compute));
+            .add_systems(
+                PreUpdate,
+                Cursor::update.in_set(FixedUpdateStage::AccumulateForces),
+            );
     }
 }
 

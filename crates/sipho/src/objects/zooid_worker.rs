@@ -5,7 +5,7 @@ impl Plugin for ZooidWorkerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             FixedUpdate,
-            (ZooidWorker::debug_spawn.in_set(SystemStage::ObjectSpawn),)
+            (ZooidWorker::debug_spawn.in_set(FixedUpdateStage::Spawn),)
                 .in_set(GameStateSet::Running),
         );
     }

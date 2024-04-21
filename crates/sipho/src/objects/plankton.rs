@@ -6,7 +6,7 @@ impl Plugin for PlanktonPlugin {
         app.add_systems(
             FixedUpdate,
             (Plankton::spawn
-                .in_set(SystemStage::ObjectSpawn)
+                .in_set(FixedUpdateStage::Spawn)
                 .in_set(GameStateSet::Running),),
         );
     }

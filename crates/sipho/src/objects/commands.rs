@@ -194,7 +194,8 @@ impl ObjectCommands<'_, '_> {
         Some(commands)
     }
 
-    pub fn despawn(&mut self, entity: Entity) {
+    /// Queue a despawn event for this entity.
+    pub fn deferred_despawn(&mut self, entity: Entity) {
         if let Ok(children) = self.parents.get(entity) {
             for &child in children {
                 if self.children.get(child).is_ok() {

@@ -12,7 +12,7 @@ impl Plugin for DashAttackerPlugin {
         app.register_type::<DashAttacker>().add_systems(
             FixedUpdate,
             DashAttacker::update
-                .in_set(SystemStage::PostCompute)
+                .in_set(FixedUpdateStage::AccumulateForces)
                 .in_set(GameStateSet::Running),
         );
     }

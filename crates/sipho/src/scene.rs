@@ -14,7 +14,10 @@ impl Plugin for LoadableScenePlugin {
             .register_type::<Name>()
             .register_type::<core::num::NonZeroU16>()
             .add_systems(PreStartup, load_system)
-            .add_systems(FixedUpdate, SaveEvent::update.in_set(SystemStage::Despawn));
+            .add_systems(
+                FixedUpdate,
+                SaveEvent::update.in_set(FixedUpdateStage::Despawn),
+            );
     }
 }
 
