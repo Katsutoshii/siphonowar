@@ -20,7 +20,12 @@ impl Plugin for SelectorPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<SelectorAssets>()
             .add_systems(Startup, Selector::startup)
-            .add_systems(FixedUpdate, Selector::update.in_set(GameStateSet::Running));
+            .add_systems(
+                FixedUpdate,
+                Selector::update
+                    .in_set(GameStateSet::Running)
+                    .in_set(FixedUpdateStage::Spawn),
+            );
     }
 }
 #[derive(Component)]

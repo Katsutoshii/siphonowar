@@ -155,7 +155,7 @@ impl ZooidHead {
                         position: position.0 + spawn_velocity,
                         velocity: Some(Velocity(spawn_velocity)),
                         team: *team,
-                        objectives: Objectives::new(Objective::FollowEntity(head_id)),
+                        // objectives: Objectives::new(Objective::FollowEntity(head_id)),
                         ..default()
                     }) {
                         elastic_events.send(SpawnElasticEvent {

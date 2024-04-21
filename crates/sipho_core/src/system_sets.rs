@@ -38,6 +38,8 @@ pub enum FixedUpdateStage {
     PreDespawn,
     /// Despawn dead or orphaned entities.
     Despawn,
+    /// Cleanup
+    Cleanup,
 }
 impl FixedUpdateStage {
     pub fn get_config() -> SystemSetConfigs {
@@ -51,6 +53,7 @@ impl FixedUpdateStage {
             Self::PostPhysics,
             Self::PreDespawn,
             Self::Despawn,
+            Self::Cleanup,
         )
             .chain()
     }

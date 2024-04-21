@@ -146,6 +146,13 @@ impl Default for Objectives {
     }
 }
 impl Objectives {
+    pub fn get_acceleration_factor(&self) -> f32 {
+        if self.last() == &Objective::Idle {
+            1.
+        } else {
+            0.25
+        }
+    }
     pub fn set_objective(
         mut query: Query<UpdateObjectiveQueryData>,
         others: Query<UpdateObjectiveNeighborQueryData>,

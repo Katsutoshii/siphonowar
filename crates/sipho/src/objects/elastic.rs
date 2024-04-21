@@ -78,7 +78,6 @@ impl ElasticCommands<'_, '_> {
             let (entity1, entity2) = pair;
             if let Ok(ref mut attached_to) = self.attachments.get_mut(entity1) {
                 if attached_to.contains(&entity2) {
-                    info!("Already attached");
                     return None;
                 }
                 attached_to.push(entity2);
@@ -210,12 +209,12 @@ impl Elastic {
     pub fn update(
         mut commands: Commands,
         mut elastic_query: Query<(Entity, &Elastic, &mut Transform)>,
-        object_query: Query<(Entity, &Position)>,
+        object_query: Query<(Entity, &Position, &Objectives)>,
         mut accel_query: Query<&mut Acceleration>,
         mut attachments: Query<&mut AttachedTo>,
     ) {
         for (entity, elastic, mut transform) in elastic_query.iter_mut() {
-            if let (Ok((entity1, position1)), Ok((entity2, position2))) = (
+            if let (Ok((entity1, position1, objective1)), Ok((entity2, position2, objective2))) = (
                 object_query.get(elastic.first()),
                 object_query.get(elastic.second()),
             ) {
@@ -223,8 +222,11 @@ impl Elastic {
                 let direction = delta.normalize_or_zero();
                 let magnitude = delta.length();
                 let force = magnitude * magnitude * 0.0001;
-                *accel_query.get_mut(entity1).unwrap() += Acceleration(direction * force);
-                *accel_query.get_mut(entity2).unwrap() -= Acceleration(direction * force);
+
+                *accel_query.get_mut(entity1).unwrap() +=
+                    Acceleration(direction * force * objective1.get_acceleration_factor());
+                *accel_query.get_mut(entity2).unwrap() -=
+                    Acceleration(direction * force * objective2.get_acceleration_factor());
 
                 // Set transform.
                 *transform =

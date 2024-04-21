@@ -8,7 +8,7 @@ impl Plugin for WaypointPlugin {
         app.init_resource::<WaypointAssets>().add_systems(
             FixedUpdate,
             (
-                Waypoint::cleanup.in_set(FixedUpdateStage::Despawn),
+                Waypoint::cleanup.in_set(FixedUpdateStage::Cleanup),
                 Waypoint::update.in_set(FixedUpdateStage::Spawn),
             )
                 .in_set(GameStateSet::Running),
@@ -63,10 +63,8 @@ impl Waypoint {
         mut control_events: EventReader<ControlEvent>,
         selection: Query<(Entity, &Selected, &Object, &AttachedTo)>,
         mut commands: Commands,
-        attachments: Query<&AttachedTo>,
         mut objectives: Query<&mut Objectives>,
         assets: Res<WaypointAssets>,
-        // meshes: Res<Assets<Mesh>>,
     ) {
         for control in control_events.read() {
             if !(control.is_pressed(ControlAction::Move)
@@ -82,26 +80,9 @@ impl Waypoint {
 
             for (entity, selected, object, attached_to) in selection.iter() {
                 if selected.is_selected() {
-                    // When a head is selected, clear the objectives of all attached children.
-                    if *object == Object::Head && !attached_to.is_empty() {
-                        // DFS to clear objectives of all attached.
-                        let mut visited: HashSet<Entity> = HashSet::new();
-                        let mut stack: Vec<Entity> = Vec::new();
-                        stack.extend(attached_to.iter());
-                        while let Some(entity) = stack.pop() {
-                            if !visited.insert(entity) {
-                                continue;
-                            }
-
-                            // Clear objective.
-                            if let Ok(mut objectives) = objectives.get_mut(entity) {
-                                objectives.clear();
-                            }
-
-                            if let Ok(attached_to) = attachments.get(entity) {
-                                stack.extend(attached_to.iter());
-                            }
-                        }
+                    // Don't change objectives for workers that are in the middle of the parent.
+                    if *object == Object::Worker && attached_to.len() > 1 {
+                        continue;
                     }
                     let mut objectives = objectives.get_mut(entity).unwrap();
                     objectives.clear();
