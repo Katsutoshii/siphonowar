@@ -12,7 +12,7 @@ impl Plugin for PhysicsPlugin {
             .register_type::<PhysicsMaterial>()
             .register_type::<PhysicsMaterials>()
             .register_type::<Velocity>()
-            .register_type::<Acceleration>()
+            .register_type::<Force>()
             .add_systems(Update, update)
             .add_systems(
                 FixedUpdate,
@@ -89,12 +89,12 @@ impl Mul<f32> for Velocity {
     PartialEq,
     Reflect,
 )]
-pub struct Acceleration(pub Vec2);
-impl Acceleration {
+pub struct Force(pub Vec2);
+impl Force {
     pub const ZERO: Self = Self(Vec2::ZERO);
 }
-impl Mul<f32> for Acceleration {
-    type Output = Acceleration;
+impl Mul<f32> for Force {
+    type Output = Force;
     fn mul(self, rhs: f32) -> Self::Output {
         Self(self.0.mul(rhs))
     }
@@ -114,18 +114,18 @@ pub fn fixed_update(
         (
             &mut Position,
             &mut Velocity,
-            &mut Acceleration,
+            &mut Force,
             &PhysicsMaterialType,
         ),
         Without<Parent>,
     >,
     materials: Res<PhysicsMaterials>,
 ) {
-    for (mut position, mut velocity, mut acceleration, material_type) in &mut query {
+    for (mut position, mut velocity, mut force, material_type) in &mut query {
         let material = materials.get(material_type).unwrap();
         let prev_velocity = *velocity;
 
-        velocity.0 += acceleration.0;
+        velocity.0 += force.0;
         let overflow = velocity.length_squared() / (material.max_velocity.powi(2)) * 0.1;
         velocity.0 = velocity.clamp_length_max(material.max_velocity);
         velocity.0 *= overflow.clamp(1.0, 10.0);
@@ -133,34 +133,34 @@ pub fn fixed_update(
 
         position.0 += velocity.0;
 
-        *acceleration = Acceleration::ZERO;
+        *force = Force::ZERO;
     }
 }
 
 // For simulated objects that are parented, apply child forces on the parent.
 // Update child velocity so it can be read elsewhere.
 pub fn fixed_update_children(
-    mut parents_query: Query<(&Velocity, &mut Acceleration, &Children), Without<Parent>>,
-    mut children_query: Query<(&mut Position, &mut Velocity, &mut Acceleration), With<Parent>>,
+    mut parents_query: Query<(&Velocity, &mut Force, &Children), Without<Parent>>,
+    mut children_query: Query<(&mut Position, &mut Velocity, &mut Force), With<Parent>>,
 ) {
-    for (velocity, mut acceleration, children) in parents_query.iter_mut() {
-        // Sum all child accelerations.
-        let mut children_acceleration = Acceleration::ZERO;
+    for (velocity, mut force, children) in parents_query.iter_mut() {
+        // Sum all child forces.
+        let mut children_force = Force::ZERO;
         let mut num_children = 0;
         for &child in children.iter() {
-            if let Ok((mut child_position, mut child_velocity, mut child_acceleration)) =
+            if let Ok((mut child_position, mut child_velocity, mut child_force)) =
                 children_query.get_mut(child)
             {
                 num_children += 1;
-                children_acceleration += *child_acceleration;
+                children_force += *child_force;
                 *child_velocity = *velocity;
-                *child_acceleration = Acceleration::ZERO;
+                *child_force = Force::ZERO;
 
                 child_position.0 += velocity.0;
             }
         }
         if num_children > 0 {
-            *acceleration += children_acceleration * (num_children as f32).recip();
+            *force += children_force * (num_children as f32).recip();
         }
     }
 }
@@ -196,6 +196,6 @@ impl Default for PhysicsMaterial {
 pub struct PhysicsBundle {
     pub position: Position,
     pub velocity: Velocity,
-    pub acceleration: Acceleration,
+    pub force: Force,
     pub material: PhysicsMaterialType,
 }

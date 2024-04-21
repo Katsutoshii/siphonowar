@@ -84,7 +84,7 @@ impl DashAttacker {
             &Velocity,
             &Navigator,
             &mut DashAttacker,
-            &mut Acceleration,
+            &mut Force,
             &Position,
             &EnemyCollisions,
         )>,
@@ -92,16 +92,8 @@ impl DashAttacker {
         configs: Res<ObjectConfigs>,
         mut damage_events: EventWriter<DamageEvent>,
     ) {
-        for (
-            entity,
-            object,
-            velocity,
-            navigator,
-            mut attacker,
-            mut acceleration,
-            position,
-            collisions,
-        ) in query.iter_mut()
+        for (entity, object, velocity, navigator, mut attacker, mut force, position, collisions) in
+            query.iter_mut()
         {
             let config = configs.get(object).unwrap();
 
@@ -128,8 +120,7 @@ impl DashAttacker {
                         stun: false,
                     });
                 } else {
-                    *acceleration +=
-                        Acceleration(delta.normalize_or_zero() * config.attack_velocity);
+                    *force += Force(delta.normalize_or_zero() * config.attack_velocity);
                 }
             }
         }

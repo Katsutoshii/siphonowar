@@ -245,21 +245,21 @@ impl CameraController {
         let window = window_query.single();
         let (mut controller, mut camera_transform) = controller_query.single_mut();
 
-        let mut acceleration = Vec2::ZERO;
+        let mut force = Vec2::ZERO;
         controller.velocity = Vec2::ZERO;
         let window_size = window.scaled_size();
 
         if let Some(centered_cursor_position) = window.cursor_position() {
             let boundary = 2.;
             // Screen border panning.
-            acceleration += if centered_cursor_position.x < boundary {
+            force += if centered_cursor_position.x < boundary {
                 -Vec2::X
             } else if centered_cursor_position.x > window_size.x - boundary {
                 Vec2::X
             } else {
                 Vec2::ZERO
             };
-            acceleration += if centered_cursor_position.y < boundary {
+            force += if centered_cursor_position.y < boundary {
                 Vec2::Y
             } else if centered_cursor_position.y > window_size.y - boundary {
                 -Vec2::Y
@@ -267,7 +267,7 @@ impl CameraController {
                 Vec2::ZERO
             };
 
-            controller.velocity += acceleration;
+            controller.velocity += force;
             let position = camera_transform.translation.xy()
                 + dt * controller.velocity * controller.sensitivity;
             controller.set_position(&mut camera_transform, position);

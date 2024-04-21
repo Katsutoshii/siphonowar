@@ -7,7 +7,7 @@ impl Plugin for NavigatorPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<Navigator>().add_systems(
             FixedUpdate,
-            (Navigator::update, Navigator::update_acceleration)
+            (Navigator::update, Navigator::update_force)
                 .chain()
                 .in_set(FixedUpdateStage::PostPhysics)
                 .in_set(GameStateSet::Running),
@@ -58,37 +58,30 @@ impl Navigator {
         }
     }
 
-    pub fn update_acceleration(
+    pub fn update_force(
         mut query: Query<(
             &Object,
             &Navigator,
             &mut Transform,
             &Position,
             &Velocity,
-            &mut Acceleration,
+            &mut Force,
         )>,
         grid: ResMut<NavigationGrid2>,
         configs: Res<ObjectConfigs>,
         spec: Res<GridSpec>,
     ) {
-        for (object, navigator, mut transform, position, velocity, mut acceleration) in
-            query.iter_mut()
-        {
+        for (object, navigator, mut transform, position, velocity, mut force) in query.iter_mut() {
             let config = configs.get(object).unwrap();
             let target_rowcol = spec.to_rowcol(navigator.target);
 
             if let Some(flow_grid) = grid.get(&target_rowcol) {
                 let target_cell_center = flow_grid.grid.to_world_position(target_rowcol);
-                let flow_acceleration =
-                    flow_grid.grid.flow_acceleration5(position.0) * config.nav_flow_factor;
-                let slow_force = navigator.slow_force(
-                    *velocity,
-                    position.0,
-                    target_cell_center,
-                    flow_acceleration,
-                );
+                let flow_force = flow_grid.grid.flow_force5(position.0) * config.nav_flow_factor;
+                let slow_force =
+                    navigator.slow_force(*velocity, position.0, target_cell_center, flow_force);
 
-                *acceleration += flow_acceleration + slow_force;
+                *force += flow_force + slow_force;
 
                 if velocity.length_squared() > 2. {
                     let angle = transform.rotation.z;
@@ -99,28 +92,28 @@ impl Navigator {
     }
 
     /// Apply a slowing force against current velocity when near the goal.
-    /// Also, undo some of the acceleration force when near the goal.
+    /// Also, undo some of the force force when near the goal.
     pub fn slow_force(
         &self,
         velocity: Velocity,
         position: Vec2,
         target_position: Vec2,
-        flow_acceleration: Acceleration,
-    ) -> Acceleration {
+        flow_force: Force,
+    ) -> Force {
         let position_delta = target_position - position;
         let dist_squared = position_delta.length_squared();
         let radius_squared = self.target_radius * self.target_radius;
 
         //  When within radius, this is negative
         let radius_diff = (dist_squared - radius_squared) / radius_squared;
-        Acceleration(
+        Force(
             self.slow_factor
                 * if dist_squared < radius_squared {
                     -1.0 * velocity.0
                 } else {
                     Vec2::ZERO
                 }
-                + flow_acceleration.0 * radius_diff.clamp(-1., 0.),
+                + flow_force.0 * radius_diff.clamp(-1., 0.),
         )
     }
 }

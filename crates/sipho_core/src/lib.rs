@@ -36,8 +36,7 @@ pub mod prelude {
         meshes,
         nav::{NavigationCostEvent, NavigationGrid2, SparseFlowGrid2},
         physics::{
-            self, Acceleration, PhysicsBundle, PhysicsMaterial, PhysicsMaterialType, Position,
-            Velocity,
+            self, Force, PhysicsBundle, PhysicsMaterial, PhysicsMaterialType, Position, Velocity,
         },
         pool::EntityPool,
         raycast::{RaycastCommands, RaycastEvent, RaycastTarget},

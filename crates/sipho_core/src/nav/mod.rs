@@ -27,42 +27,42 @@ pub struct NavigationCostEvent {
 
 /// Sparse storage for flow vectors.
 #[derive(Default, DerefMut, Deref, Clone)]
-pub struct SparseFlowGrid2(SparseGrid2<Acceleration>);
+pub struct SparseFlowGrid2(SparseGrid2<Force>);
 impl SparseFlowGrid2 {
-    /// Compute the weighted acceleration for flow from a single cell.
-    pub fn flow_acceleration(&self, position: Vec2, rowcol: RowCol) -> Acceleration {
-        if let Some(&acceleration) = self.get(rowcol) {
-            // Weight each neighboring acceleration by width - distance.
+    /// Compute the weighted force for flow from a single cell.
+    pub fn flow_force(&self, position: Vec2, rowcol: RowCol) -> Force {
+        if let Some(&force) = self.get(rowcol) {
+            // Weight each neighboring force by width - distance.
             let weight = {
                 let cell_center = self.to_world_position(rowcol);
                 (self.spec.width * self.spec.width - cell_center.distance_squared(position)).max(0.)
             };
-            return acceleration * weight;
+            return force * weight;
         }
-        Acceleration::ZERO
+        Force::ZERO
     }
 
-    /// Adds the amount of acceleration needed to bring the velocity to the underlying flow value.
-    pub fn flow_acceleration5(&self, position: Vec2) -> Acceleration {
-        let mut total_acceleration = Acceleration::ZERO;
+    /// Adds the amount of force needed to bring the velocity to the underlying flow value.
+    pub fn flow_force5(&self, position: Vec2) -> Force {
+        let mut total_force = Force::ZERO;
 
         let rowcol = self.to_rowcol(position);
 
-        total_acceleration += self.flow_acceleration(position, rowcol);
+        total_force += self.flow_force(position, rowcol);
         if self.is_boundary(rowcol) {
-            return Acceleration::ZERO;
+            return Force::ZERO;
         }
-        // Add accelerations from neighboring cells.
+        // Add forces from neighboring cells.
         for (neighbor_rowcol, _) in self.neighbors8(rowcol) {
             if self.is_boundary(neighbor_rowcol) {
                 continue;
             }
-            total_acceleration += self.flow_acceleration(position, neighbor_rowcol);
+            total_force += self.flow_force(position, neighbor_rowcol);
         }
         // What do we need to add to velocity to get total_acccel?
         // v + x = ta
         // x = ta - v
-        Acceleration(total_acceleration.normalize_or_zero())
+        Force(total_force.normalize_or_zero())
     }
 }
 
@@ -114,16 +114,15 @@ impl NavigationGrid2Entry {
                     }
                 }
             }
-            self.grid.cells.insert(
-                rowcol,
-                Acceleration(rowcol.signed_delta8(min_neighbor_rowcol)),
-            );
+            self.grid
+                .cells
+                .insert(rowcol, Force(rowcol.signed_delta8(min_neighbor_rowcol)));
             event_writer.send(NavigationCostEvent { rowcol, cost });
         }
     }
 }
 
-/// Mapping from goal RowCol to a sparse flow grid with accelerations towards that RowCol.
+/// Mapping from goal RowCol to a sparse flow grid with forces towards that RowCol.
 #[derive(Default, Resource, DerefMut, Deref)]
 pub struct NavigationGrid2(HashMap<RowCol, NavigationGrid2Entry>);
 

@@ -146,7 +146,7 @@ impl Default for Objectives {
     }
 }
 impl Objectives {
-    pub fn get_acceleration_factor(&self) -> f32 {
+    pub fn get_force_factor(&self) -> f32 {
         if self.last() == &Objective::Idle {
             1.
         } else {

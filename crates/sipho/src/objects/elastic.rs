@@ -210,7 +210,7 @@ impl Elastic {
         mut commands: Commands,
         mut elastic_query: Query<(Entity, &Elastic, &mut Transform)>,
         object_query: Query<(Entity, &Position, &Objectives)>,
-        mut accel_query: Query<&mut Acceleration>,
+        mut accel_query: Query<&mut Force>,
         mut attachments: Query<&mut AttachedTo>,
     ) {
         for (entity, elastic, mut transform) in elastic_query.iter_mut() {
@@ -224,9 +224,9 @@ impl Elastic {
                 let force = magnitude * magnitude * 0.0001;
 
                 *accel_query.get_mut(entity1).unwrap() +=
-                    Acceleration(direction * force * objective1.get_acceleration_factor());
+                    Force(direction * force * objective1.get_force_factor());
                 *accel_query.get_mut(entity2).unwrap() -=
-                    Acceleration(direction * force * objective2.get_acceleration_factor());
+                    Force(direction * force * objective2.get_force_factor());
 
                 // Set transform.
                 *transform =
