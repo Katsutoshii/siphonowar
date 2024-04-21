@@ -144,7 +144,7 @@ pub fn update(
                 enemy_neighbors.push(neighbor);
                 let other_config = configs.get(&neighbor.object).unwrap();
                 if config.is_colliding(other_config, neighbor.distance_squared) {
-                    colliding_neighbors.push(neighbor);
+                    let _ = colliding_neighbors.try_push(neighbor);
                 }
             }
         },

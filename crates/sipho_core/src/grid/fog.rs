@@ -16,11 +16,15 @@ impl Plugin for FogPlugin {
                 (
                     Grid2::<TeamVisibility>::update,
                     Grid2::<TeamVisibility>::update_visibility,
-                    FogShaderMaterial::update,
                 )
                     .chain()
                     .in_set(SystemStage::Cleanup)
+                    .in_set(GameStateSet::Running)
                     .after(GridEntity::cleanup),
+            )
+            .add_systems(
+                Update,
+                (FogShaderMaterial::update,).in_set(GameStateSet::Running),
             );
     }
 }
