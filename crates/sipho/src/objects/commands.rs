@@ -70,6 +70,7 @@ impl ObjectBundle {
                 velocity: spec
                     .velocity
                     .unwrap_or(Velocity(Vec2::ONE) * config.spawn_velocity),
+                mass: physics::Mass(1.0),
                 ..default()
             },
             health: Health::new(config.health),

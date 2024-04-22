@@ -1,3 +1,5 @@
+use sipho_core::physics::Mass;
+
 use crate::prelude::*;
 
 use super::neighbors::EnemyCollisions;
@@ -25,10 +27,16 @@ impl Consumer {
         Self { consumed }
     }
     pub fn update(
-        mut query: Query<(Entity, &mut Consumer, &EnemyCollisions)>,
+        mut query: Query<(
+            Entity,
+            &mut Consumer,
+            &mut Mass,
+            &EnemyCollisions,
+            &mut Transform,
+        )>,
         mut damage_events: EventWriter<DamageEvent>,
     ) {
-        for (entity, mut consumer, colliders) in query.iter_mut() {
+        for (entity, mut consumer, mut mass, colliders, mut transform) in query.iter_mut() {
             for neighbor in colliders.iter() {
                 if neighbor.object == Object::Food {
                     consumer.consumed += 1;
@@ -41,6 +49,8 @@ impl Consumer {
                     });
                 }
             }
+            // *mass = Mass(consumer.consumed as f32 * 0.1);
+            // transform.scale *= Vec3::splat(mass.0.max(10.0));
         }
     }
 }

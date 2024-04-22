@@ -49,6 +49,28 @@ impl Position {
 #[derive(
     Component,
     Debug,
+    Clone,
+    Copy,
+    Deref,
+    DerefMut,
+    Add,
+    AddAssign,
+    Sub,
+    SubAssign,
+    PartialEq,
+    Reflect,
+)]
+pub struct Mass(pub f32);
+
+impl Default for Mass {
+    fn default() -> Self {
+        Self(1.0)
+    }
+}
+/// Tracks velocity per entity.
+#[derive(
+    Component,
+    Debug,
     Default,
     Clone,
     Copy,
@@ -115,17 +137,18 @@ pub fn fixed_update(
             &mut Position,
             &mut Velocity,
             &mut Force,
+            &Mass,
             &PhysicsMaterialType,
         ),
         Without<Parent>,
     >,
     materials: Res<PhysicsMaterials>,
 ) {
-    for (mut position, mut velocity, mut force, material_type) in &mut query {
+    for (mut position, mut velocity, mut force, mass, material_type) in &mut query {
         let material = materials.get(material_type).unwrap();
         let prev_velocity = *velocity;
 
-        velocity.0 += force.0;
+        velocity.0 += force.0 / (mass.0).max(0.25);
         let overflow = velocity.length_squared() / (material.max_velocity.powi(2)) * 0.1;
         velocity.0 = velocity.clamp_length_max(material.max_velocity);
         velocity.0 *= overflow.clamp(1.0, 10.0);
@@ -195,6 +218,7 @@ impl Default for PhysicsMaterial {
 #[derive(Bundle, Clone, Default)]
 pub struct PhysicsBundle {
     pub position: Position,
+    pub mass: Mass,
     pub velocity: Velocity,
     pub force: Force,
     pub material: PhysicsMaterialType,

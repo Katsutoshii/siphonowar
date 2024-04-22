@@ -58,10 +58,11 @@ impl PathToHead {
                 let attached = attachments.get(entity).unwrap();
 
                 for &next in attached.iter().filter(|&entity| !visited.contains(entity)) {
-                    let mut path = paths.get_mut(next).unwrap();
-                    path.head = Some(head_entity);
-                    path.next = Some(entity);
-                    queue.push_front(next);
+                    if let Ok(mut path) = paths.get_mut(next) {
+                        path.head = Some(head_entity);
+                        path.next = Some(entity);
+                        queue.push_front(next);
+                    }
                 }
             }
         }

@@ -3,7 +3,9 @@ use bevy::ecs::system::{EntityCommands, QueryLens, SystemParam};
 use bevy::utils::smallvec::SmallVec;
 use bevy::utils::FloatOrd;
 use sipho_core::grid::fog::FogConfig;
+use sipho_core::physics::Mass;
 
+use super::zooid_worker::ZooidWorker;
 use super::ObjectAssets;
 
 pub struct ElasticPlugin;
@@ -210,7 +212,8 @@ impl Elastic {
         mut commands: Commands,
         mut elastic_query: Query<(Entity, &Elastic, &mut Transform)>,
         object_query: Query<(Entity, &Position, &Objectives)>,
-        mut accel_query: Query<&mut Force>,
+        mut phys_query: Query<&mut Force>,
+        mut mass_query: Query<&mut Mass>,
         mut attachments: Query<&mut AttachedTo>,
     ) {
         for (entity, elastic, mut transform) in elastic_query.iter_mut() {
@@ -221,11 +224,12 @@ impl Elastic {
                 let delta = position2.0 - position1.0;
                 let direction = delta.normalize_or_zero();
                 let magnitude = delta.length();
-                let force = magnitude * magnitude * 0.0001;
+                let mag_shift = (magnitude - 1.0).max(0.0);
+                let force = mag_shift.powi(2) * 0.002;
 
-                *accel_query.get_mut(entity1).unwrap() +=
+                *phys_query.get_mut(entity1).unwrap() +=
                     Force(direction * force * objective1.get_force_factor());
-                *accel_query.get_mut(entity2).unwrap() -=
+                *phys_query.get_mut(entity2).unwrap() -=
                     Force(direction * force * objective2.get_force_factor());
 
                 // Set transform.
@@ -237,8 +241,13 @@ impl Elastic {
                 if let Ok(mut attached_to) = attachments.get_mut(elastic.first()) {
                     attached_to.retain(|&mut x| x != elastic.second())
                 }
-                if let Ok(mut attached_to) = attachments.get_mut(elastic.first()) {
-                    attached_to.retain(|&mut x| x != elastic.second())
+                if let Ok(mut attached_to) = attachments.get_mut(elastic.second()) {
+                    attached_to.retain(|&mut x| x != elastic.first())
+                }
+            }
+            if let Ok(tied_neighbors) = attachments.get(entity) {
+                if tied_neighbors.len() >= 2 {
+                    *mass_query.get_mut(entity).unwrap() = Mass(0.25);
                 }
             }
         }
