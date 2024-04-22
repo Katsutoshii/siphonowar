@@ -25,8 +25,8 @@ pub struct InteractionConfigs(pub HashMap<Object, InteractionConfig>);
 #[derive(Clone, Reflect, Debug)]
 pub struct InteractionConfig {
     pub separation_radius: f32,
-    pub separation_acceleration: f32,
-    pub cohesion_acceleration: f32,
+    pub separation_force: f32,
+    pub cohesion_force: f32,
     pub alignment_factor: f32,
     pub damage_amount: i32,
 }
@@ -34,8 +34,8 @@ impl Default for InteractionConfig {
     fn default() -> Self {
         Self {
             separation_radius: 1.0,
-            separation_acceleration: 0.0,
-            cohesion_acceleration: 0.0,
+            separation_force: 0.0,
+            cohesion_force: 0.0,
             alignment_factor: 0.0,
             damage_amount: 0,
         }

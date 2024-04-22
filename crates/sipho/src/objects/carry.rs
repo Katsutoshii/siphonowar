@@ -5,7 +5,7 @@ use super::zooid_head::NearestZooidHead;
 
 /// Plugin for picking up items and carrying them.
 /// 1) When one entity begins carrying the other, their velocity is zeroed out.
-/// 2) At each step, we guarantee that all carrying entities have the same acceleration and velocity.
+/// 2) At each step, we guarantee that all carrying entities have the same force and velocity.
 pub struct CarryPlugin;
 impl Plugin for CarryPlugin {
     fn build(&self, app: &mut App) {

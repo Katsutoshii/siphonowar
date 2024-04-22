@@ -61,14 +61,14 @@ impl Grid2<Obstacle> {
         }
     }
 
-    fn obstacle_acceleration(
+    fn obstacle_force(
         &self,
         position: Vec2,
         _velocity: Velocity,
         rowcol: RowCol,
         direction: (i16, i16),
-    ) -> Acceleration {
-        let mut acceleration = Acceleration::ZERO;
+    ) -> Force {
+        let mut force = Force::ZERO;
         let obstacle_position = self.to_world_position(rowcol);
 
         if self[rowcol] != Obstacle::Empty {
@@ -90,36 +90,35 @@ impl Grid2<Obstacle> {
             //         .max(0.);
             let directional_adjustment = 1.;
             let direction = Vec2::new(direction.1 as f32, direction.0 as f32);
-            acceleration += Acceleration(-magnitude * directional_adjustment * direction);
+            force += Force(-magnitude * directional_adjustment * direction);
         }
-        acceleration
+        force
     }
 
-    /// Compute acceleration due to neighboring obstacles.
+    /// Compute force due to neighboring obstacles.
     /// For each neighboring obstacle, if the object is moving towards the obstacle
     /// we apply a force away from the obstacle.
-    pub fn acceleration(&self, position: Vec2, velocity: Velocity) -> Acceleration {
+    pub fn force(&self, position: Vec2, velocity: Velocity) -> Force {
         let (row, col) = self.to_rowcol(position);
         if self.is_boundary((row, col)) {
-            return Acceleration::ZERO;
+            return Force::ZERO;
         }
-        let mut acceleration = Acceleration::ZERO;
+        let mut force = Force::ZERO;
         for (dr, dc) in [(0, 1), (1, 0), (0, -1), (-1, 0)] {
             let obstacle_rowcol = ((row as i16 + dr) as u16, (col as i16 + dc) as u16);
-            acceleration +=
-                self.obstacle_acceleration(position, velocity, obstacle_rowcol, (dr, dc));
+            force += self.obstacle_force(position, velocity, obstacle_rowcol, (dr, dc));
         }
-        acceleration
+        force
     }
 
     /// Bounce simulated objects off obstacles.
     pub fn bounce_off_obstacles(
         obstacles: Res<Self>,
-        mut query: Query<(&mut Position, &mut Velocity, &mut Acceleration)>,
+        mut query: Query<(&mut Position, &mut Velocity, &mut Force)>,
     ) {
-        for (mut position, mut velocity, mut acceleration) in query.iter_mut() {
-            let obstacle_acceleration = obstacles.acceleration(position.0, *velocity) * 6.;
-            *acceleration += obstacle_acceleration;
+        for (mut position, mut velocity, mut force) in query.iter_mut() {
+            let obstacle_force = obstacles.force(position.0, *velocity) * 6.;
+            *force += obstacle_force;
 
             if obstacles[obstacles.to_rowcol(position.0)] != Obstacle::Empty {
                 velocity.0 *= -1.0;

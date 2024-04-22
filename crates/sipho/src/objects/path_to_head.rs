@@ -75,23 +75,18 @@ pub struct PathToHeadFollower {
 }
 impl PathToHeadFollower {
     pub fn update(
-        mut query: Query<(
-            &Position,
-            &Velocity,
-            &mut Acceleration,
-            &mut PathToHeadFollower,
-        )>,
+        mut query: Query<(&Position, &Velocity, &mut Force, &mut PathToHeadFollower)>,
         others: Query<(&Position, &Velocity)>,
     ) {
         // Get the path using follower.
         // Get the target transform using path.
-        for (position, velocity, mut acceleration, mut follower) in query.iter_mut() {
+        for (position, velocity, mut force, mut follower) in query.iter_mut() {
             if let Some(target) = follower.target {
                 if let Ok((target_position, target_velocity)) = others.get(target) {
                     let delta = target_position.0 - position.0;
                     let velocity_delta = target_velocity.0 - velocity.0;
                     let magnitude = 0.4;
-                    *acceleration += Acceleration(delta * magnitude + velocity_delta);
+                    *force += Force(delta * magnitude + velocity_delta);
                 } else {
                     follower.target = None;
                 }

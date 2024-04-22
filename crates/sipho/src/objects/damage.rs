@@ -80,7 +80,7 @@ impl DamageEvent {
     pub fn update(
         mut query: Query<(
             Option<&mut DashAttacker>,
-            &mut Acceleration,
+            &mut Force,
             &mut Health,
             &Team,
             &Position,
@@ -92,20 +92,13 @@ impl DamageEvent {
         for event in events.read() {
             let knockback_amount = 3.;
             // Knock back the damager
-            if let Ok((_, mut acceleration, _health, _team, _transform, _)) =
-                query.get_mut(event.damager)
+            if let Ok((_, mut force, _health, _team, _transform, _)) = query.get_mut(event.damager)
             {
-                *acceleration += Acceleration(*event.velocity * -1. * knockback_amount);
+                *force += Force(*event.velocity * -1. * knockback_amount);
             }
             // Reduce health and set off firework for the damaged.
-            if let Ok((
-                mut attacker,
-                mut _acceleration,
-                mut health,
-                &team,
-                &position,
-                mut objectives,
-            )) = query.get_mut(event.damaged)
+            if let Ok((mut attacker, mut _force, mut health, &team, &position, mut objectives)) =
+                query.get_mut(event.damaged)
             {
                 if health.damageable {
                     if let Some(attacker) = attacker.as_deref_mut() {

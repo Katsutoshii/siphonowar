@@ -18,7 +18,7 @@ impl Plugin for ObjectPlugin {
         app.register_type::<Object>().add_systems(
             FixedUpdate,
             ((
-                Object::update_acceleration,
+                Object::update_force,
                 Object::update_collisions,
                 ObjectBackground::update,
             )
@@ -85,11 +85,11 @@ impl Object {
 
 #[derive(QueryData)]
 #[query_data(mutable)]
-pub struct UpdateAccelerationQueryData {
+pub struct UpdateforceQueryData {
     entity: Entity,
     object: &'static Object,
     velocity: &'static Velocity,
-    acceleration: &'static mut Acceleration,
+    force: &'static mut Force,
     parent: Option<&'static Parent>,
     objectives: &'static Objectives,
     neighbors: &'static AlliedNeighbors,
@@ -110,14 +110,14 @@ impl Object {
             Self::Armor => zindex::ZOOIDS_MIN,
         }
     }
-    pub fn update_acceleration(
-        mut query: Query<UpdateAccelerationQueryData>,
+    pub fn update_force(
+        mut query: Query<UpdateforceQueryData>,
         others: Query<(&Self, &Velocity)>,
         configs: Res<ObjectConfigs>,
     ) {
         query.par_iter_mut().for_each(|mut object| {
-            let mut separation_acceleration = Acceleration::ZERO;
-            let mut alignment_acceleration = Acceleration::ZERO;
+            let mut separation_force = Force::ZERO;
+            let mut alignment_force = Force::ZERO;
             let config = configs.get(object.object).unwrap();
 
             for neighbor in object.neighbors.iter() {
@@ -128,13 +128,13 @@ impl Object {
                 // Don't apply neighbor forces when carrying items.
                 if object.parent.is_none() {
                     let separation_radius_factor = 2.;
-                    separation_acceleration += Self::separation_acceleration(
+                    separation_force += Self::separation_force(
                         -neighbor.delta,
                         neighbor.distance_squared,
                         interaction,
                         separation_radius_factor,
                     );
-                    alignment_acceleration += Self::alignment_acceleration(
+                    alignment_force += Self::alignment_force(
                         neighbor.distance_squared,
                         radius_squared,
                         *object.velocity,
@@ -149,7 +149,7 @@ impl Object {
                 for neighbor in object.enemy_neighbors.iter() {
                     let (other_object, _other_velocity) = others.get(neighbor.entity).unwrap();
                     let separation_radius_factor = 3.;
-                    separation_acceleration += Self::separation_acceleration(
+                    separation_force += Self::separation_force(
                         -neighbor.delta,
                         neighbor.distance_squared,
                         &config.interactions[other_object],
@@ -159,10 +159,9 @@ impl Object {
             }
 
             if !object.neighbors.is_empty() {
-                *object.acceleration +=
-                    alignment_acceleration * (1.0 / (object.neighbors.len() as f32));
+                *object.force += alignment_force * (1.0 / (object.neighbors.len() as f32));
             }
-            *object.acceleration += separation_acceleration;
+            *object.force += separation_force;
 
             // When idle, slow down.
             if *object.objectives.last() == Objective::Idle
@@ -174,7 +173,7 @@ impl Object {
                 if velocity_squared > 0. {
                     let slow_magnitude =
                         0.3 * (velocity_squared - idle_slow_threshold).max(0.) / velocity_squared;
-                    *object.acceleration += Acceleration(-object.velocity.0 * slow_magnitude)
+                    *object.force += Force(-object.velocity.0 * slow_magnitude)
                 }
             }
 
@@ -185,7 +184,7 @@ impl Object {
                 * 2.;
             let turn_vector =
                 Mat2::from_angle(PI * random_factor / 8.) * object.velocity.0 * spin_amount;
-            *object.acceleration += Acceleration(turn_vector);
+            *object.force += Force(turn_vector);
         });
     }
 
@@ -227,40 +226,36 @@ impl Object {
         }
     }
 
-    /// Compute acceleration from separation.
+    /// Compute force from separation.
     /// The direction is towards self away from each nearby bird.
     /// The magnitude is computed by
     /// $ magnitude = sep * (-x^2 / r^2 + 1)$
-    fn separation_acceleration(
+    fn separation_force(
         position_delta: Vec2,
         distance_squared: f32,
         interaction: &InteractionConfig,
         radius_factor: f32,
-    ) -> Acceleration {
+    ) -> Force {
         let radius = radius_factor * interaction.separation_radius;
         let radius_squared = radius * radius;
-        let magnitude =
-            interaction.separation_acceleration * (-distance_squared / (radius_squared) + 1.);
-        Acceleration(
+        let magnitude = interaction.separation_force * (-distance_squared / (radius_squared) + 1.);
+        Force(
             position_delta.normalize_or_zero()
-                * magnitude.clamp(
-                    -interaction.cohesion_acceleration,
-                    interaction.separation_acceleration,
-                ),
+                * magnitude.clamp(-interaction.cohesion_force, interaction.separation_force),
         )
     }
 
-    /// Alignment acceleration.
+    /// Alignment force.
     /// Compute the difference between this object's velocity and the other object's velocity.
-    fn alignment_acceleration(
+    fn alignment_force(
         distance_squared: f32,
         radius_squared: f32,
         velocity: Velocity,
         other_velocity: Velocity,
         config: &InteractionConfig,
-    ) -> Acceleration {
+    ) -> Force {
         let magnitude = (radius_squared - distance_squared) / radius_squared;
-        Acceleration((other_velocity.0 - velocity.0) * config.alignment_factor * magnitude)
+        Force((other_velocity.0 - velocity.0) * config.alignment_factor * magnitude)
     }
 }
 
