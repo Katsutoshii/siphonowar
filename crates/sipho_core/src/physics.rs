@@ -11,6 +11,7 @@ impl Plugin for PhysicsPlugin {
             .register_type::<HashMap<PhysicsMaterialType, PhysicsMaterial>>()
             .register_type::<PhysicsMaterial>()
             .register_type::<PhysicsMaterials>()
+            .register_type::<Mass>()
             .register_type::<Velocity>()
             .register_type::<Force>()
             .add_systems(Update, update)
