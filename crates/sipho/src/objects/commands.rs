@@ -42,6 +42,7 @@ pub struct ObjectBundle {
     pub attached_to: AttachedTo,
     pub path: PathToHead,
     pub carried_by: CarriedBy,
+    pub grid_raycast_target: GridRaycastTarget,
     pub name: Name,
 }
 impl ObjectBundle {

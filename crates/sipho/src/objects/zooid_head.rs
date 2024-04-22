@@ -42,7 +42,6 @@ impl ZooidHead {
                     object: Object::Head,
                     position: control_event.position,
                     team: config.player_team,
-                    selected: Selected::Selected,
                     ..default()
                 });
             }

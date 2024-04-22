@@ -2,7 +2,8 @@ use bevy::{input::ButtonState, prelude::*};
 
 use crate::prelude::*;
 
-#[derive(Component, Default, PartialEq, Debug, Clone)]
+#[derive(Component, Default, PartialEq, Debug, Clone, Reflect)]
+#[reflect(Component)]
 pub enum Selected {
     #[default]
     Unselected,
@@ -14,11 +15,34 @@ impl Selected {
     }
 }
 
+#[derive(Bundle)]
+pub struct HighlightBundle {
+    pub name: Name,
+    pub highlight: Highlight,
+    pub pbr: PbrBundle,
+}
+impl HighlightBundle {
+    fn new(mesh: Handle<Mesh>, material: Handle<StandardMaterial>) -> Self {
+        Self {
+            name: Name::new("Highlight"),
+            highlight: Highlight,
+            pbr: PbrBundle {
+                mesh,
+                transform: Transform::default().with_scale(Vec2::splat(1.2).extend(1.2)),
+                material,
+                visibility: Visibility::Visible,
+                ..default()
+            },
+        }
+    }
+}
+
 /// Plugin for an spacial entity paritioning grid with optional debug functionality.
 pub struct SelectorPlugin;
 impl Plugin for SelectorPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<SelectorAssets>()
+            .register_type::<Selected>()
             .add_systems(Startup, Selector::startup)
             .add_systems(
                 FixedUpdate,
@@ -56,73 +80,87 @@ impl Selector {
         mut events: EventReader<ControlEvent>,
     ) {
         for control in events.read() {
-            if control.action != ControlAction::Select {
-                continue;
-            }
-            let (mut selector, mut transform, mut visibility) = query.single_mut();
-
-            match control.state {
-                ButtonState::Pressed => {
-                    if *visibility == Visibility::Hidden {
-                        // Reset other selections.
-                        for (_object, _transform, _team, mut selected, _mesh) in &mut objects {
-                            if let Selected::Selected = selected.as_ref() {}
-                            *selected = Selected::Unselected;
-                        }
-                        for entity in highlights.iter() {
-                            commands.entity(entity).remove_parent().despawn();
-                        }
-                        selector.aabb.min = control.position;
-                        *visibility = Visibility::Visible;
-                        transform.scale = Vec3::ZERO;
-                        transform.translation = control.position.extend(zindex::SELECTOR);
-                    }
-
-                    // While held
-                    selector.aabb.max = control.position;
-                    // Resize the square to match the bounding box.
-                    transform.translation = selector.aabb.center().extend(zindex::SELECTOR);
-                    transform.scale = selector.aabb.size().extend(0.0);
-
-                    // Correct the bounding box before we check entity collision, since it might be backwards.
-                    let mut aabb = selector.aabb.clone();
-                    aabb.enforce_minmax();
-                    // Check the grid for entities in this bounding box.
-                    for entity in grid.get_entities_in_aabb(&aabb) {
-                        if let Ok(mut_obj) = objects.get_mut(entity) {
-                            let (_object, position, team, mut selected, mesh) = mut_obj;
-                            if aabb.contains(position.0) {
-                                if selected.is_selected() || *team != config.player_team {
-                                    continue;
+            match control.action {
+                ControlAction::Select => {
+                    let (mut selector, mut transform, mut visibility) = query.single_mut();
+                    match control.state {
+                        ButtonState::Pressed => {
+                            if *visibility == Visibility::Hidden {
+                                // Reset other selections.
+                                for (_object, _transform, _team, mut selected, _mesh) in
+                                    &mut objects
+                                {
+                                    if let Selected::Selected = selected.as_ref() {}
+                                    *selected = Selected::Unselected;
                                 }
-                                let child_entity = commands
-                                    .spawn(Self::highlight_bundle(&assets, mesh.clone()))
-                                    .id();
-                                commands.entity(entity).add_child(child_entity);
-                                *selected = Selected::Selected;
+                                for entity in highlights.iter() {
+                                    commands.entity(entity).remove_parent().despawn();
+                                }
+                                selector.aabb.min = control.position;
+                                *visibility = Visibility::Visible;
+                                transform.scale = Vec3::ZERO;
+                                transform.translation = control.position.extend(zindex::SELECTOR);
+                            }
+
+                            selector.aabb.max = control.position;
+                            transform.translation = selector.aabb.center().extend(zindex::SELECTOR);
+                            transform.scale = selector.aabb.size().extend(0.0);
+
+                            // Correct the bounding box before we check entity collision, since it might be backwards.
+                            let mut aabb = selector.aabb.clone();
+                            aabb.enforce_minmax();
+                            // Check the grid for entities in this bounding box.
+                            for entity in grid.get_entities_in_aabb(&aabb) {
+                                if let Ok((_object, position, team, mut selected, mesh)) =
+                                    objects.get_mut(entity)
+                                {
+                                    if aabb.contains(position.0) {
+                                        if selected.is_selected() || *team != config.player_team {
+                                            continue;
+                                        }
+                                        let child_entity = commands
+                                            .spawn(HighlightBundle::new(
+                                                mesh.clone(),
+                                                assets.white_material.clone(),
+                                            ))
+                                            .id();
+                                        commands.entity(entity).add_child(child_entity);
+                                        *selected = Selected::Selected;
+                                    }
+                                }
                             }
                         }
+                        ButtonState::Released => {
+                            *visibility = Visibility::Hidden;
+                        }
                     }
                 }
-                ButtonState::Released => {
-                    *visibility = Visibility::Hidden;
+                ControlAction::SelectEntity => {
+                    if control.state == ButtonState::Released {
+                        continue;
+                    }
+                    for entity in highlights.iter() {
+                        commands.entity(entity).remove_parent().despawn();
+                    }
+                    if let Ok((_object, _, _team, mut selected, mesh)) =
+                        objects.get_mut(control.entity)
+                    {
+                        if selected.is_selected() {
+                            continue;
+                        }
+                        let child_entity = commands
+                            .spawn(HighlightBundle::new(
+                                mesh.clone(),
+                                assets.white_material.clone(),
+                            ))
+                            .id();
+                        commands.entity(control.entity).add_child(child_entity);
+                        *selected = Selected::Selected;
+                    }
                 }
+                _ => continue,
             }
         }
-    }
-
-    fn highlight_bundle(assets: &SelectorAssets, mesh: Handle<Mesh>) -> impl Bundle {
-        (
-            Name::new("Highlight"),
-            Highlight,
-            PbrBundle {
-                mesh,
-                transform: Transform::default().with_scale(Vec2::splat(1.2).extend(1.2)),
-                material: assets.white_material.clone(),
-                visibility: Visibility::Visible,
-                ..default()
-            },
-        )
     }
 
     fn bundle(self, assets: &SelectorAssets) -> impl Bundle {

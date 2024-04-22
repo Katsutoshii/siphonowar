@@ -40,7 +40,7 @@ pub mod prelude {
             Velocity,
         },
         pool::EntityPool,
-        raycast::{RaycastCommands, RaycastEvent, RaycastTarget},
+        raycast::{GridRaycastTarget, RaycastCommands, RaycastEvent, RaycastTarget},
         shader_plane::{ShaderPlaneAssets, ShaderPlaneMaterial, ShaderPlanePlugin},
         smallset::SmallSet,
         system_sets::{FixedUpdateStage, GameStateSet},

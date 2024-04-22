@@ -137,6 +137,7 @@ pub struct ControlEvent {
     pub state: ButtonState,
     pub mode: ControlMode,
     pub position: Vec2,
+    pub entity: Entity,
 }
 impl ControlEvent {
     pub fn is_pressed(&self, action: ControlAction) -> bool {
@@ -194,7 +195,9 @@ impl ControlEvent {
                         }
                         RaycastTarget::WorldGrid => raycast_event.world_position,
                         RaycastTarget::None => raycast_event.position,
+                        RaycastTarget::GridEntity => raycast_event.world_position,
                     },
+                    entity: raycast_event.entity,
                 });
 
                 state.mode = ControlMode::from(event.action);
@@ -228,7 +231,9 @@ impl ControlEvent {
                             },
                             RaycastTarget::WorldGrid => raycast_event.world_position,
                             RaycastTarget::None => raycast_event.position,
+                            RaycastTarget::GridEntity => raycast_event.world_position,
                         },
+                        entity: raycast_event.entity,
                     };
                     // dbg!(&event);
                     control_events.send(event);
@@ -244,6 +249,7 @@ pub enum ControlAction {
     #[default]
     None,
     Select,
+    SelectEntity,
     Move,
     AttackMove,
     PanCamera,
@@ -265,6 +271,9 @@ impl From<(RaycastTarget, ControlMode, InputAction)> for ControlAction {
             (RaycastTarget::Minimap, _, InputAction::Primary) => Self::PanCamera,
             (RaycastTarget::Minimap, _, InputAction::Secondary) => Self::Move,
             (RaycastTarget::WorldGrid, ControlMode::Normal, InputAction::Primary) => Self::Select,
+            (RaycastTarget::GridEntity, ControlMode::Normal, InputAction::Primary) => {
+                Self::SelectEntity
+            }
             (RaycastTarget::WorldGrid, ControlMode::Attack, InputAction::Primary) => {
                 Self::AttackMove
             }
