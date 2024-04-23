@@ -73,35 +73,34 @@ impl ZooidHead {
     // Runs BFS to find the last entity of the shortest limb.
     // Index goes from [0, len]. When 0, we spawn off of the head.
     pub fn get_next_limb(&mut self, entity: Entity, attached_to: &Query<&AttachedTo>) -> Entity {
+        let max_arms = 10;
         let head_attached_to = attached_to.get(entity).unwrap();
-        let spawn_index = self.spawn_index % (head_attached_to.len() + 1);
-        self.spawn_index = (spawn_index + 1) % (head_attached_to.len() + 1);
-
-        if spawn_index < 1 {
+        let num_attachments = head_attached_to.len();
+        self.spawn_index = self.spawn_index + 1;
+        if num_attachments < max_arms {
             return entity;
         }
-
-        let start = head_attached_to[spawn_index - 1];
-
+        let start = head_attached_to[self.spawn_index % max_arms.min(num_attachments)];
         // BFS to find the first leaf on this limb.
         let mut visited = HashSet::<Entity>::new();
         let mut queue = VecDeque::<Entity>::new();
         queue.push_front(start);
-
+        visited.insert(entity);
         while let Some(entity) = queue.pop_back() {
             if !visited.insert(entity) {
                 continue;
             }
-            let attached_to = attached_to.get(entity).unwrap();
-            let next: VecDeque<Entity> = attached_to
-                .iter()
-                .filter(|&entity| !visited.contains(entity))
-                .copied()
-                .collect();
-            if next.is_empty() {
-                return entity;
-            } else {
-                queue.extend(next.into_iter());
+            if let Ok(attached_to) = attached_to.get(entity) {
+                let next: VecDeque<Entity> = attached_to
+                    .iter()
+                    .filter(|&entity| !visited.contains(entity))
+                    .copied()
+                    .collect();
+                if next.is_empty() {
+                    return entity;
+                } else {
+                    queue.extend(next.into_iter());
+                }
             }
         }
         entity

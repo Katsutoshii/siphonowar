@@ -235,7 +235,6 @@ impl ControlEvent {
                         },
                         entity: raycast_event.entity,
                     };
-                    // dbg!(&event);
                     control_events.send(event);
                 }
             }

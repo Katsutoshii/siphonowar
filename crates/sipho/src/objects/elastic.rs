@@ -45,7 +45,7 @@ impl SpawnElasticEvent {
 }
 
 #[derive(Component, Debug, Default, DerefMut, Deref)]
-pub struct AttachedTo(pub SmallVec<[Entity; 8]>);
+pub struct AttachedTo(pub SmallVec<[Entity; 10]>);
 
 #[derive(Component, Reflect, Debug, Deref, DerefMut)]
 #[reflect(Component)]
@@ -131,7 +131,7 @@ impl Elastic {
         magnitude: f32,
         depth: f32,
     ) -> Transform {
-        let width = 4.;
+        let width = 8.;
         let delta = position2 - position1;
         Transform {
             translation: ((position1 + position2) / 2.).extend(depth),
@@ -215,6 +215,7 @@ impl Elastic {
         mut phys_query: Query<&mut Force>,
         mut mass_query: Query<&mut Mass>,
         mut attachments: Query<&mut AttachedTo>,
+        mut firework_events: EventWriter<FireworkSpec>,
     ) {
         for (entity, elastic, mut transform) in elastic_query.iter_mut() {
             if let (Ok((entity1, position1, objective1)), Ok((entity2, position2, objective2))) = (
@@ -224,6 +225,14 @@ impl Elastic {
                 let delta = position2.0 - position1.0;
                 let direction = delta.normalize_or_zero();
                 let magnitude = delta.length();
+                if magnitude > 100.0 {
+                    commands.entity(entity).despawn();
+                    firework_events.send(FireworkSpec {
+                        position: ((position1.0 + position2.0) / 2.0).extend(0.0),
+                        color: FireworkColor::White,
+                        size: VfxSize::Small,
+                    });
+                }
                 let mag_shift = (magnitude - 1.0).max(0.0);
                 let force = mag_shift.powi(2) * 0.002;
 
