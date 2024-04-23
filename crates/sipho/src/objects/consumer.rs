@@ -49,8 +49,7 @@ impl Consumer {
                     });
                 }
             }
-            // *mass = Mass(1. + consumer.consumed as f32 * 0.01);
-            // transform.scale *= Vec3::splat(mass.0.max(10.0));
+            *mass = Mass(1.0 + consumer.consumed as f32);
         }
     }
 }

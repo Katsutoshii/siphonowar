@@ -248,7 +248,7 @@ impl Elastic {
                         size: VfxSize::Small,
                     });
                 }
-                let mag_shift = (magnitude - 16.0).max(0.0);
+                let mag_shift = (magnitude - 8.0).max(0.0);
                 let force = mag_shift.powi(3) * 0.0002;
 
                 *phys_query.get_mut(entity1).unwrap() +=
