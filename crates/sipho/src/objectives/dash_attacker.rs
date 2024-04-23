@@ -45,12 +45,12 @@ impl Default for DashAttacker {
 impl DashAttacker {
     /// Gets a random attack cooldown.
     pub fn attack_cooldown() -> Duration {
-        Duration::from_millis(rand::thread_rng().gen_range(600..700))
+        Duration::from_millis(rand::thread_rng().gen_range(300..700))
     }
 
     /// Gets the attack duration.
     pub fn attack_delay() -> Duration {
-        Duration::from_millis(rand::thread_rng().gen_range(0..100))
+        Duration::from_millis(rand::thread_rng().gen_range(0..300))
     }
 
     /// Gets the attack duration.

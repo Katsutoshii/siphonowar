@@ -46,10 +46,11 @@ impl PathToHead {
             let mut queue: VecDeque<Entity> = VecDeque::new();
             let mut visited: HashSet<Entity> = HashSet::new();
             for &entity in head_attached.iter() {
-                let mut path = paths.get_mut(entity).unwrap();
-                path.head = Some(head_entity);
-                path.next = Some(head_entity);
-                queue.push_front(entity);
+                if let Ok(mut path) = paths.get_mut(entity) {
+                    path.head = Some(head_entity);
+                    path.next = Some(head_entity);
+                    queue.push_front(entity);
+                }
             }
             while let Some(entity) = queue.pop_back() {
                 if !visited.insert(entity) {
