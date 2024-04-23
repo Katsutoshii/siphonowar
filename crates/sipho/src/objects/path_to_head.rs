@@ -63,6 +63,7 @@ impl PathToHead {
                         path.head = Some(head_entity);
                         path.next = Some(entity);
                         queue.push_front(next);
+                    } else {
                     }
                 }
             }
@@ -77,12 +78,18 @@ pub struct PathToHeadFollower {
 }
 impl PathToHeadFollower {
     pub fn update(
-        mut query: Query<(&Position, &Velocity, &mut Force, &mut PathToHeadFollower)>,
+        mut query: Query<(
+            &Position,
+            &Velocity,
+            &mut Force,
+            &mut PathToHeadFollower,
+            &AttachedTo,
+        )>,
         others: Query<(&Position, &Velocity)>,
     ) {
         // Get the path using follower.
         // Get the target transform using path.
-        for (position, velocity, mut force, mut follower) in query.iter_mut() {
+        for (position, velocity, mut force, mut follower, attachments) in query.iter_mut() {
             if let Some(target) = follower.target {
                 if let Ok((target_position, target_velocity)) = others.get(target) {
                     let delta = target_position.0 - position.0;

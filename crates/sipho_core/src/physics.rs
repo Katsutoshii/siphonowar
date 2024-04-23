@@ -149,7 +149,7 @@ pub fn fixed_update(
         let material = materials.get(material_type).unwrap();
         let prev_velocity = *velocity;
 
-        velocity.0 += force.0 / (mass.0).max(0.25);
+        velocity.0 += force.0 / (mass.0).max(0.1);
         let overflow = velocity.length_squared() / (material.max_velocity.powi(2)) * 0.1;
         velocity.0 = velocity.clamp_length_max(material.max_velocity);
         velocity.0 *= overflow.clamp(1.0, 10.0);
@@ -211,7 +211,7 @@ impl Default for PhysicsMaterial {
     fn default() -> Self {
         Self {
             max_velocity: 10.0,
-            velocity_smoothing: 0.,
+            velocity_smoothing: 0.0,
         }
     }
 }

@@ -209,11 +209,7 @@ impl Object {
                         }
                     }
                     if let Ok(path) = path_to_head.get(neighbor.entity) {
-                        path_follower.target = if path.next.is_some() {
-                            path.next
-                        } else {
-                            path.head
-                        };
+                        path_follower.target = path.next;
                     }
                 } else if object.can_carry() && neighbor.object.can_be_carried() && parent.is_none()
                 {

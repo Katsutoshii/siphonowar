@@ -64,6 +64,22 @@ impl Elastic {
     }
 }
 
+pub fn snap(
+    mut commands: &mut Commands,
+    entity: Entity,
+    elastic: &Elastic,
+    attachments: &mut Query<&mut AttachedTo>,
+) {
+    // Clean up invalid connections.
+    commands.entity(entity).despawn();
+    if let Ok(mut attached_to) = attachments.get_mut(elastic.first()) {
+        attached_to.retain(|&mut x| x != elastic.second())
+    }
+    if let Ok(mut attached_to) = attachments.get_mut(elastic.second()) {
+        attached_to.retain(|&mut x| x != elastic.first())
+    }
+}
+
 #[derive(SystemParam)]
 pub struct ElasticCommands<'w, 's> {
     commands: Commands<'w, 's>,
@@ -75,12 +91,12 @@ impl ElasticCommands<'_, '_> {
     pub fn attachments(&mut self) -> QueryLens<&AttachedTo> {
         self.attachments.transmute_lens()
     }
-    pub fn tie(&mut self, entity1: Entity, entity2: Entity, team: Team) -> Option<EntityCommands> {
+    pub fn tie(&mut self, entity1: Entity, entity2: Entity, team: Team) {
         for pair in [(entity1, entity2), (entity2, entity1)] {
             let (entity1, entity2) = pair;
             if let Ok(ref mut attached_to) = self.attachments.get_mut(entity1) {
                 if attached_to.contains(&entity2) {
-                    return None;
+                    return;
                 }
                 attached_to.push(entity2);
             }
@@ -90,7 +106,7 @@ impl ElasticCommands<'_, '_> {
         let position2 = self.positions.get(entity2).unwrap();
         let magnitude = position1.distance(position2.0);
 
-        let commands = self.commands.spawn(ElasticBundle {
+        self.commands.spawn(ElasticBundle {
             elastic: Elastic((entity1, entity2)),
             pbr: PbrBundle {
                 mesh: self.assets.connector_mesh.clone(),
@@ -105,7 +121,6 @@ impl ElasticCommands<'_, '_> {
             },
             ..default()
         });
-        Some(commands)
     }
 }
 
@@ -209,13 +224,13 @@ impl Elastic {
         }
     }
     pub fn update(
-        mut commands: Commands,
         mut elastic_query: Query<(Entity, &Elastic, &mut Transform)>,
         object_query: Query<(Entity, &Position, &Objectives)>,
         mut phys_query: Query<&mut Force>,
         mut mass_query: Query<&mut Mass>,
         mut attachments: Query<&mut AttachedTo>,
         mut firework_events: EventWriter<FireworkSpec>,
+        mut commands: Commands,
     ) {
         for (entity, elastic, mut transform) in elastic_query.iter_mut() {
             if let (Ok((entity1, position1, objective1)), Ok((entity2, position2, objective2))) = (
@@ -225,16 +240,16 @@ impl Elastic {
                 let delta = position2.0 - position1.0;
                 let direction = delta.normalize_or_zero();
                 let magnitude = delta.length();
-                if magnitude > 100.0 {
-                    commands.entity(entity).despawn();
+                if magnitude > 128.0 {
+                    snap(&mut commands, entity, elastic, &mut attachments);
                     firework_events.send(FireworkSpec {
                         position: ((position1.0 + position2.0) / 2.0).extend(0.0),
                         color: FireworkColor::White,
                         size: VfxSize::Small,
                     });
                 }
-                let mag_shift = (magnitude - 1.0).max(0.0);
-                let force = mag_shift.powi(2) * 0.002;
+                let mag_shift = (magnitude - 16.0).max(0.0);
+                let force = mag_shift.powi(3) * 0.0002;
 
                 *phys_query.get_mut(entity1).unwrap() +=
                     Force(direction * force * objective1.get_force_factor());
@@ -246,17 +261,11 @@ impl Elastic {
                     Self::get_transform(position1.0, position2.0, magnitude, zindex::ZOOIDS_MIN);
             } else {
                 // Clean up invalid connections.
-                commands.entity(entity).despawn();
-                if let Ok(mut attached_to) = attachments.get_mut(elastic.first()) {
-                    attached_to.retain(|&mut x| x != elastic.second())
-                }
-                if let Ok(mut attached_to) = attachments.get_mut(elastic.second()) {
-                    attached_to.retain(|&mut x| x != elastic.first())
-                }
+                snap(&mut commands, entity, elastic, &mut attachments);
             }
             if let Ok(tied_neighbors) = attachments.get(entity) {
                 if tied_neighbors.len() >= 2 {
-                    *mass_query.get_mut(entity).unwrap() = Mass(0.25);
+                    *mass_query.get_mut(entity).unwrap() = Mass(0.1);
                 }
             }
         }
