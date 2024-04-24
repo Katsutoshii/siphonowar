@@ -239,7 +239,7 @@ impl Elastic {
                 let delta = position2.0 - position1.0;
                 let direction = delta.normalize_or_zero();
                 let magnitude = delta.length();
-                if magnitude > 100.0 {
+                if magnitude > 128.0 {
                     snap(&mut commands, entity, elastic, &mut attachments);
                     firework_events.send(FireworkSpec {
                         position: ((position1.0 + position2.0) / 2.0).extend(0.0),

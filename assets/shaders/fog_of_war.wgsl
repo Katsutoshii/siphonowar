@@ -29,6 +29,6 @@ fn fragment(mesh: VertexOutput) -> @location(0) vec4<f32> {
     let noise = (2. + sin_t) / 3. * perlin_noise_2d(vec2<f32>(g.x + sin_t, g.y - sin_xt));
 
     output_color.a *= (1.0 - noise_amount) * alpha + noise_amount * noise;
-    // output_color.a *= 0.0;
+    //output_color.a *= 0.0;
     return output_color;
 }

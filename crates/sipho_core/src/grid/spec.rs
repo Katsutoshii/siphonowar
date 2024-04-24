@@ -105,10 +105,11 @@ impl GridSpec {
     /// Returns true iff the rowcol is on the boundary of the grid.
     pub fn is_boundary(&self, rowcol: RowCol) -> bool {
         let (row, col) = rowcol;
-        if row == 0 || row == self.rows - 1 {
+        let boundary_size = 5;
+        if row < boundary_size || row > self.rows - boundary_size {
             return true;
         }
-        if col == 0 || col == self.cols - 1 {
+        if col < boundary_size || col > self.cols - boundary_size {
             return true;
         }
         false

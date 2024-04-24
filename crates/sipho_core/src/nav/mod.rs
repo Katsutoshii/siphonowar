@@ -49,7 +49,7 @@ impl SparseFlowGrid2 {
         if let Some(rowcol) = self.to_rowcol(position) {
             total_force += self.flow_force(position, rowcol);
             if self.is_boundary(rowcol) {
-                return Force::ZERO;
+                return total_force;
             }
             // Add forces from neighboring cells.
             for (neighbor_rowcol, _) in self.neighbors8(rowcol) {
@@ -98,7 +98,10 @@ impl NavigationGrid2Entry {
             let mut min_neighbor_cost = cost;
             for (neighbor_rowcol, _) in self.grid.neighbors8(rowcol) {
                 // Cornering checks for diagonals.
-                if neighbor_rowcol.0 != rowcol.0 && neighbor_rowcol.1 != rowcol.1 {
+                if neighbor_rowcol.0 != rowcol.0
+                    && neighbor_rowcol.1 != rowcol.1
+                    && self.grid.in_bounds(neighbor_rowcol)
+                {
                     if obstacles[(neighbor_rowcol.0, rowcol.1)] != Obstacle::Empty {
                         // info!("Corner skip! {:?} -> {:?}", rowcol, neighbor_rowcol);
                         continue;

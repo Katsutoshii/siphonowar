@@ -32,13 +32,16 @@ pub struct GridVisualizerShaderMaterial {
     size: GridSize,
     #[storage(2, read_only)]
     grid: Vec<u32>,
+    #[uniform(3)]
+    wave_color: Color,
 }
 impl Default for GridVisualizerShaderMaterial {
     fn default() -> Self {
         Self {
-            color: Color::WHITE,
+            color: Color::MIDNIGHT_BLUE,
             size: GridSize::default(),
             grid: Vec::default(),
+            wave_color: Color::ALICE_BLUE,
         }
     }
 }

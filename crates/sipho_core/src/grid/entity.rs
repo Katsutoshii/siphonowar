@@ -55,8 +55,10 @@ impl GridEntity {
         mut despawns_writer: EventWriter<DespawnEvent>,
     ) {
         for (entity, mut grid_entity, team, transform) in &mut query {
-            if let Some(rowcol) = grid.to_rowcol(transform.0) {
-                if let Some(event) = grid.update(entity, *team, grid_entity.rowcol, rowcol) {
+            let rowcol = grid.to_rowcol(transform.0);
+            if rowcol.is_some() && !grid.is_boundary(rowcol.unwrap()) {
+                if let Some(event) = grid.update(entity, *team, grid_entity.rowcol, rowcol.unwrap())
+                {
                     grid_entity.rowcol = event.rowcol;
                     event_writer.send(event);
                 }
