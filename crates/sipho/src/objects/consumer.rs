@@ -27,16 +27,10 @@ impl Consumer {
         Self { consumed }
     }
     pub fn update(
-        mut query: Query<(
-            Entity,
-            &mut Consumer,
-            &mut Mass,
-            &EnemyCollisions,
-            &mut Transform,
-        )>,
+        mut query: Query<(Entity, &mut Consumer, &mut Mass, &EnemyCollisions)>,
         mut damage_events: EventWriter<DamageEvent>,
     ) {
-        for (entity, mut consumer, mut mass, colliders, mut transform) in query.iter_mut() {
+        for (entity, mut consumer, mut mass, colliders) in query.iter_mut() {
             for neighbor in colliders.iter() {
                 if neighbor.object == Object::Food {
                     consumer.consumed += 1;

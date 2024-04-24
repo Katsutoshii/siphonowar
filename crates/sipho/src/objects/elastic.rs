@@ -1,11 +1,10 @@
 use crate::prelude::*;
-use bevy::ecs::system::{EntityCommands, QueryLens, SystemParam};
+use bevy::ecs::system::{QueryLens, SystemParam};
 use bevy::utils::smallvec::SmallVec;
 use bevy::utils::FloatOrd;
 use sipho_core::grid::fog::FogConfig;
 use sipho_core::physics::Mass;
 
-use super::zooid_worker::ZooidWorker;
 use super::ObjectAssets;
 
 pub struct ElasticPlugin;
@@ -65,7 +64,7 @@ impl Elastic {
 }
 
 pub fn snap(
-    mut commands: &mut Commands,
+    commands: &mut Commands,
     entity: Entity,
     elastic: &Elastic,
     attachments: &mut Query<&mut AttachedTo>,

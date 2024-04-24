@@ -76,7 +76,7 @@ impl ZooidHead {
         let max_arms = 10;
         let head_attached_to = attached_to.get(entity).unwrap();
         let num_attachments = head_attached_to.len();
-        self.spawn_index = self.spawn_index + 1;
+        self.spawn_index += 1;
         if num_attachments < max_arms {
             return entity;
         }

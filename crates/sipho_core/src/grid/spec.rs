@@ -176,7 +176,7 @@ impl GridSpec {
     /// Get in radius, with discrete cell position inputs.
     pub fn get_in_radius_discrete(&self, rowcol: RowCol, radius: u16) -> Vec<RowCol> {
         let (row, col) = rowcol;
-        if !Self::in_bounds(&self, rowcol) {
+        if !Self::in_bounds(self, rowcol) {
             return vec![];
         }
         let mut results = Vec::default();
