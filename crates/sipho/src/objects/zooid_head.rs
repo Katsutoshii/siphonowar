@@ -127,9 +127,17 @@ impl ZooidHead {
     ) {
         let config = configs.get(&Object::Worker).unwrap();
         for control_event in control_events.read() {
-            if !control_event.is_pressed(ControlAction::SpawnZooid) {
-                continue;
+            enum SpawnedType {
+                Worker,
+                Shocker,
             }
+            let spawn_type = if control_event.is_pressed(ControlAction::SpawnZooid) {
+                SpawnedType::Worker
+            } else if control_event.is_pressed(ControlAction::SpawnShocker) {
+                SpawnedType::Shocker
+            } else {
+                continue;
+            };
             for (mut head, head_id, velocity, team, selected, mut consumer) in query.iter_mut() {
                 if !selected.is_selected() {
                     continue;
@@ -140,9 +148,12 @@ impl ZooidHead {
                 let entity = head.get_next_limb(head_id, &attachments);
 
                 let position = positions.get(entity).unwrap();
-
-                if consumer.consumed > 0 {
-                    consumer.consumed -= 1;
+                let food_needed = match spawn_type {
+                    SpawnedType::Shocker => 3,
+                    SpawnedType::Worker => 1,
+                };
+                if consumer.consumed > food_needed {
+                    consumer.consumed -= food_needed;
                     let direction = if let Some(normalized) = velocity.try_normalize() {
                         normalized
                     } else {
@@ -153,6 +164,10 @@ impl ZooidHead {
                         position: position.0 + spawn_velocity,
                         velocity: Some(Velocity(spawn_velocity)),
                         team: *team,
+                        object: match spawn_type {
+                            SpawnedType::Worker => Object::Worker,
+                            SpawnedType::Shocker => Object::Shocker,
+                        },
                         // objectives: Objectives::new(Objective::FollowEntity(head_id)),
                         ..default()
                     }) {

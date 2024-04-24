@@ -44,18 +44,18 @@ impl Default for ShockAttacker {
 impl ShockAttacker {
     /// Gets a random attack cooldown.
     pub fn attack_cooldown() -> Duration {
-        Duration::from_millis(rand::thread_rng().gen_range(1000..2000))
+        Duration::from_millis(rand::thread_rng().gen_range(2000..3000))
         // Duration::from_millis(800)
     }
 
     /// Gets the attack duration.
     pub fn attack_delay() -> Duration {
-        Duration::from_millis(rand::thread_rng().gen_range(300..1000))
+        Duration::from_millis(rand::thread_rng().gen_range(500..1000))
     }
 
     /// Gets the attack duration.
     pub fn attack_duration() -> Duration {
-        Duration::from_millis(150)
+        Duration::from_millis(100)
     }
 
     pub fn next_state(&mut self, in_radius: bool) -> ShockAttackerState {
