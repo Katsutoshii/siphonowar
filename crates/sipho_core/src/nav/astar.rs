@@ -107,7 +107,7 @@ impl AStarRunner {
             // a lower cost going through this node
             for (neighbor_rowcol, neighbor_cost) in grid.neighbors8(rowcol) {
                 // Skip out of bounds positions.
-                if grid.is_boundary(neighbor_rowcol) {
+                if grid.is_boundary(neighbor_rowcol) || !grid.in_bounds(neighbor_rowcol) {
                     continue;
                 }
                 if obstacles[neighbor_rowcol] != Obstacle::Empty {

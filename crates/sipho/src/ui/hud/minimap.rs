@@ -159,7 +159,7 @@ impl MinimapUiMaterial {
             }
 
             for event in camera_moves.read() {
-                let rowcol = spec.to_rowcol(event.position);
+                let rowcol = spec.to_rowcol(event.position).unwrap();
                 material.input.camera_position = Vec2 {
                     x: rowcol.1 as f32,
                     y: rowcol.0 as f32,

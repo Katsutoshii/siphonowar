@@ -99,14 +99,15 @@ impl Grid2<Obstacle> {
     /// For each neighboring obstacle, if the object is moving towards the obstacle
     /// we apply a force away from the obstacle.
     pub fn force(&self, position: Vec2, velocity: Velocity) -> Force {
-        let (row, col) = self.to_rowcol(position);
-        if self.is_boundary((row, col)) {
-            return Force::ZERO;
-        }
         let mut force = Force::ZERO;
-        for (dr, dc) in [(0, 1), (1, 0), (0, -1), (-1, 0)] {
-            let obstacle_rowcol = ((row as i16 + dr) as u16, (col as i16 + dc) as u16);
-            force += self.obstacle_force(position, velocity, obstacle_rowcol, (dr, dc));
+        if let Some((row, col)) = self.to_rowcol(position) {
+            if self.is_boundary((row, col)) {
+                return Force::ZERO;
+            }
+            for (dr, dc) in [(0, 1), (1, 0), (0, -1), (-1, 0)] {
+                let obstacle_rowcol = ((row as i16 + dr) as u16, (col as i16 + dc) as u16);
+                force += self.obstacle_force(position, velocity, obstacle_rowcol, (dr, dc));
+            }
         }
         force
     }
@@ -119,10 +120,11 @@ impl Grid2<Obstacle> {
         for (mut position, mut velocity, mut force) in query.iter_mut() {
             let obstacle_force = obstacles.force(position.0, *velocity) * 6.;
             *force += obstacle_force;
-
-            if obstacles[obstacles.to_rowcol(position.0)] != Obstacle::Empty {
-                velocity.0 *= -1.0;
-                position.0 += velocity.0;
+            if let Some(rowcol) = obstacles.to_rowcol(position.0) {
+                if obstacles[rowcol] != Obstacle::Empty {
+                    velocity.0 *= -1.0;
+                    position.0 += velocity.0;
+                }
             }
         }
     }

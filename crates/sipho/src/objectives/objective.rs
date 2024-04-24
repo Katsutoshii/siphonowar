@@ -171,7 +171,7 @@ impl Objectives {
                 {
                     // If already attacking an entity but we are now closer to different entity, attack the new closest
                     // entity.
-                    match object.objectives.bypass_change_detection().last_mut() {
+                    match object.objectives.last_mut() {
                         Objective::AttackEntity(entity) => {
                             *entity = neighbor.entity;
                         }

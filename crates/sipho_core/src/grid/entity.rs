@@ -9,11 +9,14 @@ impl Plugin for EntityGridPlugin {
         app.add_plugins(Grid2Plugin::<TeamEntitySets>::default())
             .add_systems(
                 FixedUpdate,
-                (
-                    GridEntity::update,
-                    GridEntity::drop_oobs,
-                    GridEntity::cleanup,
-                )
+                (GridEntity::update)
+                    .chain()
+                    .in_set(FixedUpdateStage::PostSpawn)
+                    .in_set(GameStateSet::Running),
+            )
+            .add_systems(
+                FixedUpdate,
+                (GridEntity::cleanup)
                     .chain()
                     .in_set(FixedUpdateStage::PreDespawn)
                     .in_set(GameStateSet::Running),
@@ -45,30 +48,27 @@ pub struct GridEntity {
     pub rowcol: Option<RowCol>,
 }
 impl GridEntity {
-    pub fn drop_oobs(
-        query: Query<(Entity, &Position)>,
-        grid: ResMut<Grid2<TeamEntitySets>>,
-        mut despawns_writer: EventWriter<DespawnEvent>,
-    ) {
-        for (entity, position) in query.iter() {
-            if !grid.in_bounds(grid.to_rowcol(position.0)) {
-                despawns_writer.send(DespawnEvent(entity));
-            }
-        }
-    }
     pub fn update(
         mut query: Query<(Entity, &mut Self, &Team, &Position)>,
         mut grid: ResMut<Grid2<TeamEntitySets>>,
         mut event_writer: EventWriter<EntityGridEvent>,
+        mut despawns_writer: EventWriter<DespawnEvent>,
     ) {
         for (entity, mut grid_entity, team, transform) in &mut query {
-            let rowcol = grid.to_rowcol(transform.0);
-            if let Some(event) = grid.update(entity, *team, grid_entity.rowcol, rowcol) {
-                grid_entity.rowcol = event.rowcol;
-                event_writer.send(event);
+            if let Some(rowcol) = grid.to_rowcol(transform.0) {
+                if let Some(event) = grid.update(entity, *team, grid_entity.rowcol, rowcol) {
+                    grid_entity.rowcol = event.rowcol;
+                    event_writer.send(event);
+                }
+            } else {
+                despawns_writer.send(DespawnEvent(entity));
+                if let Some(prev_rowcol) = grid_entity.rowcol {
+                    grid.remove(entity, *team, prev_rowcol);
+                }
             }
         }
     }
+
     pub fn cleanup(
         query: Query<(Entity, &Self, &Team)>,
         mut grid: ResMut<Grid2<TeamEntitySets>>,
@@ -76,12 +76,13 @@ impl GridEntity {
         mut grid_events: EventWriter<EntityGridEvent>,
     ) {
         for despawn_event in despawns.read() {
-            let (entity, grid_entity, team) = query.get(despawn_event.0).unwrap();
-            if let Some(rowcol) = grid_entity.rowcol {
-                if let Some(grid_event) = grid.remove(entity, *team, rowcol) {
-                    grid_events.send(grid_event);
-                } else {
-                    error!("No rowcol for {:?}", entity)
+            if let Ok((entity, grid_entity, team)) = query.get(despawn_event.0) {
+                if let Some(rowcol) = grid_entity.rowcol {
+                    if let Some(grid_event) = grid.remove(entity, *team, rowcol) {
+                        grid_events.send(grid_event);
+                    } else {
+                        error!("No rowcol for {:?}", entity)
+                    }
                 }
             }
         }
@@ -235,7 +236,7 @@ mod tests {
         grid.resize();
         assert_eq!(grid.spec.offset(), Vec2 { x: 50.0, y: 50.0 });
         let rowcol = grid.spec.to_rowcol(Vec2 { x: 0., y: 0. });
-        assert_eq!(rowcol, (5, 5));
+        assert_eq!(rowcol, Some((5, 5)));
 
         assert!(grid.get_mut((5, 5)).is_some());
         assert!(grid.get((5, 5)).is_some());

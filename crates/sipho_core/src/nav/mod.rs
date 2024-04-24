@@ -46,19 +46,20 @@ impl SparseFlowGrid2 {
     pub fn flow_force5(&self, position: Vec2) -> Force {
         let mut total_force = Force::ZERO;
 
-        let rowcol = self.to_rowcol(position);
-
-        total_force += self.flow_force(position, rowcol);
-        if self.is_boundary(rowcol) {
-            return Force::ZERO;
-        }
-        // Add forces from neighboring cells.
-        for (neighbor_rowcol, _) in self.neighbors8(rowcol) {
-            if self.is_boundary(neighbor_rowcol) {
-                continue;
+        if let Some(rowcol) = self.to_rowcol(position) {
+            total_force += self.flow_force(position, rowcol);
+            if self.is_boundary(rowcol) {
+                return Force::ZERO;
             }
-            total_force += self.flow_force(position, neighbor_rowcol);
+            // Add forces from neighboring cells.
+            for (neighbor_rowcol, _) in self.neighbors8(rowcol) {
+                if self.is_boundary(neighbor_rowcol) {
+                    continue;
+                }
+                total_force += self.flow_force(position, neighbor_rowcol);
+            }
         }
+
         // What do we need to add to velocity to get total_acccel?
         // v + x = ta
         // x = ta - v

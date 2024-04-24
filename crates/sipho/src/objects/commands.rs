@@ -96,8 +96,10 @@ impl ObjectCommands<'_, '_> {
     pub fn spawn(&mut self, spec: ObjectSpec) -> Option<EntityCommands> {
         let config = &self.configs[&spec.object];
         let team_material = self.assets.get_team_material(spec.team);
-        if self.obstacles[self.obstacles.to_rowcol(spec.position)] != Obstacle::Empty {
-            return None;
+        if let Some(rowcol) = self.obstacles.to_rowcol(spec.position) {
+            if self.obstacles[rowcol] != Obstacle::Empty {
+                return None;
+            }
         }
         let commands = match spec.object {
             Object::Worker => {

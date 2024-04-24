@@ -35,11 +35,13 @@ impl Navigator {
         for (navigator, position) in query.iter() {
             let source = spec.to_rowcol(position.0);
             let destination = spec.to_rowcol(navigator.target);
-            match destinations.entry(destination) {
-                Entry::Occupied(o) => o.into_mut(),
-                Entry::Vacant(v) => v.insert(Vec::with_capacity(1)),
+            if let (Some(source), Some(destination)) = (source, destination) {
+                match destinations.entry(destination) {
+                    Entry::Occupied(o) => o.into_mut(),
+                    Entry::Vacant(v) => v.insert(Vec::with_capacity(1)),
+                }
+                .push(source);
             }
-            .push(source);
         }
 
         // Populate the grid.
@@ -73,19 +75,20 @@ impl Navigator {
     ) {
         for (object, navigator, mut transform, position, velocity, mut force) in query.iter_mut() {
             let config = configs.get(object).unwrap();
-            let target_rowcol = spec.to_rowcol(navigator.target);
+            if let Some(target_rowcol) = spec.to_rowcol(navigator.target) {
+                if let Some(flow_grid) = grid.get(&target_rowcol) {
+                    let target_cell_center = flow_grid.grid.to_world_position(target_rowcol);
+                    let flow_force =
+                        flow_grid.grid.flow_force5(position.0) * config.nav_flow_factor;
+                    let slow_force =
+                        navigator.slow_force(*velocity, position.0, target_cell_center, flow_force);
 
-            if let Some(flow_grid) = grid.get(&target_rowcol) {
-                let target_cell_center = flow_grid.grid.to_world_position(target_rowcol);
-                let flow_force = flow_grid.grid.flow_force5(position.0) * config.nav_flow_factor;
-                let slow_force =
-                    navigator.slow_force(*velocity, position.0, target_cell_center, flow_force);
+                    *force += flow_force + slow_force;
 
-                *force += flow_force + slow_force;
-
-                if velocity.length_squared() > 2. {
-                    let angle = transform.rotation.z;
-                    transform.rotate_z(0.01 * (velocity.to_angle() - angle));
+                    if velocity.length_squared() > 2. {
+                        let angle = transform.rotation.z;
+                        transform.rotate_z(0.01 * (velocity.to_angle() - angle));
+                    }
                 }
             }
         }

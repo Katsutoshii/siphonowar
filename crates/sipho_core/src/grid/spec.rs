@@ -34,8 +34,11 @@ impl Default for GridSpec {
     }
 }
 impl GridSpec {
-    pub fn discretize(&self, value: f32) -> u16 {
-        (value / self.width) as u16
+    pub fn discretize(&self, value: f32) -> Option<u16> {
+        if value < 0.0 {
+            return None;
+        }
+        Some((value / self.width) as u16)
     }
     // Covert row, col to a single index.
     pub fn flat_index(&self, rowcol: RowCol) -> usize {
@@ -44,9 +47,13 @@ impl GridSpec {
     }
 
     /// Returns (row, col) from a position in world space.
-    pub fn to_rowcol(&self, mut position: Vec2) -> RowCol {
+    pub fn to_rowcol(&self, mut position: Vec2) -> Option<RowCol> {
         position += self.offset();
-        (self.discretize(position.y), self.discretize(position.x))
+        let res = (self.discretize(position.y)?, self.discretize(position.x)?);
+        if self.in_bounds(res) {
+            return Some(res);
+        }
+        None
     }
 
     /// Returns the world position of the cell coordinate.
@@ -144,11 +151,15 @@ impl GridSpec {
     pub fn get_in_aabb(&self, aabb: &Aabb2) -> Vec<RowCol> {
         let mut results = Vec::default();
 
-        let (min_row, min_col) = self.to_rowcol(aabb.min);
-        let (max_row, max_col) = self.to_rowcol(aabb.max);
-        for row in min_row..=max_row {
-            for col in min_col..=max_col {
-                results.push((row, col))
+        let min_rowcol = self.to_rowcol(aabb.min);
+        let max_rowcol = self.to_rowcol(aabb.max);
+        if let (Some((min_row, min_col)), Some((max_row, max_col))) = (min_rowcol, max_rowcol) {
+            for row in min_row..=max_row {
+                for col in min_col..=max_col {
+                    if self.in_bounds((row, col)) {
+                        results.push((row, col));
+                    }
+                }
             }
         }
         results
@@ -156,21 +167,27 @@ impl GridSpec {
 
     /// Get in radius.
     pub fn get_in_radius(&self, position: Vec2, radius: f32) -> Vec<RowCol> {
-        self.get_in_radius_discrete(self.to_rowcol(position), self.discretize(radius) + 1)
+        if let Some(rowcol) = self.to_rowcol(position) {
+            return self.get_in_radius_discrete(rowcol, self.discretize(radius).unwrap() + 1);
+        }
+        vec![]
     }
 
     /// Get in radius, with discrete cell position inputs.
     pub fn get_in_radius_discrete(&self, rowcol: RowCol, radius: u16) -> Vec<RowCol> {
         let (row, col) = rowcol;
-
+        if !Self::in_bounds(&self, rowcol) {
+            return vec![];
+        }
         let mut results = Vec::default();
         for other_row in self.cell_range(row, radius) {
             for other_col in self.cell_range(col, radius) {
                 let other_rowcol = (other_row, other_col);
-                if !Self::in_radius(rowcol, other_rowcol, radius) {
-                    continue;
+                if Self::in_radius(rowcol, other_rowcol, radius)
+                    && Self::in_bounds(self, other_rowcol)
+                {
+                    results.push(other_rowcol)
                 }
-                results.push(other_rowcol)
             }
         }
         results
@@ -180,15 +197,15 @@ impl GridSpec {
     pub fn in_radius(rowcol: RowCol, other_rowcol: RowCol, radius: u16) -> bool {
         let (row, col) = rowcol;
         let (other_row, other_col) = other_rowcol;
-        let row_dist = other_row as i16 - row as i16;
-        let col_dist = other_col as i16 - col as i16;
-        row_dist * row_dist + col_dist * col_dist < radius as i16 * radius as i16
+        let row_dist = row.abs_diff(other_row);
+        let col_dist = col.abs_diff(other_col);
+        row_dist * row_dist + col_dist * col_dist < radius * radius
     }
 
     /// Returns a range starting at `center - radius` ending at `center + radius`.
     fn cell_range(&self, center: u16, radius: u16) -> RangeInclusive<u16> {
         let (min, max) = (
-            (center as i16 - radius as i16).max(0) as u16,
+            (if radius < center { center - radius } else { 0 }),
             (center + radius).min(self.rows),
         );
         min..=max

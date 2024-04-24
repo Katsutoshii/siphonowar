@@ -58,8 +58,8 @@ impl RowColDistance for RowCol {
         let (row1, col1) = self;
         let (row2, col2) = rowcol2;
         Vec2 {
-            x: (col2 as i16 - col1 as i16) as f32,
-            y: (row2 as i16 - row1 as i16) as f32,
+            x: col2 as f32 - col1 as f32,
+            y: row2 as f32 - row1 as f32,
         }
     }
 }
