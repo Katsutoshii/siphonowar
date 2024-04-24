@@ -1,7 +1,7 @@
 use std::ops::{Index, IndexMut};
 
 use crate::prelude::*;
-use bevy::{prelude::*, utils::HashSet};
+use bevy::{asset::DependencyLoadState, prelude::*, utils::HashSet};
 
 pub struct EntityGridPlugin;
 impl Plugin for EntityGridPlugin {
@@ -9,7 +9,11 @@ impl Plugin for EntityGridPlugin {
         app.add_plugins(Grid2Plugin::<TeamEntitySets>::default())
             .add_systems(
                 FixedUpdate,
-                (GridEntity::update, GridEntity::cleanup)
+                (
+                    GridEntity::update,
+                    GridEntity::drop_oobs,
+                    GridEntity::cleanup,
+                )
                     .chain()
                     .in_set(FixedUpdateStage::PreDespawn)
                     .in_set(GameStateSet::Running),
@@ -41,6 +45,17 @@ pub struct GridEntity {
     pub rowcol: Option<RowCol>,
 }
 impl GridEntity {
+    pub fn drop_oobs(
+        query: Query<(Entity, &Position)>,
+        grid: ResMut<Grid2<TeamEntitySets>>,
+        mut despawns_writer: EventWriter<DespawnEvent>,
+    ) {
+        for (entity, position) in query.iter() {
+            if !grid.in_bounds(grid.to_rowcol(position.0)) {
+                despawns_writer.send(DespawnEvent(entity));
+            }
+        }
+    }
     pub fn update(
         mut query: Query<(Entity, &mut Self, &Team, &Position)>,
         mut grid: ResMut<Grid2<TeamEntitySets>>,
