@@ -231,7 +231,7 @@ impl CameraController {
         for event in mouse_wheel.read() {
             let height = camera_transform.translation.z;
             camera_transform.translation.z =
-                (height - event.y * 100.).clamp(zindex::MIN_CAMERA, zindex::CAMERA);
+                (height - event.y * 10.).clamp(zindex::MIN_CAMERA, zindex::CAMERA);
         }
     }
 
