@@ -14,8 +14,10 @@ impl Plugin for ZooidHeadPlugin {
         app.add_systems(
             FixedUpdate,
             (
-                (ZooidHead::spawn, ZooidHead::spawn_zooids).in_set(FixedUpdateStage::Spawn),
-                NearestZooidHead::update.in_set(FixedUpdateStage::PostSpawn),
+                (ZooidHead::spawn, ZooidHead::update, ZooidHead::spawn_zooids)
+                    .chain()
+                    .in_set(FixedUpdateStage::Spawn),
+                // NearestZooidHead::update.in_set(FixedUpdateStage::PostSpawn),
             )
                 .in_set(GameStateSet::Running),
         );
@@ -29,6 +31,19 @@ pub struct ZooidHead {
     pub spawn_index: usize,
 }
 impl ZooidHead {
+    // Increase head size based on consumer.
+    pub fn update(
+        mut query: Query<(&mut Transform, &Consumer), With<ZooidHead>>,
+        configs: Res<ObjectConfigs>,
+    ) {
+        let config = configs.get(&Object::Head).unwrap();
+        for (mut transform, consumer) in query.iter_mut() {
+            let count = 1. + consumer.consumed as f32 / 20.;
+
+            transform.scale = Vec3::splat(config.radius * 1.5 * count / (count + 1.))
+        }
+    }
+
     pub fn spawn(
         mut commands: ObjectCommands,
         config: Res<TeamConfig>,

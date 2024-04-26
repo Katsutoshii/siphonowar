@@ -43,7 +43,8 @@ impl Consumer {
                     });
                 }
             }
-            *mass = Mass(1.0 + consumer.consumed as f32);
+            let count = consumer.consumed as f32;
+            *mass = Mass(1.0 + (2. * count / (count + 1.0)));
         }
     }
 }

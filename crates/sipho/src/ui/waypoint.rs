@@ -80,11 +80,14 @@ impl Waypoint {
 
             for (entity, selected, object, attached_to) in selection.iter() {
                 if selected.is_selected() {
+                    let mut objectives = objectives.get_mut(entity).unwrap();
                     // Don't change objectives for workers that are in the middle of the parent.
                     if *object == Object::Worker && attached_to.len() > 1 {
+                        if objectives.last() != &Objective::Idle {
+                            objectives.clear();
+                        }
                         continue;
                     }
-                    let mut objectives = objectives.get_mut(entity).unwrap();
                     objectives.clear();
                     let objective = match control.mode {
                         ControlMode::Normal => Objective::FollowEntity(waypoint_entity),

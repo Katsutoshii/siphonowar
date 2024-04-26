@@ -1,4 +1,9 @@
-use bevy::{ecs::system::SystemParam, prelude::*, ui::RelativeCursorPosition, utils::FloatOrd};
+use bevy::{
+    ecs::system::SystemParam,
+    prelude::*,
+    ui::RelativeCursorPosition,
+    utils::{FloatOrd, HashMap},
+};
 
 use crate::{Grid2, Team, TeamEntitySets};
 
@@ -13,6 +18,11 @@ pub enum RaycastTarget {
 
 #[derive(Component, Default)]
 pub struct GridRaycastTarget;
+
+#[derive(Resource)]
+pub struct ScaledMeshes {
+    pub mapping: HashMap<Handle<Mesh>, Mesh>,
+}
 
 /// System param to allow spawning effects.
 #[derive(SystemParam)]
