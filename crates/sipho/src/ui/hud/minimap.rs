@@ -131,6 +131,7 @@ impl MinimapUiMaterial {
             if spec.is_changed() {
                 material.resize(&spec);
             }
+
             for event in grid_events.read() {
                 let team = event.team as usize;
                 if let Some(rowcol) = event.prev_rowcol {
@@ -146,14 +147,17 @@ impl MinimapUiMaterial {
             }
 
             for event in visibility_updates.read() {
-                for &VisibilityUpdate { team: _, rowcol } in &event.removals {
+                for &VisibilityUpdate { rowcol, amount, .. } in &event.removals {
                     if spec.in_bounds(rowcol) {
-                        material.grid[spec.flat_index(rowcol)].visibility = 0.5;
+                        material.grid[spec.flat_index(rowcol)].visibility = amount;
                     }
                 }
-                for &VisibilityUpdate { team: _, rowcol } in &event.additions {
+                for &VisibilityUpdate { rowcol, amount, .. } in &event.additions {
                     if spec.in_bounds(rowcol) {
-                        material.grid[spec.flat_index(rowcol)].visibility = 1.;
+                        material.grid[spec.flat_index(rowcol)].visibility = material.grid
+                            [spec.flat_index(rowcol)]
+                        .visibility
+                        .max(amount);
                     }
                 }
             }

@@ -17,13 +17,13 @@ fn fragment(mesh: VertexOutput) -> @location(0) vec4<f32> {
     let col = u32(g.x);
     let path1 = vec2<f32>(-1.0, 0.33);
     let path2 = vec2<f32>(.2, -0.8);
-    var path3 = vec2<f32>( 0.01 * sin(time * 0.1),  0.001 * cos(time * 0.1));
+    var path3 = vec2<f32>(0.01 * sin(time * 0.1), 0.001 * cos(time * 0.1));
     let path4 = vec2<f32>(-0.1, -0.1);
-    
+
     var wave = color * 0.1;
     wave += 0.1 * wave_color * perlin_noise_2d(g + path1 * time * 0.3) * cos(time * 0.01);
-    wave += 0.1 * wave_color * perlin_noise_2d(g + path2 * time* 0.3);
+    wave += 0.1 * wave_color * perlin_noise_2d(g + path2 * time * 0.3);
     wave += 0.2 * color * abs(perlin_noise_2d(g + path3 * time));
     wave += color * perlin_noise_2d(g + path4 * time) * (0.2 + .05 * sin(time * 0.001));
-    return (wave * 0.07 + vec4<f32>(0., 0.05 + 0.01 * cos(time * 0.001), 0.2 + 0.05 * sin(time * 0.001), 0.1)) * 0.8;
+    return (wave * 0.07 + vec4<f32>(0., 0.05 + 0.01 * cos(time * 0.001), 0.2 + 0.05 * sin(time * 0.001), 0.1)) * 1.0;
 }

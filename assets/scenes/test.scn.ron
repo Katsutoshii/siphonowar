@@ -28,8 +28,8 @@
       player_team: Blue,
     ),
     "sipho_core::grid::fog::FogConfig": FogConfig(
-      visibility_radius: 6,
-      fog_radius: 5,
+      visibility_radius: 8,
+      fog_radius: 7,
     ),
     "sipho_core::grid::spec::GridSpec": GridSpec(
       rows: 256,

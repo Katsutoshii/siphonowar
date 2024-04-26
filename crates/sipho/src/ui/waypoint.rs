@@ -115,10 +115,11 @@ impl Waypoint {
                 ..default()
             },
             CarriedBy::default(),
-            PhysicsBundle {
-                position: Position(position),
-                ..default()
-            },
+            Position(position),
+            // PhysicsBundle {
+            //     position: Position(position),
+            //     ..default()
+            // },
             self,
         )
     }

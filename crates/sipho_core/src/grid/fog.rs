@@ -40,7 +40,7 @@ impl Default for FogConfig {
     fn default() -> Self {
         Self {
             player_team: Team::Blue,
-            visibility_radius: 5,
+            visibility_radius: 7,
             fog_radius: 6,
         }
     }
@@ -51,6 +51,7 @@ impl Default for FogConfig {
 pub struct VisibilityUpdate {
     pub team: Team,
     pub rowcol: RowCol,
+    pub amount: f32,
 }
 
 /// Communicates to other systems that visibility has been updated.
@@ -100,9 +101,12 @@ impl Grid2<TeamVisibility> {
             if let Some(prev_rowcol) = event.prev_rowcol {
                 updates
                     .removals
-                    .extend(grid.remove_visibility(prev_rowcol, event.team, &config))
+                    .extend(grid.remove_visibility(prev_rowcol, event.team, &config));
             }
             if let Some(rowcol) = event.rowcol {
+                // updates
+                //     .removals
+                //     .extend(grid.remove_visibility(rowcol, event.team, &config));
                 updates
                     .additions
                     .extend(grid.add_visibility(rowcol, event.team, &config));
@@ -119,17 +123,17 @@ impl Grid2<TeamVisibility> {
         config: &FogConfig,
     ) -> Vec<VisibilityUpdate> {
         let mut updates = Vec::default();
-        let radius = config.visibility_radius;
-        for other_rowcol in self.get_in_radius_discrete(rowcol, radius) {
+        for other_rowcol in self.get_in_radius_discrete(rowcol, config.visibility_radius) {
             if let Some(grid_visibility) = self.get_mut(other_rowcol) {
                 if grid_visibility.get(team) > 0 {
                     *grid_visibility.get_mut(team) -= 1;
-                    if team == config.player_team && grid_visibility.get(team) == 0 {
-                        updates.push(VisibilityUpdate {
-                            team,
-                            rowcol: other_rowcol,
-                        });
-                    }
+                }
+                if team == config.player_team && grid_visibility.get(team) == 0 {
+                    updates.push(VisibilityUpdate {
+                        team,
+                        rowcol: other_rowcol,
+                        amount: 0.5,
+                    });
                 }
             }
         }
@@ -156,12 +160,16 @@ impl Grid2<TeamVisibility> {
         for other_rowcol in self.get_in_radius_discrete(cell, config.visibility_radius) {
             if let Some(grid_visibility) = self.get_mut(other_rowcol) {
                 *grid_visibility.get_mut(team) += 1;
-                if team == config.player_team
-                    && GridSpec::in_radius(cell, other_rowcol, config.fog_radius)
-                {
+                if team == config.player_team {
+                    let amount = if GridSpec::in_radius(cell, other_rowcol, config.fog_radius) {
+                        1.0
+                    } else {
+                        0.5
+                    };
                     updates.push(VisibilityUpdate {
                         team,
                         rowcol: other_rowcol,
+                        amount,
                     });
                 }
             }
@@ -219,11 +227,12 @@ impl FogShaderMaterial {
         let material: &mut FogShaderMaterial =
             shader_assets.get_mut(&assets.shader_material).unwrap();
         for event in updates.read() {
-            for &VisibilityUpdate { team: _, rowcol } in &event.removals {
-                material.grid[spec.flat_index(rowcol)] = 0.5;
+            for &VisibilityUpdate { rowcol, amount, .. } in &event.removals {
+                material.grid[spec.flat_index(rowcol)] = 1. - amount;
             }
-            for &VisibilityUpdate { team: _, rowcol } in &event.additions {
-                material.grid[spec.flat_index(rowcol)] = 0.;
+            for &VisibilityUpdate { rowcol, amount, .. } in &event.additions {
+                material.grid[spec.flat_index(rowcol)] =
+                    material.grid[spec.flat_index(rowcol)].min(1. - amount);
             }
         }
     }

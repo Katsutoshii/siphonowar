@@ -118,7 +118,7 @@ impl Grid2<Obstacle> {
         mut query: Query<(&mut Position, &mut Velocity, &mut Force)>,
     ) {
         for (mut position, mut velocity, mut force) in query.iter_mut() {
-            let obstacle_force = obstacles.force(position.0, *velocity) * 6.;
+            let obstacle_force = obstacles.force(position.0, *velocity) * 10.;
             *force += obstacle_force;
             if let Some(rowcol) = obstacles.to_rowcol(position.0) {
                 if obstacles[rowcol] != Obstacle::Empty {

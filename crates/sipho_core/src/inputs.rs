@@ -1,6 +1,7 @@
 use bevy::input::keyboard::KeyboardInput;
 use bevy::input::mouse::MouseButtonInput;
 use bevy::input::{ButtonState, InputSystem};
+use bevy::utils::HashSet;
 use bevy::{prelude::*, utils::HashMap};
 
 use std::hash::Hash;
@@ -129,6 +130,8 @@ impl From<InputAction> for ControlMode {
 #[reflect(Resource)]
 pub struct ControlState {
     pub mode: ControlMode,
+    // Stores pressed actions that are NOT mode actions.
+    pub pressed: HashSet<InputAction>,
 }
 
 /// Describes an input action and the worldspace position where it occurred.
@@ -170,6 +173,7 @@ impl ControlEvent {
                     raycast_event = raycast.raycast(ray);
                 }
             }
+
             if let Some(raycast_event) = &raycast_event {
                 let action = ControlAction::from((raycast_event.target, state.mode, event.action));
 
@@ -201,7 +205,18 @@ impl ControlEvent {
                     entity: raycast_event.entity,
                 });
 
-                state.mode = ControlMode::from(event.action);
+                // Only update state if no inputs were held last frame.
+                if state.pressed.is_empty() {
+                    state.mode = ControlMode::from(event.action);
+                }
+
+                // Maintain
+                if event.action != InputAction::AttackMode {
+                    match event.state {
+                        ButtonState::Pressed => state.pressed.insert(event.action),
+                        ButtonState::Released => state.pressed.remove(&event.action),
+                    };
+                }
             } else {
                 // warn!("No raycast");
             }
