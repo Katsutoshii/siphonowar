@@ -11,6 +11,7 @@ bevy = {version = "0.13.0", features = ["dynamic_linking", "file_watcher"]}
 bevy_mod_raycast = "0.17.0"
 clap = "4.5.2"
 derive_more = "0.99.17"
+image = "0.24.9"
 rand = "0.8.5"
 serde = "1.0.192"
 

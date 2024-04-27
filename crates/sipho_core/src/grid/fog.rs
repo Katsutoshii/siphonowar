@@ -1,6 +1,13 @@
 use crate::prelude::*;
 
-use bevy::render::render_resource::{AsBindGroup, ShaderRef};
+use bevy::render::{
+    render_resource::{
+        AsBindGroup, Extent3d, ShaderRef, TextureDescriptor, TextureDimension, TextureFormat,
+        TextureUsages,
+    },
+    texture::ImageSampler,
+};
+use image::DynamicImage;
 
 /// Plugin for fog of war.
 pub struct FogPlugin;
@@ -8,6 +15,7 @@ impl Plugin for FogPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<FogConfig>()
             .insert_resource(FogConfig::default())
+            .init_resource::<FogAssets>()
             .add_plugins(ShaderPlanePlugin::<FogShaderMaterial>::default())
             .add_plugins(Grid2Plugin::<TeamVisibility>::default())
             .add_event::<VisibilityUpdateEvent>()
@@ -16,6 +24,7 @@ impl Plugin for FogPlugin {
                 (
                     Grid2::<TeamVisibility>::update,
                     Grid2::<TeamVisibility>::update_visibility,
+                    FogShaderMaterial::update,
                 )
                     .chain()
                     .in_set(FixedUpdateStage::PreDespawn)
@@ -23,8 +32,9 @@ impl Plugin for FogPlugin {
                     .after(GridEntity::cleanup),
             )
             .add_systems(
-                Update,
-                (FogShaderMaterial::update,).in_set(GameStateSet::Running),
+                FixedUpdate,
+                (FogShaderMaterial::init.after(FogShaderMaterial::resize_on_change),)
+                    .in_set(GameStateSet::Running),
             );
     }
 }
@@ -185,15 +195,16 @@ pub struct FogShaderMaterial {
     pub color: Color,
     #[uniform(1)]
     pub size: GridSize,
-    #[storage(2, read_only)]
-    pub grid: Vec<f32>,
+    #[texture(2)]
+    #[sampler(3)]
+    texture: Handle<Image>,
 }
-impl Default for FogShaderMaterial {
-    fn default() -> Self {
+impl FromWorld for FogShaderMaterial {
+    fn from_world(world: &mut World) -> Self {
         Self {
             color: Color::BLACK,
             size: GridSize::default(),
-            grid: Vec::default(),
+            texture: world.get_resource::<FogAssets>().unwrap().texture.clone(),
         }
     }
 }
@@ -202,8 +213,6 @@ impl ShaderPlaneMaterial for FogShaderMaterial {
         self.size.width = spec.width;
         self.size.rows = spec.rows.into();
         self.size.cols = spec.cols.into();
-        self.grid
-            .resize(spec.rows as usize * spec.cols as usize, 1.);
     }
     fn translation(_spec: &GridSpec) -> Vec3 {
         Vec2::ZERO.extend(zindex::FOG_OF_WAR)
@@ -218,22 +227,92 @@ impl Material for FogShaderMaterial {
     }
 }
 impl FogShaderMaterial {
+    pub fn init(spec: Res<GridSpec>, assets: ResMut<FogAssets>, mut images: ResMut<Assets<Image>>) {
+        if !spec.is_changed() {
+            return;
+        }
+        let size = Extent3d {
+            width: spec.cols as u32,
+            height: spec.rows as u32,
+            ..default()
+        };
+
+        info!("FogShaderMaterial::init");
+        let image = images.get_mut(&assets.texture).unwrap();
+        image.resize(size);
+    }
+
     pub fn update(
-        spec: Res<GridSpec>,
+        // spec: Res<GridSpec>,
         assets: Res<ShaderPlaneAssets<Self>>,
         mut shader_assets: ResMut<Assets<Self>>,
         mut updates: EventReader<VisibilityUpdateEvent>,
+        fog_assets: Res<FogAssets>,
+        mut images: ResMut<Assets<Image>>,
     ) {
-        let material: &mut FogShaderMaterial =
-            shader_assets.get_mut(&assets.shader_material).unwrap();
-        for event in updates.read() {
-            for &VisibilityUpdate { rowcol, amount, .. } in &event.removals {
-                material.grid[spec.flat_index(rowcol)] = 1. - amount;
+        // Mark shader assets as changed.
+        shader_assets.get_mut(&assets.shader_material);
+        // let material: &mut FogShaderMaterial =
+        //     shader_assets.get_mut(&assets.shader_material).unwrap();
+
+        let image = images.get_mut(&fog_assets.texture).unwrap();
+        if let Ok(DynamicImage::ImageRgba8(mut rgba)) = image.clone().try_into_dynamic() {
+            for event in updates.read() {
+                for &VisibilityUpdate { rowcol, amount, .. } in &event.removals {
+                    let amount_u8 = ((amount * 0.99) * (u8::MAX as f32)) as u8;
+                    let (y, x) = rowcol;
+                    let pixel = rgba.get_pixel_mut(x as u32, y as u32);
+                    pixel.0[3] = amount_u8;
+                }
+                for &VisibilityUpdate { rowcol, amount, .. } in &event.additions {
+                    let amount_u8 = ((amount * 0.99) * (u8::MAX as f32)) as u8;
+                    let (y, x) = rowcol;
+                    let pixel = rgba.get_pixel_mut(x as u32, y as u32);
+                    pixel.0[3] = amount_u8.max(pixel.0[3]);
+                }
             }
-            for &VisibilityUpdate { rowcol, amount, .. } in &event.additions {
-                material.grid[spec.flat_index(rowcol)] =
-                    material.grid[spec.flat_index(rowcol)].min(1. - amount);
-            }
+
+            *image = Image::from_dynamic(DynamicImage::ImageRgba8(rgba), true, image.asset_usage);
         }
+    }
+}
+
+/// Handles to shader plane assets.
+#[derive(Resource)]
+pub struct FogAssets {
+    pub texture: Handle<Image>,
+}
+impl FromWorld for FogAssets {
+    fn from_world(world: &mut World) -> Self {
+        info!("FogAssets::from_world");
+        let assets = Self {
+            texture: {
+                let mut images = world.get_resource_mut::<Assets<Image>>().unwrap();
+                let size = Extent3d {
+                    width: 256,
+                    height: 256,
+                    ..default()
+                };
+                let mut image = Image {
+                    texture_descriptor: TextureDescriptor {
+                        label: None,
+                        dimension: TextureDimension::D2,
+                        format: TextureFormat::Rgba8UnormSrgb,
+                        size,
+                        mip_level_count: 1,
+                        sample_count: 1,
+                        usage: TextureUsages::TEXTURE_BINDING
+                            | TextureUsages::COPY_DST
+                            | TextureUsages::RENDER_ATTACHMENT,
+                        view_formats: &[],
+                    },
+                    sampler: ImageSampler::linear(),
+                    ..default()
+                };
+                image.resize(size);
+                images.add(image)
+            },
+        };
+        assets
     }
 }

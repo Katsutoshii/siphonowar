@@ -219,6 +219,16 @@ impl ControlEvent {
                 }
             } else {
                 // warn!("No raycast");
+
+                let action = ControlAction::from((RaycastTarget::None, state.mode, event.action));
+
+                control_events.send(ControlEvent {
+                    action,
+                    state: event.state,
+                    mode: state.mode,
+                    position: Vec2::ZERO,
+                    entity: Entity::PLACEHOLDER,
+                });
             }
         }
         // Tick all active timers.
