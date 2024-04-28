@@ -197,14 +197,14 @@ pub struct FogShaderMaterial {
     pub size: GridSize,
     #[texture(2)]
     #[sampler(3)]
-    texture: Handle<Image>,
+    visibility_texture: Handle<Image>,
 }
 impl FromWorld for FogShaderMaterial {
     fn from_world(world: &mut World) -> Self {
         Self {
             color: Color::BLACK,
             size: GridSize::default(),
-            texture: world.get_resource::<FogAssets>().unwrap().texture.clone(),
+            visibility_texture: world.get_resource::<FogAssets>().unwrap().texture.clone(),
         }
     }
 }
@@ -237,13 +237,11 @@ impl FogShaderMaterial {
             ..default()
         };
 
-        info!("FogShaderMaterial::init");
         let image = images.get_mut(&assets.texture).unwrap();
         image.resize(size);
     }
 
     pub fn update(
-        // spec: Res<GridSpec>,
         assets: Res<ShaderPlaneAssets<Self>>,
         mut shader_assets: ResMut<Assets<Self>>,
         mut updates: EventReader<VisibilityUpdateEvent>,
@@ -252,8 +250,6 @@ impl FogShaderMaterial {
     ) {
         // Mark shader assets as changed.
         shader_assets.get_mut(&assets.shader_material);
-        // let material: &mut FogShaderMaterial =
-        //     shader_assets.get_mut(&assets.shader_material).unwrap();
 
         let image = images.get_mut(&fog_assets.texture).unwrap();
         if let Ok(DynamicImage::ImageRgba8(mut rgba)) = image.clone().try_into_dynamic() {
