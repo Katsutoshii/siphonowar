@@ -65,7 +65,7 @@ impl LightningCommands<'_, '_> {
                         ..default()
                     };
                     let depth = 3.;
-                    for offset in [-0.7, -0.2, 0.2, 0.7] {
+                    for offset in [-0.5, 0.0, 0.5] {
                         parent.spawn(PointLightBundle {
                             point_light,
                             transform: Transform {

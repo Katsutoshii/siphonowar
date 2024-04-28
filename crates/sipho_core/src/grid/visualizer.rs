@@ -34,14 +34,21 @@ pub struct GridVisualizerShaderMaterial {
     grid: Vec<u32>,
     #[uniform(3)]
     wave_color: Color,
+    #[texture(4)]
+    #[sampler(5)]
+    sand_texture: Handle<Image>,
 }
-impl Default for GridVisualizerShaderMaterial {
-    fn default() -> Self {
+impl FromWorld for GridVisualizerShaderMaterial {
+    fn from_world(world: &mut World) -> Self {
         Self {
             color: Color::MIDNIGHT_BLUE,
             size: GridSize::default(),
             grid: Vec::default(),
             wave_color: Color::ALICE_BLUE,
+            sand_texture: world
+                .get_resource::<AssetServer>()
+                .unwrap()
+                .load("textures/background/sand.png"),
         }
     }
 }
