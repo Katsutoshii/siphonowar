@@ -77,7 +77,7 @@ impl MainCamera {
                     ..default()
                 }
                 .into(),
-                transform: Transform::from_xyz(0.0, 0.0, zindex::CAMERA)
+                transform: Transform::from_xyz(0.0, -1000., zindex::CAMERA)
                     .with_rotation(Quat::from_axis_angle(Vec3::X, PI / 8.)),
                 tonemapping: Tonemapping::TonyMcMapface,
                 ..default()
