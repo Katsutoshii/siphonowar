@@ -20,6 +20,7 @@ impl Plugin for MinimapPlugin {
 
 fn setup(mut commands: Commands, mut ui_materials: ResMut<Assets<MinimapUiMaterial>>) {
     info!("Hud setup!");
+    // Root
     commands
         .spawn((
             Name::new("Hud"),
@@ -28,7 +29,6 @@ fn setup(mut commands: Commands, mut ui_materials: ResMut<Assets<MinimapUiMateri
                     width: Val::Percent(100.0),
                     height: Val::Percent(100.0),
                     align_items: AlignItems::End,
-                    justify_content: JustifyContent::End,
                     position_type: PositionType::Absolute,
                     ..default()
                 },
@@ -36,21 +36,88 @@ fn setup(mut commands: Commands, mut ui_materials: ResMut<Assets<MinimapUiMateri
             },
         ))
         .with_children(|parent| {
-            parent.spawn((
-                MinimapUi,
-                RaycastTarget::Minimap,
-                RelativeCursorPosition::default(),
-                MaterialNodeBundle {
+            // Flex row
+            parent
+                .spawn(NodeBundle {
                     style: Style {
-                        position_type: PositionType::Absolute,
-                        width: Val::Px(360.0),
-                        height: Val::Px(360.0),
+                        width: Val::Percent(100.0),
+                        flex_direction: FlexDirection::Row,
                         ..default()
                     },
-                    material: ui_materials.add(MinimapUiMaterial::default()),
                     ..default()
-                },
-            ));
+                })
+                .with_children(|parent| {
+                    // Column 1
+                    parent
+                        .spawn(NodeBundle {
+                            style: Style {
+                                justify_content: JustifyContent::FlexStart,
+                                width: Val::Percent(100.),
+                                ..default()
+                            },
+                            ..default()
+                        })
+                        .with_children(|parent| {
+                            parent.spawn((ButtonBundle {
+                                style: Style {
+                                    width: Val::Px(360.0),
+                                    height: Val::Px(360.0),
+                                    ..default()
+                                },
+                                background_color: Color::GRAY.with_a(0.02).into(),
+                                ..default()
+                            },));
+                        });
+                    // Column 2
+                    parent
+                        .spawn(NodeBundle {
+                            style: Style {
+                                width: Val::Percent(100.),
+                                justify_content: JustifyContent::Center,
+                                ..default()
+                            },
+                            ..default()
+                        })
+                        .with_children(|parent| {
+                            parent.spawn((ButtonBundle {
+                                style: Style {
+                                    top: Val::Percent(50.),
+                                    width: Val::Px(360.0),
+                                    height: Val::Px(180.0),
+                                    ..default()
+                                },
+                                background_color: Color::GRAY.with_a(0.02).into(),
+                                ..default()
+                            },));
+                        });
+                    // Column 3: Minimap
+                    parent
+                        .spawn(NodeBundle {
+                            style: Style {
+                                justify_content: JustifyContent::FlexEnd,
+                                width: Val::Percent(100.),
+                                ..default()
+                            },
+                            ..default()
+                        })
+                        .with_children(|parent| {
+                            parent.spawn((
+                                MinimapUi,
+                                RaycastTarget::Minimap,
+                                RelativeCursorPosition::default(),
+                                MaterialNodeBundle {
+                                    style: Style {
+                                        position_type: PositionType::Absolute,
+                                        width: Val::Px(360.0),
+                                        height: Val::Px(360.0),
+                                        ..default()
+                                    },
+                                    material: ui_materials.add(MinimapUiMaterial::default()),
+                                    ..default()
+                                },
+                            ));
+                        });
+                });
         });
 }
 
