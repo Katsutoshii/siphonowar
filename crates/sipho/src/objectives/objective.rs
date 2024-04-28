@@ -161,13 +161,12 @@ impl Objectives {
             if let Some(neighbor) = object.enemy_neighbors.first() {
                 let other = others.get(neighbor.entity).unwrap();
                 // An object should only attack a neighbor if that neighbor is not being carried.
-                if object.object.can_attack()
-                    && neighbor.object.can_be_attacked()
-                    && object.parent.is_none()
+                let object_can_attack = object.object.can_attack() && object.parent.is_none();
+                let other_can_be_attacked = neighbor.object.can_be_attacked()
                     && other.carried_by.is_empty()
                     && (other.path_follower.is_none()
-                        || other.path_follower.unwrap().target.is_none())
-                {
+                        || other.path_follower.unwrap().target.is_none());
+                if object_can_attack && other_can_be_attacked {
                     // If already attacking an entity but we are now closer to different entity, attack the new closest
                     // entity.
                     if *object.object == Object::Worker && object.attached_to.len() >= 2 {

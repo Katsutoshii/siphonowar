@@ -1,4 +1,4 @@
-use crate::prelude::*;
+use crate::{prelude::*, ui::selector::HighlightBundle};
 use bevy::{
     ecs::system::{EntityCommands, SystemParam},
     prelude::*,
@@ -153,6 +153,7 @@ impl ObjectCommands<'_, '_> {
             }
             Object::Head => {
                 let mesh = self.assets.worker_mesh.clone();
+                let selected = spec.selected;
                 let background = self.background_bundle(team_material.clone(), mesh.clone());
                 let mut commands = self.commands.spawn((
                     ZooidHead::default(),
@@ -165,9 +166,16 @@ impl ObjectCommands<'_, '_> {
                 ));
                 commands.with_children(|parent| {
                     parent.spawn(background);
+                    if selected.is_selected() {
+                        parent.spawn(HighlightBundle::new(
+                            mesh.clone(),
+                            self.assets.white_material.clone(),
+                        ));
+                    }
                 });
                 let entity = commands.id();
                 commands.insert(Objectives::new(Objective::FollowEntity(entity)));
+
                 commands
             }
             Object::Plankton => {

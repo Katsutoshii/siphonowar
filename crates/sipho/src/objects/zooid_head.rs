@@ -20,7 +20,8 @@ impl Plugin for ZooidHeadPlugin {
                 // NearestZooidHead::update.in_set(FixedUpdateStage::PostSpawn),
             )
                 .in_set(GameStateSet::Running),
-        );
+        )
+        .add_systems(OnExit(GameState::Loading), ZooidHead::spawn_initial);
     }
 }
 
@@ -42,6 +43,16 @@ impl ZooidHead {
 
             transform.scale = Vec3::splat(config.radius * 1.5 * count / (count + 1.))
         }
+    }
+
+    pub fn spawn_initial(mut commands: ObjectCommands, config: Res<TeamConfig>) {
+        commands.spawn(ObjectSpec {
+            object: Object::Head,
+            position: Vec2::ZERO,
+            selected: Selected::Selected,
+            team: config.player_team,
+            ..default()
+        });
     }
 
     pub fn spawn(

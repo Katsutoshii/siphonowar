@@ -7,7 +7,8 @@ pub struct ObjectAssets {
     pub shocker_mesh: Handle<Mesh>,
     pub armor_mesh: Handle<Mesh>,
     pub connector_mesh: Handle<Mesh>,
-    team_materials: Vec<TeamMaterials>,
+    pub team_materials: Vec<TeamMaterials>,
+    pub white_material: Handle<StandardMaterial>,
 }
 impl ObjectAssets {
     pub fn get_team_material(&self, team: Team) -> TeamMaterials {
@@ -41,6 +42,12 @@ impl FromWorld for ObjectAssets {
                     .iter()
                     .map(|color| TeamMaterials::new(*color, &mut materials))
                     .collect()
+            },
+            white_material: {
+                let mut materials = world
+                    .get_resource_mut::<Assets<StandardMaterial>>()
+                    .unwrap();
+                materials.add(StandardMaterial::from(Color::WHITE.with_a(0.25)))
             },
         }
     }

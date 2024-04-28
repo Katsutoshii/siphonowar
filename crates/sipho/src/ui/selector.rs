@@ -2,7 +2,7 @@ use bevy::{input::ButtonState, prelude::*};
 
 use crate::prelude::*;
 
-#[derive(Component, Default, PartialEq, Debug, Clone, Reflect)]
+#[derive(Component, Default, PartialEq, Debug, Clone, Copy, Reflect)]
 #[reflect(Component)]
 pub enum Selected {
     #[default]
@@ -22,7 +22,7 @@ pub struct HighlightBundle {
     pub pbr: PbrBundle,
 }
 impl HighlightBundle {
-    fn new(mesh: Handle<Mesh>, material: Handle<StandardMaterial>) -> Self {
+    pub fn new(mesh: Handle<Mesh>, material: Handle<StandardMaterial>) -> Self {
         Self {
             name: Name::new("Highlight"),
             highlight: Highlight,
@@ -208,7 +208,7 @@ impl FromWorld for SelectorAssets {
                 let mut materials = world
                     .get_resource_mut::<Assets<StandardMaterial>>()
                     .unwrap();
-                materials.add(StandardMaterial::from(Color::ALICE_BLUE.with_a(0.2)))
+                materials.add(StandardMaterial::from(Color::WHITE.with_a(0.25)))
             },
         }
     }
