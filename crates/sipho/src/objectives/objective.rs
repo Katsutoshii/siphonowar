@@ -161,15 +161,20 @@ impl Objectives {
             if let Some(neighbor) = object.enemy_neighbors.first() {
                 let other = others.get(neighbor.entity).unwrap();
                 // An object should only attack a neighbor if that neighbor is not being carried.
-                let object_can_attack = object.object.can_attack() && object.parent.is_none();
+                let object_can_attack = object.object.can_attack();
                 let other_can_be_attacked = neighbor.object.can_be_attacked()
-                    && other.carried_by.is_empty()
                     && (other.path_follower.is_none()
                         || other.path_follower.unwrap().target.is_none());
                 if object_can_attack && other_can_be_attacked {
                     // If already attacking an entity but we are now closer to different entity, attack the new closest
                     // entity.
                     if *object.object == Object::Worker && object.attached_to.len() >= 2 {
+                        continue;
+                    }
+                    // Free floating can not attack food.
+                    if neighbor.object == Object::Food
+                        && (object.path_to_head.head.is_none() || *object.object == Object::Shocker)
+                    {
                         continue;
                     }
                     match object.objectives.bypass_change_detection().last_mut() {
@@ -279,18 +284,16 @@ pub struct UpdateObjectiveQueryData {
     entity: Entity,
     object: &'static Object,
     objectives: &'static mut Objectives,
-    parent: Option<&'static Parent>,
     health: &'static Health,
     enemy_neighbors: &'static EnemyNeighbors,
     allied_neighbors: &'static AlliedNeighbors,
     attached_to: &'static AttachedTo,
+    path_to_head: &'static PathToHead,
 }
 
 #[derive(QueryData)]
 pub struct UpdateObjectiveNeighborQueryData {
     object: &'static Object,
     velocity: &'static Velocity,
-    parent: Option<&'static Parent>,
-    carried_by: &'static CarriedBy,
     path_follower: Option<&'static PathToHeadFollower>,
 }
