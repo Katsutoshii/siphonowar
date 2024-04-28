@@ -64,6 +64,7 @@ pub fn get_depth() -> f32 {
 pub struct MainCamera;
 impl MainCamera {
     pub fn startup(mut commands: Commands) {
+        let theta = PI / 8.;
         commands.spawn((
             Camera3dBundle {
                 camera: Camera {
@@ -77,8 +78,8 @@ impl MainCamera {
                     ..default()
                 }
                 .into(),
-                transform: Transform::from_xyz(0.0, -1000., zindex::CAMERA)
-                    .with_rotation(Quat::from_axis_angle(Vec3::X, PI / 8.)),
+                transform: Transform::from_xyz(0.0, -zindex::CAMERA * theta.tan(), zindex::CAMERA)
+                    .with_rotation(Quat::from_axis_angle(Vec3::X, theta)),
                 tonemapping: Tonemapping::TonyMcMapface,
                 ..default()
             },
