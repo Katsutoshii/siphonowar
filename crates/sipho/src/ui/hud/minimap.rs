@@ -200,11 +200,12 @@ impl MinimapUiMaterial {
             for event in camera_moves.read() {
                 let position =
                     event.position + Vec2::new(0.0, zindex::CAMERA * MainCamera::THETA.tan());
-                let rowcol = spec.to_rowcol(position).unwrap();
-                material.input.camera_position = Vec2 {
-                    x: rowcol.1 as f32,
-                    y: rowcol.0 as f32,
-                };
+                if let Some(rowcol) = spec.to_rowcol(position) {
+                    material.input.camera_position = Vec2 {
+                        x: rowcol.1 as f32,
+                        y: rowcol.0 as f32,
+                    };
+                }
             }
         }
     }

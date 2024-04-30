@@ -77,9 +77,9 @@ impl AStarRunner {
         obstacles: &Grid2<Obstacle>,
     ) {
         // We're at `start`, with a zero cost
-        if grid.is_boundary(self.destination) {
+        if grid.is_boundary(self.destination) || !grid.in_bounds(self.destination) {
             return;
-        }
+        };
 
         let heuristic_factor = self.heuristic_factor(source);
 
@@ -134,7 +134,11 @@ impl AStarRunner {
         let sources: BTreeSet<RowCol> = sources
             .iter()
             .copied()
-            .filter(|&rowcol| grid.in_bounds(rowcol) && obstacles[rowcol] == Obstacle::Empty)
+            .filter(|&rowcol| {
+                !grid.is_boundary(rowcol)
+                    && grid.in_bounds(rowcol)
+                    && obstacles[rowcol] == Obstacle::Empty
+            })
             .collect();
         let mut runner = AStarRunner::new(destination);
         for source in sources {
