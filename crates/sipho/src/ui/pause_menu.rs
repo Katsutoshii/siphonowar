@@ -31,7 +31,7 @@ const HOVERED_PRESSED_BUTTON: Color = Color::rgb(0.45, 0.45, 0.45);
 
 // All actions that can be triggered from a button click
 #[derive(Component)]
-enum MenuButtonAction {
+enum PauseMenuButtonAction {
     Play,
     Settings,
     Quit,
@@ -141,7 +141,7 @@ impl PauseMenu {
                                     background_color: NORMAL_BUTTON.into(),
                                     ..default()
                                 },
-                                MenuButtonAction::Play,
+                                PauseMenuButtonAction::Play,
                             ))
                             .with_children(|parent| {
                                 let icon = asset_server.load("textures/icons/right.png");
@@ -162,7 +162,7 @@ impl PauseMenu {
                                     background_color: NORMAL_BUTTON.into(),
                                     ..default()
                                 },
-                                MenuButtonAction::Settings,
+                                PauseMenuButtonAction::Settings,
                             ))
                             .with_children(|parent| {
                                 let icon = asset_server.load("textures/icons/wrench.png");
@@ -183,7 +183,7 @@ impl PauseMenu {
                                     background_color: NORMAL_BUTTON.into(),
                                     ..default()
                                 },
-                                MenuButtonAction::Quit,
+                                PauseMenuButtonAction::Quit,
                             ))
                             .with_children(|parent| {
                                 let icon = asset_server.load("textures/icons/exit_right.png");
@@ -227,7 +227,11 @@ impl PauseMenu {
     fn button_system(
         mut interaction_query: Query<
             (&Interaction, &mut BackgroundColor, Option<&SelectedOption>),
-            (Changed<Interaction>, With<Button>),
+            (
+                Changed<Interaction>,
+                With<Button>,
+                With<PauseMenuButtonAction>,
+            ),
         >,
     ) {
         for (interaction, mut color, selected) in &mut interaction_query {
@@ -244,7 +248,7 @@ impl PauseMenu {
     #[allow(clippy::type_complexity)]
     fn menu_action(
         interaction_query: Query<
-            (&Interaction, &MenuButtonAction),
+            (&Interaction, &PauseMenuButtonAction),
             (Changed<Interaction>, With<Button>),
         >,
         mut app_exit_events: EventWriter<AppExit>,
@@ -254,14 +258,14 @@ impl PauseMenu {
         for (interaction, menu_button_action) in &interaction_query {
             if *interaction == Interaction::Pressed {
                 match menu_button_action {
-                    MenuButtonAction::Quit => {
+                    PauseMenuButtonAction::Quit => {
                         app_exit_events.send(AppExit);
                     }
-                    MenuButtonAction::Play => {
+                    PauseMenuButtonAction::Play => {
                         game_state.set(GameState::Running);
                         menu_state.set(MenuState::Disabled);
                     }
-                    MenuButtonAction::Settings => menu_state.set(MenuState::Settings),
+                    PauseMenuButtonAction::Settings => menu_state.set(MenuState::Settings),
                 }
             }
         }

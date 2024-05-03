@@ -4,11 +4,13 @@ use bevy::reflect::TypePath;
 use bevy::render::render_resource::*;
 use bevy::ui::RelativeCursorPosition;
 
+use super::assets::HudAssets;
+use super::SpawnHudNode;
+
 pub struct MinimapPlugin;
 impl Plugin for MinimapPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(UiMaterialPlugin::<MinimapUiMaterial>::default())
-            .add_systems(Startup, setup)
             .add_systems(
                 Update,
                 MinimapUiMaterial::update
@@ -16,77 +18,6 @@ impl Plugin for MinimapPlugin {
                     .after(GridEntity::update),
             );
     }
-}
-
-fn setup(mut commands: Commands, mut ui_materials: ResMut<Assets<MinimapUiMaterial>>) {
-    info!("Hud setup!");
-    // Root
-    commands
-        .spawn((
-            Name::new("Hud"),
-            NodeBundle {
-                style: Style {
-                    width: Val::Percent(100.0),
-                    height: Val::Percent(100.0),
-                    align_items: AlignItems::End,
-                    position_type: PositionType::Absolute,
-                    ..default()
-                },
-                ..default()
-            },
-        ))
-        .with_children(|parent| {
-            // Flex row
-            parent
-                .spawn(NodeBundle {
-                    style: Style {
-                        width: Val::Percent(100.0),
-                        display: Display::Flex,
-                        align_items: AlignItems::FlexEnd,
-                        justify_content: JustifyContent::SpaceBetween,
-                        ..default()
-                    },
-                    ..default()
-                })
-                .with_children(|parent| {
-                    // Column 1
-                    parent.spawn((ButtonBundle {
-                        style: Style {
-                            width: Val::Px(300.0),
-                            height: Val::Px(300.0),
-                            ..default()
-                        },
-                        background_color: Color::GRAY.with_a(0.02).into(),
-                        ..default()
-                    },));
-                    // Column 2
-                    parent.spawn((ButtonBundle {
-                        style: Style {
-                            // top: Val::Percent(50.),
-                            width: Val::Px(300.0),
-                            height: Val::Px(150.0),
-                            ..default()
-                        },
-                        background_color: Color::GRAY.with_a(0.02).into(),
-                        ..default()
-                    },));
-                    // Column 3: Minimap
-                    parent.spawn((
-                        MinimapUi,
-                        RaycastTarget::Minimap,
-                        RelativeCursorPosition::default(),
-                        MaterialNodeBundle {
-                            style: Style {
-                                width: Val::Px(300.0),
-                                height: Val::Px(300.0),
-                                ..default()
-                            },
-                            material: ui_materials.add(MinimapUiMaterial::default()),
-                            ..default()
-                        },
-                    ));
-                });
-        });
 }
 
 #[derive(ShaderType, TypePath, Debug, Clone, Copy)]
@@ -131,9 +62,27 @@ impl Default for MinimapUiMaterialInput {
 
 #[derive(Component)]
 pub struct MinimapUi;
+impl SpawnHudNode for MinimapUi {
+    fn spawn(parent: &mut ChildBuilder, assets: &HudAssets) {
+        parent.spawn((
+            MinimapUi,
+            RaycastTarget::Minimap,
+            RelativeCursorPosition::default(),
+            MaterialNodeBundle {
+                style: Style {
+                    width: Val::Px(300.0),
+                    height: Val::Px(300.0),
+                    ..default()
+                },
+                material: assets.minimap_material.clone(),
+                ..default()
+            },
+        ));
+    }
+}
 
 #[derive(AsBindGroup, Asset, TypePath, Default, Debug, Clone)]
-struct MinimapUiMaterial {
+pub struct MinimapUiMaterial {
     #[uniform(0)]
     input: MinimapUiMaterialInput,
     #[storage(1, read_only)]
