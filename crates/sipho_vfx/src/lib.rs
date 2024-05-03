@@ -1,5 +1,6 @@
 use sipho_core::prelude::*;
 
+pub mod bubbles;
 pub mod fireworks;
 pub mod lightning;
 
@@ -23,6 +24,10 @@ pub enum VfxSize {
 pub struct VfxPlugin;
 impl Plugin for VfxPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins((lightning::LightningPlugin, fireworks::FireworkPlugin));
+        app.add_plugins((
+            lightning::LightningPlugin,
+            fireworks::FireworkPlugin,
+            bubbles::BubblesPlugin,
+        ));
     }
 }
