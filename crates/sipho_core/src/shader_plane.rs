@@ -41,7 +41,6 @@ pub trait ShaderPlaneMaterial: Material + FromWorld {
     fn resize(&mut self, spec: &GridSpec);
 
     fn setup(world: &mut World) {
-        info!("ShaderPlaneMaterial::setup");
         let material = Self::from_world(world);
         let spec = world.get_resource::<GridSpec>().unwrap();
         let assets = world.get_resource::<ShaderPlaneAssets<Self>>().unwrap();
@@ -63,7 +62,6 @@ pub trait ShaderPlaneMaterial: Material + FromWorld {
         if !spec.is_changed() {
             return;
         }
-        info!("ShaderPlaneMaterial::resize_on_change");
 
         let mut transform = transforms.single_mut();
         transform.scale = Self::scale(&spec);

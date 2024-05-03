@@ -7,7 +7,7 @@ version = "0.1.0"
 
 [dependencies]
 arrayvec = "0.7.4"
-bevy = {version = "0.13.0", features = ["dynamic_linking", "file_watcher"]}
+bevy = {version = "0.13.2", features = ["dynamic_linking", "file_watcher"]}
 bevy_mod_raycast = "0.17.0"
 clap = "4.5.2"
 derive_more = "0.99.17"
