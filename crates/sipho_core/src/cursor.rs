@@ -45,6 +45,10 @@ impl Cursor {
                 style: style.clone(),
                 image: UiImage::new(assets.cursor.clone()),
                 z_index: ZIndex::Global(i32::MAX),
+                transform: Transform {
+                    scale: Vec3::splat(0.7),
+                    ..default()
+                },
                 ..default()
             },
             Cursor,
@@ -60,7 +64,7 @@ impl Cursor {
         if let Some(cursor_pixel_position) = window.cursor_position() {
             let (mut style, mut image) = cursor.single_mut();
             style.left = Val::Px(cursor_pixel_position.x - 2.0);
-            style.top = Val::Px(cursor_pixel_position.y - 0.0);
+            style.top = Val::Px(cursor_pixel_position.y - 4.0);
 
             if control_state.is_changed() {
                 image.texture = match control_state.mode {
