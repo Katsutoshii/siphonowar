@@ -1,7 +1,9 @@
 use crate::prelude::*;
 
 use self::{
-    assets::HudAssets, controls_pane::HudControlsPane, minimap::MinimapUi,
+    assets::HudAssets,
+    controls_pane::{HudControlsButton, HudControlsPane},
+    minimap::MinimapUi,
     selected_pane::HudSelectedPane,
 };
 
@@ -15,17 +17,24 @@ impl Plugin for HudPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((minimap::MinimapPlugin,))
             .init_resource::<HudAssets>()
-            .add_systems(Startup, setup);
+            .add_systems(Startup, setup)
+            .add_systems(Update, HudControlsButton::button_system);
     }
 }
 
 pub trait SpawnHudNode {
-    fn spawn(parent: &mut ChildBuilder, assets: &HudAssets);
+    fn spawn(&self, parent: &mut ChildBuilder, assets: &HudAssets);
 }
+
+pub const TEXT_COLOR: Color = Color::rgb(0.9, 0.9, 0.9);
+pub const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
+pub const HOVERED_BUTTON: Color = Color::rgb(0.25, 0.25, 0.25);
+pub const PRESSED_BUTTON: Color = Color::rgb(0.35, 0.35, 0.35);
+pub const HOVERED_PRESSED_BUTTON: Color = Color::rgb(0.45, 0.45, 0.45);
 
 pub struct HudFlexRow;
 impl SpawnHudNode for HudFlexRow {
-    fn spawn(parent: &mut ChildBuilder, assets: &HudAssets) {
+    fn spawn(&self, parent: &mut ChildBuilder, assets: &HudAssets) {
         parent
             .spawn(NodeBundle {
                 style: Style {
@@ -38,9 +47,9 @@ impl SpawnHudNode for HudFlexRow {
                 ..default()
             })
             .with_children(|parent| {
-                HudControlsPane::spawn(parent, assets);
-                HudSelectedPane::spawn(parent, assets);
-                MinimapUi::spawn(parent, assets);
+                HudControlsPane.spawn(parent, assets);
+                HudSelectedPane.spawn(parent, assets);
+                MinimapUi.spawn(parent, assets);
             });
     }
 }
@@ -58,5 +67,5 @@ fn setup(mut commands: Commands, assets: Res<HudAssets>) {
                 ..default()
             },
         ))
-        .with_children(|parent| HudFlexRow::spawn(parent, &assets));
+        .with_children(|parent| HudFlexRow.spawn(parent, &assets));
 }

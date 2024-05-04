@@ -63,7 +63,7 @@ impl Default for MinimapUiMaterialInput {
 #[derive(Component)]
 pub struct MinimapUi;
 impl SpawnHudNode for MinimapUi {
-    fn spawn(parent: &mut ChildBuilder, assets: &HudAssets) {
+    fn spawn(&self, parent: &mut ChildBuilder, assets: &HudAssets) {
         parent.spawn((
             MinimapUi,
             RaycastTarget::Minimap,
