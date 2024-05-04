@@ -58,6 +58,7 @@ pub enum InputAction {
     TieCursor,
     PauseMenu,
     Fuse,
+    AttachZooid,
 }
 
 /// Specifies input mapping.
@@ -290,6 +291,7 @@ pub enum ControlAction {
     TieCursor,
     Fuse,
     PauseMenu,
+    AttachZooid,
 }
 impl From<(RaycastTarget, ControlMode, InputAction)> for ControlAction {
     fn from(value: (RaycastTarget, ControlMode, InputAction)) -> Self {
@@ -315,6 +317,7 @@ impl From<(RaycastTarget, ControlMode, InputAction)> for ControlAction {
             (RaycastTarget::WorldGrid, _, InputAction::TieSelection) => Self::TieSelection,
             (RaycastTarget::WorldGrid, _, InputAction::TieCursor) => Self::TieCursor,
             (RaycastTarget::WorldGrid, _, InputAction::DragCamera) => Self::DragCamera,
+            (RaycastTarget::WorldGrid, _, InputAction::AttachZooid) => Self::AttachZooid,
             (_, _, InputAction::PauseMenu) => Self::PauseMenu,
             (RaycastTarget::None, _, _) => Self::None,
 

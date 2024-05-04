@@ -52,6 +52,7 @@
         KeyV: TieCursor,
         Escape: PauseMenu,
         KeyO: Fuse,
+        KeyQ: AttachZooid,
       },
       mouse: {
         Left: Primary,

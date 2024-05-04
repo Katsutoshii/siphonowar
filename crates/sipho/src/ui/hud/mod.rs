@@ -4,7 +4,7 @@ use self::{
     assets::HudAssets,
     controls_pane::{HudControlsButton, HudControlsPane},
     minimap::MinimapUi,
-    selected_pane::HudSelectedPane,
+    selected_pane::{HudSelectedPane, HudUnitButton},
 };
 
 pub mod assets;
@@ -18,7 +18,14 @@ impl Plugin for HudPlugin {
         app.add_plugins((minimap::MinimapPlugin,))
             .init_resource::<HudAssets>()
             .add_systems(Startup, setup)
-            .add_systems(Update, HudControlsButton::button_system);
+            .add_systems(
+                Update,
+                (
+                    HudControlsButton::button_system,
+                    HudSelectedPane::update,
+                    HudUnitButton::update,
+                ),
+            );
     }
 }
 

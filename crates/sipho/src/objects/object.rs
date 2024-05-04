@@ -36,6 +36,8 @@ impl Plugin for ObjectPlugin {
     Copy,
     Clone,
     PartialEq,
+    PartialOrd,
+    Ord,
     Eq,
     Hash,
     Debug,
