@@ -47,16 +47,7 @@ impl Plugin for CameraPlugin {
 
 #[derive(Event)]
 pub struct CameraMoveEvent {
-    pub position: Vec2,
-}
-
-pub const FOV: f32 = PI / 4.;
-
-// Compute UI depth for camera such that the Y distance is 1.
-pub fn get_depth() -> f32 {
-    let theta = FOV / 2.;
-    let opposite = 1. / 2.;
-    opposite / theta.tan()
+    pub position: Vec3,
 }
 
 /// Used to help identify our main camera
@@ -64,6 +55,8 @@ pub fn get_depth() -> f32 {
 pub struct MainCamera;
 impl MainCamera {
     pub const THETA: f32 = PI / 8.;
+    pub const FOV: f32 = PI / 4.;
+
     pub fn startup(mut commands: Commands) {
         commands.spawn((
             Camera3dBundle {
@@ -72,7 +65,7 @@ impl MainCamera {
                     ..default()
                 },
                 projection: PerspectiveProjection {
-                    fov: FOV,
+                    fov: Self::FOV,
                     near: 0.1,
                     far: 2000.,
                     ..default()
@@ -142,49 +135,37 @@ impl Default for CameraController {
 impl CameraController {
     // Set camera position.
     pub fn set_position(&self, camera_transform: &mut Transform, position: Vec2) {
-        camera_transform.translation = position.extend(camera_transform.translation.z);
+        let height = camera_transform.translation.z;
+        camera_transform.translation = position.extend(height);
         self.world2d_bounds
             .clamp3(&mut camera_transform.translation)
     }
 
     fn update_bounds(
         grid_spec: Res<GridSpec>,
-        mut controller_query: Query<(&mut Self, &Camera, &GlobalTransform), With<MainCamera>>,
+        mut controller_query: Query<(&mut Self, &GlobalTransform), With<MainCamera>>,
         window: Query<&Window, With<PrimaryWindow>>,
     ) {
         if !grid_spec.is_changed() {
             return;
         }
-        let (mut controller, camera, camera_transform) = controller_query.single_mut();
-        if let Some(world2d_size) =
-            Self::get_world2d_size(camera, camera_transform, window.single())
-        {
+        let (mut controller, camera_transform) = controller_query.single_mut();
+        if let Some(world2d_size) = Self::get_world2d_size(camera_transform, window.single()) {
             controller.world2d_bounds = grid_spec.world2d_bounds();
-            controller.world2d_bounds.min += world2d_size * 0.5;
-            controller.world2d_bounds.max -= world2d_size * 0.5;
+            controller.world2d_bounds.min += world2d_size;
+            controller.world2d_bounds.max -= world2d_size;
+            dbg!(&controller.world2d_bounds);
         }
     }
 
-    fn get_world2d_size(
-        camera: &Camera,
-        camera_transform: &GlobalTransform,
-        window: &Window,
-    ) -> Option<Vec2> {
-        let camera_min = camera.viewport_to_world_2d(
-            camera_transform,
-            Vec2 {
-                x: 0.,
-                y: window.physical_height() as f32,
-            },
-        )?;
-        let camera_max = camera.viewport_to_world_2d(
-            camera_transform,
-            Vec2 {
-                x: window.physical_width() as f32,
-                y: 0.,
-            },
-        )?;
-        Some(camera_max - camera_min)
+    fn get_world2d_size(camera_transform: &GlobalTransform, window: &Window) -> Option<Vec2> {
+        Some(
+            1.5 * Vec2 {
+                x: 1.,
+                y: window.height() / window.width(),
+            } * camera_transform.translation().z
+                * (MainCamera::FOV / 2.).tan(),
+        )
     }
 
     pub fn update_control(
@@ -227,7 +208,7 @@ impl CameraController {
                 } => {
                     controller.set_position(&mut camera_transform, *position);
                     event_writer.send(CameraMoveEvent {
-                        position: camera_transform.translation.xy(),
+                        position: camera_transform.translation,
                     });
                 }
                 _ => {}
@@ -237,6 +218,9 @@ impl CameraController {
             let height = camera_transform.translation.z;
             camera_transform.translation.z =
                 (height - event.y * 50.).clamp(zindex::MIN_CAMERA, zindex::CAMERA);
+            event_writer.send(CameraMoveEvent {
+                position: camera_transform.translation,
+            });
         }
     }
 
@@ -277,7 +261,7 @@ impl CameraController {
                 + dt * controller.velocity * controller.sensitivity;
             controller.set_position(&mut camera_transform, position);
             event_writer.send(CameraMoveEvent {
-                position: camera_transform.translation.xy(),
+                position: camera_transform.translation,
             });
         }
     }

@@ -18,16 +18,26 @@ impl Plugin for PlanktonPlugin {
 #[derive(Component, Default)]
 pub struct Plankton;
 impl Plankton {
-    pub fn spawn_random(grid_spec: Res<GridSpec>, mut commands: ObjectCommands) {
+    pub fn spawn_random(
+        grid_spec: Res<GridSpec>,
+        mut commands: ObjectCommands,
+        obstacles: Res<Grid2<Obstacle>>,
+    ) {
         let bounds = grid_spec.world2d_bounds_eps();
         for _ in 0..1000 {
+            let position = Vec2 {
+                x: rand::thread_rng().gen_range(bounds.min.x..bounds.max.x),
+                y: rand::thread_rng().gen_range(bounds.min.y..bounds.max.y),
+            };
+            let rowcol = obstacles.to_rowcol(position).unwrap();
+            if !obstacles.is_clear(rowcol) {
+                continue;
+            }
+
             commands.spawn(ObjectSpec {
                 object: Object::Plankton,
                 team: Team::None,
-                position: Vec2 {
-                    x: rand::thread_rng().gen_range(bounds.min.x..bounds.max.x),
-                    y: rand::thread_rng().gen_range(bounds.min.y..bounds.max.y),
-                },
+                position,
                 ..default()
             });
         }

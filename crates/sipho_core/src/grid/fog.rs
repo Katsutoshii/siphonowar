@@ -114,9 +114,6 @@ impl Grid2<TeamVisibility> {
                     .extend(grid.remove_visibility(prev_rowcol, event.team, &config));
             }
             if let Some(rowcol) = event.rowcol {
-                // updates
-                //     .removals
-                //     .extend(grid.remove_visibility(rowcol, event.team, &config));
                 updates
                     .additions
                     .extend(grid.add_visibility(rowcol, event.team, &config));
@@ -134,6 +131,10 @@ impl Grid2<TeamVisibility> {
     ) -> Vec<VisibilityUpdate> {
         let mut updates = Vec::default();
         for other_rowcol in self.get_in_radius_discrete(rowcol, config.visibility_radius) {
+            // Don't add visibility on the boundary.
+            if self.is_near_boundary(other_rowcol) {
+                continue;
+            }
             if let Some(grid_visibility) = self.get_mut(other_rowcol) {
                 if grid_visibility.get(team) > 0 {
                     *grid_visibility.get_mut(team) -= 1;
@@ -168,6 +169,10 @@ impl Grid2<TeamVisibility> {
     ) -> Vec<VisibilityUpdate> {
         let mut updates = Vec::default();
         for other_rowcol in self.get_in_radius_discrete(cell, config.visibility_radius) {
+            // Don't add visibility on the boundary.
+            if self.is_boundary(other_rowcol) {
+                continue;
+            }
             if let Some(grid_visibility) = self.get_mut(other_rowcol) {
                 *grid_visibility.get_mut(team) += 1;
                 if team == config.player_team {

@@ -28,7 +28,6 @@ fn get_team_presence(row: u32, col: u32) -> vec3<f32> {
     let arr = grid[grid_index(input.size, row, col)].team_presence;
     return vec3<f32>(arr[0], arr[1], arr[2]);
 }
-
 @fragment
 fn fragment(in: UiVertexOutput) -> @location(0) vec4<f32> {
 
@@ -38,7 +37,7 @@ fn fragment(in: UiVertexOutput) -> @location(0) vec4<f32> {
     let col = u32(g.x);
 
     var camera_brightness = vec4<f32>(0.);
-    let camera_check = abs(g - input.camera_position);
+    let camera_check = abs(g - input.camera_position + input.viewport_size / 2.);
     if camera_check.x < input.viewport_size.x && camera_check.y < input.viewport_size.y {
         camera_brightness = vec4<f32>(0.05);
     }

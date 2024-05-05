@@ -7,7 +7,8 @@ use bevy::{
 
 use crate::{Grid2, Team, TeamEntitySets};
 
-#[derive(Component, Default, PartialEq, Debug, Clone, Copy)]
+#[derive(Component, Default, PartialEq, Debug, Clone, Copy, Reflect)]
+#[reflect(Component)]
 pub enum RaycastTarget {
     #[default]
     None,

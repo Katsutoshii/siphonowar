@@ -65,11 +65,18 @@ impl Waypoint {
         mut commands: Commands,
         mut objectives: Query<&mut Objectives>,
         assets: Res<WaypointAssets>,
+        obstacles: Res<Grid2<Obstacle>>,
     ) {
         for control in control_events.read() {
             if !(control.is_pressed(ControlAction::Move)
                 || control.is_pressed(ControlAction::AttackMove))
             {
+                continue;
+            }
+
+            // Don't spawn waypoints in obstacles.
+            let rowcol = obstacles.to_rowcol(control.position).unwrap();
+            if !obstacles.is_clear(rowcol) {
                 continue;
             }
 

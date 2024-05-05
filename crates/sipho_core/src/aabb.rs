@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use std::mem::swap;
+use std::{mem::swap, ops::Mul};
 
 /// Axis-aligned bounding box in 2d.
 #[derive(Default, PartialEq, Debug, Clone)]
@@ -38,5 +38,14 @@ impl Aabb2 {
     pub fn clamp3(&self, vec: &mut Vec3) {
         vec.x = vec.x.clamp(self.min.x, self.max.x);
         vec.y = vec.y.clamp(self.min.y, self.max.y);
+    }
+}
+impl Mul<f32> for Aabb2 {
+    type Output = Self;
+    fn mul(self, rhs: f32) -> Self::Output {
+        Self {
+            min: self.min * rhs,
+            max: self.max * rhs,
+        }
     }
 }

@@ -56,6 +56,12 @@ impl GridSpec {
         None
     }
 
+    /// Returns (row, col) from a position in world space.
+    pub fn to_uv(&self, mut position: Vec2) -> Vec2 {
+        position += self.offset();
+        position / self.width
+    }
+
     /// Returns the world position of the cell coordinate.
     pub fn to_world_position(&self, rowcol: RowCol) -> Vec2 {
         let (row, col) = rowcol;
@@ -102,17 +108,25 @@ impl GridSpec {
         }
     }
 
-    /// Returns true iff the rowcol is on the boundary of the grid.
-    pub fn is_boundary(&self, rowcol: RowCol) -> bool {
+    pub fn is_boundary_n(&self, rowcol: RowCol, n: u16) -> bool {
         let (row, col) = rowcol;
-        let boundary_size = 5;
-        if row < boundary_size || row > self.rows - boundary_size {
+        if row < n || row > self.rows - n {
             return true;
         }
-        if col < boundary_size || col > self.cols - boundary_size {
+        if col < n || col > self.cols - n {
             return true;
         }
         false
+    }
+
+    /// Returns true iff the rowcol is on the boundary of the grid.
+    pub fn is_near_boundary(&self, rowcol: RowCol) -> bool {
+        self.is_boundary_n(rowcol, 4)
+    }
+
+    /// Returns true iff the rowcol is on the boundary of the grid.
+    pub fn is_boundary(&self, rowcol: RowCol) -> bool {
+        self.is_boundary_n(rowcol, 3)
     }
 
     /// Returns true if the rowcol is in bounds.

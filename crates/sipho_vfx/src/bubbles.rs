@@ -61,7 +61,7 @@ fn setup(
             gradient: {
                 let mut gradient = Gradient::new();
                 gradient.add_key(0.0, Vec2::splat(10.0));
-                gradient.add_key(1.0, Vec2::splat(5.0));
+                gradient.add_key(1.0, Vec2::splat(12.0));
                 gradient
             },
             screen_space_size: false,

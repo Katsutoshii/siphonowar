@@ -61,6 +61,10 @@ impl Grid2<Obstacle> {
         }
     }
 
+    pub fn is_clear(&self, rowcol: RowCol) -> bool {
+        self[rowcol] == Obstacle::Empty && !self.is_boundary(rowcol)
+    }
+
     fn obstacle_force(
         &self,
         position: Vec2,
@@ -71,7 +75,7 @@ impl Grid2<Obstacle> {
         let mut force = Force::ZERO;
         let obstacle_position = self.to_world_position(rowcol);
 
-        if self[rowcol] != Obstacle::Empty {
+        if !self.is_clear(rowcol) {
             //   W
             // ┏---┓
             // ┏━━━┳━━━┓
@@ -121,7 +125,7 @@ impl Grid2<Obstacle> {
             let obstacle_force = obstacles.force(position.0, *velocity) * 10.;
             *force += obstacle_force;
             if let Some(rowcol) = obstacles.to_rowcol(position.0) {
-                if obstacles[rowcol] != Obstacle::Empty {
+                if !obstacles.is_clear(rowcol) {
                     velocity.0 *= -1.0;
                     position.0 += velocity.0;
                 }

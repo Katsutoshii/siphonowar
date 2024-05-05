@@ -126,32 +126,45 @@ impl From<InputAction> for ControlMode {
     }
 }
 
+// Sends events at a given interval for events until the key is released OR a new raycast target is provided.
+#[derive(Reflect, Default, Clone)]
+pub struct HeldActionRepeater {
+    pub timer: Timer,
+    pub target: RaycastTarget,
+}
+
 #[derive(Default, Resource, Reflect, Clone)]
 #[reflect(Resource)]
 pub struct ControlState {
     pub mode: ControlMode,
     // For held controls, stores their recurring timers.
-    pub held_actions: HashMap<ControlAction, Timer>,
+    pub held_actions: HashMap<ControlAction, HeldActionRepeater>,
+    // For held controls, stores their raycast target.
+    pub held_action_targets: HashMap<ControlAction, RaycastTarget>,
     // For pressed controls, stores their recurring timers.
     pub press_durations: HashMap<ControlAction, Stopwatch>,
     // Entity being hovered.
     pub hovered_entity: Option<Entity>,
+    pub input_targets: HashMap<InputAction, RaycastTarget>,
 }
 impl ControlState {
-    pub fn press_action(&mut self, action: ControlAction) {
+    pub fn press_action(&mut self, action: ControlAction, target: RaycastTarget) {
         let duration = action.get_repeat_duration();
         if duration.as_nanos() > 0 {
             self.held_actions.insert(
                 action,
-                Timer::new(action.get_repeat_duration(), TimerMode::Repeating),
+                HeldActionRepeater {
+                    timer: Timer::new(action.get_repeat_duration(), TimerMode::Repeating),
+                    target,
+                },
             );
         }
         self.press_durations.insert(action, Stopwatch::new());
     }
 
     pub fn tick(&mut self, delta: Duration) {
-        for (_action, timer) in self.held_actions.iter_mut() {
-            timer.tick(delta);
+        for (_action, repeater) in self.held_actions.iter_mut() {
+            repeater.timer.tick(delta);
         }
         for (_action, stopwatch) in self.press_durations.iter_mut() {
             stopwatch.tick(delta);
@@ -177,9 +190,24 @@ impl ControlState {
         raycast_event: &RaycastEvent,
     ) -> Vec<ControlEvent> {
         let mut events = Vec::new();
+        let mut actions_to_release: Vec<ControlAction> = Vec::new();
 
-        for (&action, timer) in self.held_actions.iter() {
-            if timer.finished() {
+        for (&action, repeater) in self.held_actions.iter() {
+            // When the input goes from Minimap -> WorldGrid, release.
+            if let (RaycastTarget::Minimap, RaycastTarget::WorldGrid) =
+                (repeater.target, raycast_event.target)
+            {
+                events.push(ControlEvent {
+                    action,
+                    state: ButtonState::Released,
+                    position: ControlEvent::compute_position(grid_spec, raycast_event),
+                    entity: raycast_event.entity,
+                    duration: Duration::from_millis(0),
+                });
+                actions_to_release.push(action);
+                continue;
+            }
+            if repeater.timer.finished() {
                 events.push(ControlEvent {
                     action,
                     state: ButtonState::Pressed,
@@ -188,6 +216,9 @@ impl ControlState {
                     duration: Duration::from_millis(0),
                 });
             }
+        }
+        for action in actions_to_release {
+            self.release_action(action);
         }
         events
     }
@@ -275,6 +306,7 @@ impl ControlEvent {
             }
         }
 
+        // Process inputs
         for event in input_events.read() {
             if let Some(raycast_event) = &raycast_event {
                 let action = ControlAction::from((raycast_event.target, state.mode, event.action));
@@ -293,7 +325,7 @@ impl ControlEvent {
                 }
 
                 if event.state == ButtonState::Pressed {
-                    state.press_action(action);
+                    state.press_action(action, raycast_event.target);
                 } else if event.state == ButtonState::Released
                     && !state.press_durations.contains_key(&action)
                 {

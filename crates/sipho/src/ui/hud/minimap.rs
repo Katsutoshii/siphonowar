@@ -37,6 +37,10 @@ impl Default for MinimapGridEntry {
 pub const WIDTH: usize = 256;
 pub const HEIGHT: usize = 256;
 pub const SIZE: usize = WIDTH * HEIGHT;
+pub const DEFAULT_VIEWPORT_SIZE: Vec2 = Vec2 {
+    x: 16. * 1.5,
+    y: 9. * 1.5,
+};
 
 #[derive(ShaderType, AsBindGroup, TypePath, Debug, Clone)]
 struct MinimapUiMaterialInput {
@@ -55,7 +59,7 @@ impl Default for MinimapUiMaterialInput {
             colors: Team::COLORS,
             size: GridSize::default(),
             camera_position: Vec2::ZERO,
-            viewport_size: Vec2 { x: 16., y: 9. },
+            viewport_size: DEFAULT_VIEWPORT_SIZE,
         }
     }
 }
@@ -147,14 +151,10 @@ impl MinimapUiMaterial {
             }
 
             for event in camera_moves.read() {
-                let position =
-                    event.position + Vec2::new(0.0, zindex::CAMERA * MainCamera::THETA.tan());
-                if let Some(rowcol) = spec.to_rowcol(position) {
-                    material.input.camera_position = Vec2 {
-                        x: rowcol.1 as f32,
-                        y: rowcol.0 as f32,
-                    };
-                }
+                let position = event.position.xy() + event.position.z * MainCamera::THETA.tan();
+                material.input.camera_position = spec.to_uv(position);
+                material.input.viewport_size =
+                    DEFAULT_VIEWPORT_SIZE * (event.position.z / zindex::CAMERA);
             }
         }
     }
