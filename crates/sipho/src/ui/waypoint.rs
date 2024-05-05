@@ -75,7 +75,7 @@ impl Waypoint {
 
             // Spawn a new waypoint.
             let waypoint_bundle =
-                Waypoint::default().bundle(&assets, control.position, control.mode);
+                Waypoint::default().bundle(&assets, control.position, control.action);
             let waypoint_entity = commands.spawn(waypoint_bundle).id();
 
             for (entity, selected, object, attached_to) in selection.iter() {
@@ -89,9 +89,10 @@ impl Waypoint {
                         continue;
                     }
                     objectives.clear();
-                    let objective = match control.mode {
-                        ControlMode::Normal => Objective::FollowEntity(waypoint_entity),
-                        ControlMode::Attack => Objective::AttackFollowEntity(waypoint_entity),
+                    let objective = match control.action {
+                        ControlAction::Move => Objective::FollowEntity(waypoint_entity),
+                        ControlAction::AttackMove => Objective::AttackFollowEntity(waypoint_entity),
+                        _ => unreachable!(),
                     };
                     objectives.push(objective);
                 }
@@ -99,7 +100,12 @@ impl Waypoint {
         }
     }
 
-    pub fn bundle(self, assets: &WaypointAssets, position: Vec2, mode: ControlMode) -> impl Bundle {
+    pub fn bundle(
+        self,
+        assets: &WaypointAssets,
+        position: Vec2,
+        action: ControlAction,
+    ) -> impl Bundle {
         (
             Name::new("Waypoint"),
             PbrBundle {
@@ -108,9 +114,10 @@ impl Waypoint {
                     .with_scale(Vec2::splat(self.size).extend(1.))
                     // .with_rotation(Quat::from_axis_angle(Vec3::Y, PI / 2.))
                     .with_translation(position.extend(zindex::WAYPOINT)),
-                material: match mode {
-                    ControlMode::Normal => assets.blue_material.clone(),
-                    ControlMode::Attack => assets.red_material.clone(),
+                material: match action {
+                    ControlAction::Move => assets.blue_material.clone(),
+                    ControlAction::AttackMove => assets.red_material.clone(),
+                    _ => unreachable!(),
                 },
                 ..default()
             },

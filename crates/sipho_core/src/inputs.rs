@@ -1,7 +1,7 @@
 use bevy::input::keyboard::KeyboardInput;
 use bevy::input::mouse::MouseButtonInput;
 use bevy::input::{ButtonState, InputSystem};
-use bevy::utils::HashSet;
+use bevy::time::Stopwatch;
 use bevy::{prelude::*, utils::HashMap};
 
 use std::hash::Hash;
@@ -9,10 +9,7 @@ use std::hash::Hash;
 /// Mouse events are translated into InputActions.
 /// Rays are cast to determine the target of the InputAction.
 /// How can we determine what the target was?
-use std::{
-    ops::{Index, IndexMut},
-    time::Duration,
-};
+use std::time::Duration;
 
 use crate::prelude::*;
 
@@ -75,6 +72,8 @@ pub struct InputEvent {
     pub state: ButtonState,
 }
 impl InputEvent {
+    // Convert direct keyboard/mouse input events into generalized InputEvents
+    // with hold durations.
     pub fn update(
         mut inputs: EventWriter<Self>,
         mut keyboard_inputs: EventReader<KeyboardInput>,
@@ -131,8 +130,67 @@ impl From<InputAction> for ControlMode {
 #[reflect(Resource)]
 pub struct ControlState {
     pub mode: ControlMode,
-    // Stores pressed actions that are NOT mode actions.
-    pub pressed: HashSet<InputAction>,
+    // For held controls, stores their recurring timers.
+    pub held_actions: HashMap<ControlAction, Timer>,
+    // For pressed controls, stores their recurring timers.
+    pub press_durations: HashMap<ControlAction, Stopwatch>,
+    // Entity being hovered.
+    pub hovered_entity: Option<Entity>,
+}
+impl ControlState {
+    pub fn press_action(&mut self, action: ControlAction) {
+        let duration = action.get_repeat_duration();
+        if duration.as_nanos() > 0 {
+            self.held_actions.insert(
+                action,
+                Timer::new(action.get_repeat_duration(), TimerMode::Repeating),
+            );
+        }
+        self.press_durations.insert(action, Stopwatch::new());
+    }
+
+    pub fn tick(&mut self, delta: Duration) {
+        for (_action, timer) in self.held_actions.iter_mut() {
+            timer.tick(delta);
+        }
+        for (_action, stopwatch) in self.press_durations.iter_mut() {
+            stopwatch.tick(delta);
+        }
+    }
+
+    pub fn release_action(&mut self, action: ControlAction) {
+        self.press_durations.remove(&action);
+        self.held_actions.remove(&action);
+    }
+
+    pub fn get_duration(&mut self, action: ControlAction) -> Duration {
+        if let Some(stopwatches) = self.press_durations.get(&action) {
+            stopwatches.elapsed()
+        } else {
+            Duration::from_millis(0)
+        }
+    }
+
+    pub fn get_repeat_events(
+        &mut self,
+        grid_spec: &GridSpec,
+        raycast_event: &RaycastEvent,
+    ) -> Vec<ControlEvent> {
+        let mut events = Vec::new();
+
+        for (&action, timer) in self.held_actions.iter() {
+            if timer.finished() {
+                events.push(ControlEvent {
+                    action,
+                    state: ButtonState::Pressed,
+                    position: ControlEvent::compute_position(grid_spec, raycast_event),
+                    entity: raycast_event.entity,
+                    duration: Duration::from_millis(0),
+                });
+            }
+        }
+        events
+    }
 }
 
 /// Describes an input action and the worldspace position where it occurred.
@@ -140,9 +198,19 @@ pub struct ControlState {
 pub struct ControlEvent {
     pub action: ControlAction,
     pub state: ButtonState,
-    pub mode: ControlMode,
     pub position: Vec2,
     pub entity: Entity,
+    pub duration: Duration,
+}
+impl ControlEvent {
+    pub fn compute_position(grid_spec: &GridSpec, raycast: &RaycastEvent) -> Vec2 {
+        match raycast.target {
+            RaycastTarget::Minimap => grid_spec.uv_to_world_position(raycast.position),
+            RaycastTarget::WorldGrid => raycast.world_position,
+            RaycastTarget::None => raycast.position,
+            RaycastTarget::GridEntity => raycast.world_position,
+        }
+    }
 }
 impl ControlEvent {
     pub fn is_pressed(&self, action: ControlAction) -> bool {
@@ -158,7 +226,6 @@ impl ControlEvent {
         mut control_events: EventWriter<ControlEvent>,
         cursor: CursorParam,
         grid_spec: Option<Res<GridSpec>>,
-        mut timers: Local<ControlTimers>,
         time: Res<Time>,
         mut state: ResMut<ControlState>,
     ) {
@@ -167,117 +234,105 @@ impl ControlEvent {
         } else {
             return;
         };
-        let mut raycast_event = None;
-        for event in input_events.read() {
-            if raycast_event.is_none() {
-                if let Some(ray) = cursor.ray3d() {
-                    raycast_event = raycast.raycast(ray);
+
+        let raycast_event = if let Some(ray) = cursor.ray3d() {
+            raycast.raycast(ray)
+        } else {
+            None
+        };
+
+        // If no inputs, send hover.
+        if input_events.is_empty() {
+            if let Some(raycast_event) = &raycast_event {
+                if raycast_event.target == RaycastTarget::GridEntity {
+                    let new_hover = if let Some(hovered_entity) = state.hovered_entity {
+                        hovered_entity != raycast_event.entity
+                    } else {
+                        true
+                    };
+                    if new_hover {
+                        state.hovered_entity = Some(raycast_event.entity);
+                        control_events.send(ControlEvent {
+                            action: ControlAction::SelectHover,
+                            state: ButtonState::Pressed,
+                            entity: raycast_event.entity,
+                            position: ControlEvent::compute_position(&grid_spec, raycast_event),
+                            duration: Duration::default(),
+                        });
+                    }
+                } else {
+                    if let Some(hovered_entity) = state.hovered_entity {
+                        control_events.send(ControlEvent {
+                            action: ControlAction::SelectHover,
+                            state: ButtonState::Released,
+                            entity: hovered_entity,
+                            position: ControlEvent::compute_position(&grid_spec, raycast_event),
+                            duration: Duration::default(),
+                        });
+                    }
+                    state.hovered_entity = None;
                 }
             }
+        }
 
+        for event in input_events.read() {
             if let Some(raycast_event) = &raycast_event {
                 let action = ControlAction::from((raycast_event.target, state.mode, event.action));
 
-                // Skip this action if the timer isn't ready.
-                if let Some(timer) = timers.get_mut(&action) {
-                    match event.state {
-                        ButtonState::Pressed => {
-                            timer.unpause();
-                            timer.reset();
+                // Only update state if no inputs were held last frame.
+                if state.held_actions.is_empty() {
+                    match action {
+                        ControlAction::AttackMode => {
+                            state.mode = ControlMode::Attack;
                         }
-                        ButtonState::Released => {
-                            timer.pause();
+                        ControlAction::AttackMove => {
+                            state.mode = ControlMode::Normal;
                         }
+                        _ => {}
                     }
                 }
 
+                if event.state == ButtonState::Pressed {
+                    state.press_action(action);
+                } else if event.state == ButtonState::Released
+                    && !state.press_durations.contains_key(&action)
+                {
+                    continue;
+                }
+
                 control_events.send(ControlEvent {
                     action,
                     state: event.state,
-                    mode: state.mode,
-                    position: match raycast_event.target {
-                        RaycastTarget::Minimap => {
-                            grid_spec.uv_to_world_position(raycast_event.position)
-                        }
-                        RaycastTarget::WorldGrid => raycast_event.world_position,
-                        RaycastTarget::None => raycast_event.position,
-                        RaycastTarget::GridEntity => raycast_event.world_position,
-                    },
                     entity: raycast_event.entity,
+                    position: ControlEvent::compute_position(&grid_spec, raycast_event),
+                    duration: state.get_duration(action),
                 });
 
-                // Only update state if no inputs were held last frame.
-                if state.pressed.is_empty() {
-                    state.mode = ControlMode::from(event.action);
+                if event.state == ButtonState::Released {
+                    state.release_action(action);
                 }
-
-                // Maintain
-                if event.action != InputAction::AttackMode {
-                    match event.state {
-                        ButtonState::Pressed => state.pressed.insert(event.action),
-                        ButtonState::Released => state.pressed.remove(&event.action),
-                    };
-                }
-            } else {
-                // warn!("No raycast");
-
-                let action = ControlAction::from((RaycastTarget::None, state.mode, event.action));
-
-                control_events.send(ControlEvent {
-                    action,
-                    state: event.state,
-                    mode: state.mode,
-                    position: Vec2::ZERO,
-                    entity: Entity::PLACEHOLDER,
-                });
             }
         }
-        // Tick all active timers.
-        for (&action, timer) in timers.iter_mut() {
-            if timer.paused() {
-                continue;
-            }
 
-            if raycast_event.is_none() {
-                if let Some(ray) = cursor.ray3d() {
-                    raycast_event = raycast.raycast(ray);
-                }
-            }
-            timer.tick(time.delta());
-            if timer.finished() {
-                timer.reset();
-                if let Some(raycast_event) = &raycast_event {
-                    let event = ControlEvent {
-                        action,
-                        state: ButtonState::Pressed,
-                        mode: ControlMode::Normal,
-                        position: match raycast_event.target {
-                            RaycastTarget::Minimap => match action {
-                                ControlAction::Select => raycast_event.world_position,
-                                _ => grid_spec.uv_to_world_position(raycast_event.position),
-                            },
-                            RaycastTarget::WorldGrid => raycast_event.world_position,
-                            RaycastTarget::None => raycast_event.position,
-                            RaycastTarget::GridEntity => raycast_event.world_position,
-                        },
-                        entity: raycast_event.entity,
-                    };
-                    control_events.send(event);
-                }
+        state.tick(time.delta());
+        if let Some(raycast_event) = &raycast_event {
+            for event in state.get_repeat_events(&grid_spec, raycast_event) {
+                control_events.send(event);
             }
         }
     }
 }
 
 /// Describes an action input by the user.
-#[derive(Default, PartialEq, Eq, Clone, Copy, Debug, Hash)]
+#[derive(Default, PartialEq, Eq, Clone, Copy, Debug, Hash, Reflect)]
 pub enum ControlAction {
     #[default]
     None,
     Select,
-    SelectEntity,
+    SelectHover,
     Move,
     AttackMove,
+    AttackMode,
     PanCamera,
     DragCamera,
     SpawnHead,
@@ -293,15 +348,27 @@ pub enum ControlAction {
     PauseMenu,
     AttachZooid,
 }
+impl ControlAction {
+    pub fn get_repeat_duration(self) -> Duration {
+        match self {
+            Self::Move => Duration::from_millis(100),
+            Self::Select => Duration::from_millis(5),
+            Self::DragCamera => Duration::from_millis(5),
+            Self::PanCamera => Duration::from_millis(5),
+            _ => Duration::from_millis(0),
+        }
+    }
+}
 impl From<(RaycastTarget, ControlMode, InputAction)> for ControlAction {
     fn from(value: (RaycastTarget, ControlMode, InputAction)) -> Self {
         match value {
             (RaycastTarget::Minimap, _, InputAction::Primary) => Self::PanCamera,
             (RaycastTarget::Minimap, _, InputAction::Secondary) => Self::Move,
-            (RaycastTarget::WorldGrid, ControlMode::Normal, InputAction::Primary) => Self::Select,
-            (RaycastTarget::GridEntity, ControlMode::Normal, InputAction::Primary) => {
-                Self::SelectEntity
-            }
+            (
+                RaycastTarget::WorldGrid | RaycastTarget::GridEntity,
+                ControlMode::Normal,
+                InputAction::Primary,
+            ) => Self::Select,
             (RaycastTarget::WorldGrid, ControlMode::Attack, InputAction::Primary) => {
                 Self::AttackMove
             }
@@ -319,49 +386,10 @@ impl From<(RaycastTarget, ControlMode, InputAction)> for ControlAction {
             (RaycastTarget::WorldGrid, _, InputAction::DragCamera) => Self::DragCamera,
             (RaycastTarget::WorldGrid, _, InputAction::AttachZooid) => Self::AttachZooid,
             (_, _, InputAction::PauseMenu) => Self::PauseMenu,
+            (_, _, InputAction::AttackMode) => Self::AttackMode,
             (RaycastTarget::None, _, _) => Self::None,
 
             _ => Self::None,
         }
-    }
-}
-
-/// Collection of timers to prevent input action spam.
-#[derive(Deref, DerefMut)]
-pub struct ControlTimers(HashMap<ControlAction, Timer>);
-impl Default for ControlTimers {
-    fn default() -> Self {
-        let mut timers = Self(HashMap::default());
-        timers.insert(
-            ControlAction::Move,
-            Timer::new(Duration::from_millis(100), TimerMode::Repeating),
-        );
-        timers.insert(
-            ControlAction::Select,
-            Timer::new(Duration::from_millis(5), TimerMode::Repeating),
-        );
-        timers.insert(
-            ControlAction::DragCamera,
-            Timer::new(Duration::from_millis(5), TimerMode::Repeating),
-        );
-        timers.insert(
-            ControlAction::PanCamera,
-            Timer::new(Duration::from_millis(5), TimerMode::Repeating),
-        );
-        for (_action, timer) in timers.iter_mut() {
-            timer.pause();
-        }
-        timers
-    }
-}
-impl Index<ControlAction> for ControlTimers {
-    type Output = Timer;
-    fn index(&self, i: ControlAction) -> &Self::Output {
-        self.get(&i).unwrap()
-    }
-}
-impl IndexMut<ControlAction> for ControlTimers {
-    fn index_mut(&mut self, i: ControlAction) -> &mut Self::Output {
-        self.get_mut(&i).unwrap()
     }
 }

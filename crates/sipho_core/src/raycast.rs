@@ -74,11 +74,17 @@ impl RaycastCommands<'_, '_> {
             .map(|&entity| self.grid_meshes.get(entity).unwrap())
         {
             let mesh = self.assets.get(mesh_handle).unwrap();
-            let mut scaled_mesh = mesh.clone();
-            scaled_mesh.scale_by(Vec3::splat(1.2));
-            let mesh_to_world = transform.compute_matrix();
+
+            let mut local_transform = transform.compute_transform();
+            if local_transform.scale.x <= 20. {
+                local_transform.scale *= 3.5;
+            } else {
+                local_transform.scale *= 1.5;
+            }
+
+            let mesh_to_world = local_transform.compute_matrix();
             if let Some(intersection) = bevy_mod_raycast::prelude::ray_intersection_over_mesh(
-                &scaled_mesh,
+                mesh,
                 &mesh_to_world,
                 ray,
                 bevy_mod_raycast::prelude::Backfaces::Cull,

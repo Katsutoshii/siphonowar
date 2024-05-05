@@ -22,6 +22,10 @@
           max_velocity: 1.0,
           velocity_smoothing: 0.5,
         ),
+        Food: PhysicsMaterial(
+          max_velocity: 8.0,
+          velocity_smoothing: 0.5,
+        ),
       }
     ),
     "sipho_core::team::TeamConfig": TeamConfig(
@@ -29,7 +33,7 @@
     ),
     "sipho_core::grid::fog::FogConfig": FogConfig(
       visibility_radius: 8,
-      fog_radius: 7,
+      fog_radius: 6,
     ),
     "sipho_core::grid::spec::GridSpec": GridSpec(
       rows: 256,
@@ -311,7 +315,7 @@
         })
       ),
       Food: ObjectConfig(
-        physics_material: Zooid,
+        physics_material: Food,
         neighbor_radius: 128.0,
         nav_flow_factor: 1.,
         attack_velocity: 0.0,

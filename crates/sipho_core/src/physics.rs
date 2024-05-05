@@ -201,6 +201,7 @@ pub enum PhysicsMaterialType {
     SlowZooid,
     ArmorZooid,
     Plankton,
+    Food,
 }
 #[derive(Clone, Reflect, Debug)]
 pub struct PhysicsMaterial {

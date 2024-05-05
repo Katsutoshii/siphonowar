@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use bevy::{input::ButtonState, prelude::*};
 
 use crate::prelude::*;
@@ -11,7 +13,7 @@ pub enum Selected {
 }
 impl Selected {
     pub fn is_selected(&self) -> bool {
-        self != &Self::Unselected
+        self == &Self::Selected
     }
 }
 
@@ -43,9 +45,9 @@ impl Plugin for SelectorPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<SelectorAssets>()
             .register_type::<Selected>()
-            .add_systems(Startup, Selector::startup)
+            .add_systems(Startup, (Selector::setup,))
             .add_systems(
-                FixedUpdate,
+                Update,
                 Selector::update
                     .in_set(GameStateSet::Running)
                     .in_set(FixedUpdateStage::Spawn),
@@ -54,14 +56,15 @@ impl Plugin for SelectorPlugin {
 }
 #[derive(Component)]
 pub struct Highlight;
+#[derive(Component)]
+pub struct HoverHighlight;
 
 #[derive(Component, Default)]
 pub struct Selector {
-    pub active: bool,
     pub aabb: Aabb2,
 }
 impl Selector {
-    pub fn startup(mut commands: Commands, assets: Res<SelectorAssets>) {
+    pub fn setup(mut commands: Commands, assets: Res<SelectorAssets>) {
         commands.spawn(Self::default().bundle(&assets));
     }
 
@@ -70,6 +73,7 @@ impl Selector {
         mut commands: Commands,
         mut query: Query<(&mut Self, &mut Transform, &mut Visibility)>,
         highlights: Query<Entity, With<Highlight>>,
+        hover_highlights: Query<Entity, With<HoverHighlight>>,
         mut objects: Query<
             (&Object, &Position, &Team, &mut Selected, &Handle<Mesh>),
             Without<Self>,
@@ -132,30 +136,55 @@ impl Selector {
                         }
                         ButtonState::Released => {
                             *visibility = Visibility::Hidden;
+                            // On release, select the hovered entity.
+                            if control.duration < Duration::from_millis(100) {
+                                info!("Short selection release");
+                                for entity in highlights.iter() {
+                                    commands.entity(entity).remove_parent().despawn();
+                                }
+                                if let Ok((_object, _, _team, mut selected, mesh)) =
+                                    objects.get_mut(control.entity)
+                                {
+                                    if selected.is_selected() {
+                                        continue;
+                                    }
+                                    // This entity reference is from PreUpdate, so it may have been deleted.
+                                    if commands.get_entity(control.entity).is_none() {
+                                        continue;
+                                    }
+                                    let child_entity = commands
+                                        .spawn(HighlightBundle::new(
+                                            mesh.clone(),
+                                            assets.white_material.clone(),
+                                        ))
+                                        .id();
+                                    commands.entity(control.entity).add_child(child_entity);
+
+                                    *selected = Selected::Selected;
+                                }
+                            }
                         }
                     }
                 }
-                ControlAction::SelectEntity => {
-                    if control.state == ButtonState::Released {
-                        continue;
-                    }
-                    for entity in highlights.iter() {
-                        commands.entity(entity).remove_parent().despawn();
-                    }
-                    if let Ok((_object, _, _team, mut selected, mesh)) =
-                        objects.get_mut(control.entity)
-                    {
-                        if selected.is_selected() {
-                            continue;
+                ControlAction::SelectHover => {
+                    if let Ok((_object, _, _team, _, mesh)) = objects.get_mut(control.entity) {
+                        for entity in hover_highlights.iter() {
+                            commands.entity(entity).remove_parent().despawn();
                         }
-                        let child_entity = commands
-                            .spawn(HighlightBundle::new(
-                                mesh.clone(),
-                                assets.white_material.clone(),
-                            ))
-                            .id();
-                        commands.entity(control.entity).add_child(child_entity);
-                        *selected = Selected::Selected;
+
+                        if control.state == ButtonState::Pressed {
+                            // Spawn a lighter highlight on the hovered entity.
+                            let child_entity = commands
+                                .spawn((
+                                    HoverHighlight,
+                                    HighlightBundle::new(
+                                        mesh.clone(),
+                                        assets.hover_material.clone(),
+                                    ),
+                                ))
+                                .id();
+                            commands.entity(control.entity).add_child(child_entity);
+                        }
                     }
                 }
                 _ => continue,
@@ -178,12 +207,13 @@ impl Selector {
     }
 }
 
-/// Handles to common grid assets.
+/// Handles to common selector assets.
 #[derive(Resource)]
 pub struct SelectorAssets {
     pub mesh: Handle<Mesh>,
     pub blue_material: Handle<StandardMaterial>,
     pub white_material: Handle<StandardMaterial>,
+    pub hover_material: Handle<StandardMaterial>,
 }
 
 impl FromWorld for SelectorAssets {
@@ -209,6 +239,12 @@ impl FromWorld for SelectorAssets {
                     .get_resource_mut::<Assets<StandardMaterial>>()
                     .unwrap();
                 materials.add(StandardMaterial::from(Color::WHITE.with_a(0.25)))
+            },
+            hover_material: {
+                let mut materials = world
+                    .get_resource_mut::<Assets<StandardMaterial>>()
+                    .unwrap();
+                materials.add(StandardMaterial::from(Color::WHITE.with_a(0.1)))
             },
         }
     }
