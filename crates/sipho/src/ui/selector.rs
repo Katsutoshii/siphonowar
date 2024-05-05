@@ -138,7 +138,6 @@ impl Selector {
                             *visibility = Visibility::Hidden;
                             // On release, select the hovered entity.
                             if control.duration < Duration::from_millis(100) {
-                                info!("Short selection release");
                                 for entity in highlights.iter() {
                                     commands.entity(entity).remove_parent().despawn();
                                 }
