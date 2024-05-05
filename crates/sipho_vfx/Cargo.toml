@@ -8,7 +8,7 @@ version = "0.1.0"
 [dependencies]
 bevy = {version = "0.13.2", features = ["dynamic_linking", "file_watcher"]}
 bevy_console = "0.11.1"
-bevy_hanabi = "0.10.0"
+bevy_hanabi = {version = "0.10", default-features = false, features = ["3d"]}
 derive_more = "0.99.17"
 profiling-procmacros = "1.0.15"
 rand = "0.8.5"

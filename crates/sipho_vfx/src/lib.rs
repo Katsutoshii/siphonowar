@@ -1,3 +1,4 @@
+use bevy_hanabi::HanabiPlugin;
 use sipho_core::prelude::*;
 
 pub mod bubbles;
@@ -25,6 +26,7 @@ pub struct VfxPlugin;
 impl Plugin for VfxPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((
+            HanabiPlugin,
             lightning::LightningPlugin,
             fireworks::FireworkPlugin,
             bubbles::BubblesPlugin,

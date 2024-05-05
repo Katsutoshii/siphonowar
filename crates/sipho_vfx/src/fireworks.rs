@@ -6,8 +6,7 @@ use bevy_hanabi::prelude::*;
 pub struct FireworkPlugin;
 impl Plugin for FireworkPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(HanabiPlugin)
-            .add_event::<FireworkSpec>()
+        app.add_event::<FireworkSpec>()
             .init_resource::<EffectAssets>()
             .init_resource::<ParticleEffectPool<FIREWORK_COLOR_BLUE>>()
             .init_resource::<ParticleEffectPool<FIREWORK_COLOR_RED>>()

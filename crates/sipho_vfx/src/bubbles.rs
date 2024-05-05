@@ -23,7 +23,7 @@ fn setup(
     let lifetime = writer.lit(4.).expr();
     let init_lifetime = SetAttributeModifier::new(Attribute::LIFETIME, lifetime);
 
-    let accel = writer.lit((Vec3::Y + Vec3::Z) * 20.).expr();
+    let accel = writer.lit((Vec3::Y + Vec3::Z) * 10.).expr();
     let update_accel = AccelModifier::new(accel);
 
     let init_pos = SetPositionCircleModifier {
@@ -32,6 +32,13 @@ fn setup(
         dimension: ShapeDimension::Volume,
         axis: writer.lit(Vec3::Z).expr(),
     };
+
+    let rotation = (writer.rand(ScalarType::Float) * writer.lit(std::f32::consts::TAU)).expr();
+    let init_rotation = SetAttributeModifier::new(Attribute::F32_0, rotation);
+
+    // The rotation of the OrientModifier is read from the F32_0 attribute (our
+    // per-particle rotation)
+    let rotation_attr = writer.attr(Attribute::F32_0).expr();
 
     let effect = effects.add(
         EffectAsset::new(
@@ -43,16 +50,21 @@ fn setup(
         .init(init_pos)
         .init(init_age)
         .init(init_lifetime)
+        .init(init_rotation)
         .update(update_accel)
         .render(ParticleTextureModifier {
             texture: texture_handle.clone(),
             sample_mapping: ImageSampleMapping::ModulateOpacityFromR,
         })
+        .render(OrientModifier {
+            mode: OrientMode::FaceCameraPosition,
+            rotation: Some(rotation_attr),
+        })
         .render(ColorOverLifetimeModifier {
             gradient: {
                 let mut gradient = Gradient::new();
                 gradient.add_key(0.0, Vec4::new(0.9, 1.0, 1.0, 0.0));
-                gradient.add_key(0.5, Vec4::new(0.9, 1.0, 1.0, 0.2));
+                gradient.add_key(0.5, Vec4::new(0.9, 1.0, 1.0, 0.08));
                 gradient.add_key(1.0, Vec4::new(0.9, 1.0, 1.0, 0.0));
                 gradient
             },
@@ -60,7 +72,7 @@ fn setup(
         .render(SizeOverLifetimeModifier {
             gradient: {
                 let mut gradient = Gradient::new();
-                gradient.add_key(0.0, Vec2::splat(10.0));
+                gradient.add_key(0.0, Vec2::splat(8.0));
                 gradient.add_key(1.0, Vec2::splat(12.0));
                 gradient
             },

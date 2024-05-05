@@ -13,6 +13,6 @@ pub const NAVIGATION_LAYER: f32 = 0.14 * FACTOR;
 pub const HIGHLIGHT: f32 = 0.15 * FACTOR;
 pub const WAYPOINT: f32 = 0.22 * FACTOR;
 pub const SELECTOR: f32 = 0.30 * FACTOR;
-pub const FOG_OF_WAR: f32 = 4.0 * FACTOR;
+pub const FOG_OF_WAR: f32 = 5.0 * FACTOR;
 pub const MIN_CAMERA: f32 = 1000.0;
 pub const CAMERA: f32 = 2500.0;

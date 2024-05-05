@@ -55,7 +55,7 @@ pub enum InputAction {
     TieCursor,
     PauseMenu,
     Fuse,
-    AttachZooid,
+    BuildWorker,
 }
 
 /// Specifies input mapping.
@@ -378,7 +378,7 @@ pub enum ControlAction {
     TieCursor,
     Fuse,
     PauseMenu,
-    AttachZooid,
+    BuildWorker,
 }
 impl ControlAction {
     pub fn get_repeat_duration(self) -> Duration {
@@ -416,7 +416,7 @@ impl From<(RaycastTarget, ControlMode, InputAction)> for ControlAction {
             (RaycastTarget::WorldGrid, _, InputAction::TieSelection) => Self::TieSelection,
             (RaycastTarget::WorldGrid, _, InputAction::TieCursor) => Self::TieCursor,
             (RaycastTarget::WorldGrid, _, InputAction::DragCamera) => Self::DragCamera,
-            (RaycastTarget::WorldGrid, _, InputAction::AttachZooid) => Self::AttachZooid,
+            (RaycastTarget::WorldGrid, _, InputAction::BuildWorker) => Self::BuildWorker,
             (_, _, InputAction::PauseMenu) => Self::PauseMenu,
             (_, _, InputAction::AttackMode) => Self::AttackMode,
             (RaycastTarget::None, _, _) => Self::None,

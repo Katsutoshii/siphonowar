@@ -1,6 +1,7 @@
 use crate::prelude::*;
 
 mod assets;
+mod builder;
 mod carry;
 mod commands;
 mod config;

@@ -40,7 +40,12 @@ impl Plugin for SiphonowarPlugin {
     }
 }
 
-fn spawn_gltf(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn spawn_gltf(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    // mut meshes: ResMut<Assets<Mesh>>,
+    // mut materials: ResMut<Assets<StandardMaterial>>,
+) {
     info!("Spawn gltf");
     commands.spawn((
         Name::new("Rocks"),
@@ -62,4 +67,18 @@ fn spawn_gltf(mut commands: Commands, asset_server: Res<AssetServer>) {
             ..default()
         },
     ));
+    // commands.spawn(PbrBundle {
+    //     mesh: meshes.add(Mesh::from(meshes::UNIT_SQUARE)),
+    //     material: materials.add(StandardMaterial {
+    //         base_color: Color::BLACK,
+    //         alpha_mode: AlphaMode::Blend,
+    //         ..default()
+    //     }),
+    //     transform: Transform {
+    //         translation: Vec3::Z * 1000.,
+    //         scale: Vec3::splat(1000.),
+    //         ..default()
+    //     },
+    //     ..default()
+    // });
 }

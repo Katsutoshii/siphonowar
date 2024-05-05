@@ -56,7 +56,7 @@
         KeyV: TieCursor,
         Escape: PauseMenu,
         KeyO: Fuse,
-        KeyQ: AttachZooid,
+        KeyQ: BuildWorker,
       },
       mouse: {
         Left: Primary,
