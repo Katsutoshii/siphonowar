@@ -208,10 +208,14 @@ impl ControlState {
                 continue;
             }
             if repeater.timer.finished() {
+                let mut raycast_event = raycast_event.clone();
+                if action == ControlAction::Select {
+                    raycast_event.target = RaycastTarget::WorldGrid;
+                }
                 events.push(ControlEvent {
                     action,
                     state: ButtonState::Pressed,
-                    position: ControlEvent::compute_position(grid_spec, raycast_event),
+                    position: ControlEvent::compute_position(grid_spec, &raycast_event),
                     entity: raycast_event.entity,
                     duration: Duration::from_millis(0),
                 });
