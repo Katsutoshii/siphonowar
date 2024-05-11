@@ -14,7 +14,11 @@ impl Plugin for ZooidHeadPlugin {
         app.add_systems(
             FixedUpdate,
             (
-                (ZooidHead::spawn, ZooidHead::update, ZooidHead::spawn_zooids)
+                (
+                    ZooidHead::spawn,
+                    ZooidHead::update,
+                    ZooidHead::spawn_linked_zooids,
+                )
                     .chain()
                     .in_set(FixedUpdateStage::Spawn),
                 // NearestZooidHead::update.in_set(FixedUpdateStage::PostSpawn),
@@ -23,6 +27,11 @@ impl Plugin for ZooidHeadPlugin {
         )
         .add_systems(OnExit(GameState::Loading), ZooidHead::spawn_initial);
     }
+}
+
+enum SpawnedType {
+    Worker,
+    Shocker,
 }
 
 /// State for a head.
@@ -132,9 +141,34 @@ impl ZooidHead {
         entity
     }
 
+    pub fn make_linked(
+        self: &mut Self,
+        velocity: &Velocity,
+        elastic_events: &mut EventWriter<SpawnElasticEvent>,
+        position: &Position,
+        team: &Team,
+        object: Object,
+        commands: &mut ObjectCommands,
+        entity: Entity,
+    ) {
+        if let Some(entity_commands) = commands.spawn(ObjectSpec {
+            position: position.0 + velocity.0,
+            velocity: Some(*velocity),
+            team: *team,
+            object: object,
+            // objectives: Objectives::new(Objective::FollowEntity(head_id)),
+            ..default()
+        }) {
+            elastic_events.send(SpawnElasticEvent {
+                elastic: Elastic((entity, entity_commands.id())),
+                team: *team,
+            });
+        }
+    }
+
     /// System to spawn zooids on Z key.
     #[allow(clippy::too_many_arguments)]
-    pub fn spawn_zooids(
+    pub fn spawn_linked_zooids(
         mut query: Query<(
             &mut Self,
             Entity,
@@ -153,10 +187,6 @@ impl ZooidHead {
     ) {
         let config = configs.get(&Object::Worker).unwrap();
         for control_event in control_events.read() {
-            enum SpawnedType {
-                Worker,
-                Shocker,
-            }
             let spawn_type = if control_event.is_pressed(ControlAction::SpawnZooid) {
                 SpawnedType::Worker
             } else if control_event.is_pressed(ControlAction::SpawnShocker) {
@@ -186,22 +216,19 @@ impl ZooidHead {
                         Vec2::Y
                     };
                     let spawn_velocity: Vec2 = direction * config.spawn_velocity;
-                    if let Some(entity_commands) = commands.spawn(ObjectSpec {
-                        position: position.0 + spawn_velocity,
-                        velocity: Some(Velocity(spawn_velocity)),
-                        team: *team,
-                        object: match spawn_type {
-                            SpawnedType::Worker => Object::Worker,
+                    Self::make_linked(
+                        &mut head,
+                        &Velocity { 0: spawn_velocity },
+                        &mut elastic_events,
+                        position,
+                        team,
+                        match spawn_type {
                             SpawnedType::Shocker => Object::Shocker,
+                            SpawnedType::Worker => Object::Worker,
                         },
-                        // objectives: Objectives::new(Objective::FollowEntity(head_id)),
-                        ..default()
-                    }) {
-                        elastic_events.send(SpawnElasticEvent {
-                            elastic: Elastic((entity, entity_commands.id())),
-                            team: fog_config.player_team,
-                        });
-                    }
+                        &mut commands,
+                        entity,
+                    );
                 }
             }
             break;

@@ -96,6 +96,11 @@ impl DamageEvent {
             {
                 *force += Force(*event.velocity * -1. * knockback_amount);
             }
+            // Knock forward the damaged
+            if let Ok((_, mut force, _health, _team, _transform, _)) = query.get_mut(event.damaged)
+            {
+                *force += Force(*event.velocity * 0.5 * knockback_amount);
+            }
             // Reduce health and set off firework for the damaged.
             if let Ok((mut attacker, mut _force, mut health, &team, &position, mut objectives)) =
                 query.get_mut(event.damaged)

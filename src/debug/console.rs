@@ -1,5 +1,6 @@
 use bevy_console::{reply, AddConsoleCommand, ConsoleCommand, ConsolePlugin};
 use clap::Parser;
+use sipho::objects::ai::EnemyAI;
 use sipho::{prelude::*, scene::SaveEvent};
 
 /// Plugin for input action events.
@@ -23,12 +24,13 @@ impl Plugin for CustomConsolePlugin {
     }
 }
 
-#[derive(Parser, ConsoleCommand)]
+#[derive(Parser, ConsoleCommand, Default)]
 #[command(name = "spawn")]
 struct SpawnCommand {
     count: usize,
     team: Team,
     object: Object,
+    ai: Option<bool>,
 }
 impl SpawnCommand {
     pub fn update(
@@ -41,6 +43,7 @@ impl SpawnCommand {
             object,
             team,
             count,
+            ai,
         })) = log.take()
         {
             reply!(log, "spawning {} {:?}", count, object);
@@ -54,12 +57,16 @@ impl SpawnCommand {
                                     x: (i * 40) as f32,
                                     y: (j * 40) as f32,
                                 };
-                            commands.spawn(ObjectSpec {
+                            if let Some(mut entity_command) = commands.spawn(ObjectSpec {
                                 object,
                                 team,
                                 position,
                                 ..default()
-                            });
+                            }) {
+                                if ai.unwrap_or(false) {
+                                    entity_command.insert(EnemyAI {});
+                                }
+                            }
                         }
                     }
                 }
