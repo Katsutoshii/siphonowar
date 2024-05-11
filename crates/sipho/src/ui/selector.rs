@@ -24,13 +24,13 @@ pub struct HighlightBundle {
     pub pbr: PbrBundle,
 }
 impl HighlightBundle {
-    pub fn new(mesh: Handle<Mesh>, material: Handle<StandardMaterial>) -> Self {
+    pub fn new(mesh: Handle<Mesh>, material: Handle<StandardMaterial>, scale: f32) -> Self {
         Self {
             name: Name::new("Highlight"),
             highlight: Highlight,
             pbr: PbrBundle {
                 mesh,
-                transform: Transform::default().with_scale(Vec2::splat(1.2).extend(1.2)),
+                transform: Transform::default().with_scale(Vec3::splat(scale)),
                 material,
                 visibility: Visibility::Visible,
                 ..default()
@@ -72,7 +72,7 @@ impl Selector {
     pub fn update(
         mut commands: Commands,
         mut query: Query<(&mut Self, &mut Transform, &mut Visibility)>,
-        highlights: Query<Entity, With<Highlight>>,
+        highlights: Query<Entity, (With<Highlight>, Without<HoverHighlight>)>,
         hover_highlights: Query<Entity, With<HoverHighlight>>,
         mut objects: Query<
             (&Object, &Position, &Team, &mut Selected, &Handle<Mesh>),
@@ -126,6 +126,7 @@ impl Selector {
                                             .spawn(HighlightBundle::new(
                                                 mesh.clone(),
                                                 assets.white_material.clone(),
+                                                1.2,
                                             ))
                                             .id();
                                         commands.entity(entity).add_child(child_entity);
@@ -155,6 +156,7 @@ impl Selector {
                                         .spawn(HighlightBundle::new(
                                             mesh.clone(),
                                             assets.white_material.clone(),
+                                            1.2,
                                         ))
                                         .id();
                                     commands.entity(control.entity).add_child(child_entity);
@@ -179,6 +181,7 @@ impl Selector {
                                     HighlightBundle::new(
                                         mesh.clone(),
                                         assets.hover_material.clone(),
+                                        1.25,
                                     ),
                                 ))
                                 .id();
@@ -237,13 +240,21 @@ impl FromWorld for SelectorAssets {
                 let mut materials = world
                     .get_resource_mut::<Assets<StandardMaterial>>()
                     .unwrap();
-                materials.add(StandardMaterial::from(Color::WHITE.with_a(0.25)))
+                materials.add(StandardMaterial {
+                    base_color: Color::WHITE.with_a(0.25),
+                    alpha_mode: AlphaMode::Blend,
+                    ..default()
+                })
             },
             hover_material: {
                 let mut materials = world
                     .get_resource_mut::<Assets<StandardMaterial>>()
                     .unwrap();
-                materials.add(StandardMaterial::from(Color::WHITE.with_a(0.1)))
+                materials.add(StandardMaterial {
+                    base_color: Color::WHITE.with_a(0.1),
+                    alpha_mode: AlphaMode::Blend,
+                    ..default()
+                })
             },
         }
     }

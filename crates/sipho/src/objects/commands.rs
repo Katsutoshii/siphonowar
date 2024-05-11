@@ -1,4 +1,7 @@
-use crate::{prelude::*, ui::selector::HighlightBundle};
+use crate::{
+    prelude::*,
+    ui::selector::{HighlightBundle, SelectorAssets},
+};
 use bevy::{
     ecs::system::{EntityCommands, SystemParam},
     prelude::*,
@@ -84,6 +87,7 @@ impl ObjectBundle {
 #[derive(SystemParam)]
 pub struct ObjectCommands<'w, 's> {
     assets: Res<'w, ObjectAssets>,
+    selector_assets: Res<'w, SelectorAssets>,
     commands: Commands<'w, 's>,
     configs: Res<'w, ObjectConfigs>,
     parents: Query<'w, 's, &'static Children, Without<Parent>>,
@@ -169,7 +173,8 @@ impl ObjectCommands<'_, '_> {
                     if selected.is_selected() {
                         parent.spawn(HighlightBundle::new(
                             mesh.clone(),
-                            self.assets.white_material.clone(),
+                            self.selector_assets.white_material.clone(),
+                            1.2,
                         ));
                     }
                 });
@@ -227,7 +232,15 @@ impl ObjectCommands<'_, '_> {
             ObjectBackground,
             PbrBundle {
                 mesh,
-                transform: Transform::default().with_scale(Vec3::splat(1.5)),
+                transform: Transform {
+                    scale: Vec3::splat(1.5),
+                    translation: Vec3 {
+                        x: 0.,
+                        y: 0.,
+                        z: -0.1,
+                    },
+                    ..default()
+                },
                 material: team_material.background,
                 ..default()
             },

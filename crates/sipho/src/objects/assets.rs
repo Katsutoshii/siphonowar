@@ -8,7 +8,6 @@ pub struct ObjectAssets {
     pub armor_mesh: Handle<Mesh>,
     pub connector_mesh: Handle<Mesh>,
     pub team_materials: Vec<TeamMaterials>,
-    pub white_material: Handle<StandardMaterial>,
     pub builder_material: Handle<StandardMaterial>,
 }
 impl ObjectAssets {
@@ -44,19 +43,14 @@ impl FromWorld for ObjectAssets {
                     .map(|color| TeamMaterials::new(*color, &mut materials))
                     .collect()
             },
-            white_material: {
-                let mut materials = world
-                    .get_resource_mut::<Assets<StandardMaterial>>()
-                    .unwrap();
-                materials.add(StandardMaterial::from(Color::WHITE.with_a(0.25)))
-            },
             builder_material: {
                 let mut materials = world
                     .get_resource_mut::<Assets<StandardMaterial>>()
                     .unwrap();
                 materials.add(StandardMaterial {
-                    base_color: Color::YELLOW.with_a(0.25),
+                    base_color: Color::YELLOW.with_a(0.5),
                     emissive: Color::YELLOW,
+                    alpha_mode: AlphaMode::Blend,
                     ..default()
                 })
             },

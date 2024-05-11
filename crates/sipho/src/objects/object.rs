@@ -270,7 +270,8 @@ impl ObjectBackground {
                     let offset = -0.1 * parent_velocity.extend(0.);
                     let inverse = parent_transform.compute_transform().rotation.inverse();
                     let result = inverse.mul_vec3(offset);
-                    transform.translation = result;
+                    transform.translation.x = result.x;
+                    transform.translation.y = result.y;
                 }
             } else {
                 info!("No parent, despawn background! {:?}", entity);
