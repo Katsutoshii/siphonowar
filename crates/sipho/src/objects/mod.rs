@@ -44,6 +44,7 @@ impl Plugin for ObjectsPlugin {
             object::ObjectPlugin,
             path_to_head::PathToHeadPlugin,
             damage::DamagePlugin,
+            builder::ObjectBuilderPlugin,
         ))
         .init_resource::<ObjectAssets>();
     }

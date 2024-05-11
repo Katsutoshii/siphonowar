@@ -391,6 +391,7 @@ impl ControlAction {
             Self::Select => Duration::from_millis(5),
             Self::DragCamera => Duration::from_millis(5),
             Self::PanCamera => Duration::from_millis(5),
+            Self::BuildWorker => Duration::from_millis(5),
             _ => Duration::from_millis(0),
         }
     }
@@ -420,7 +421,9 @@ impl From<(RaycastTarget, ControlMode, InputAction)> for ControlAction {
             (RaycastTarget::WorldGrid, _, InputAction::TieSelection) => Self::TieSelection,
             (RaycastTarget::WorldGrid, _, InputAction::TieCursor) => Self::TieCursor,
             (RaycastTarget::WorldGrid, _, InputAction::DragCamera) => Self::DragCamera,
-            (RaycastTarget::WorldGrid, _, InputAction::BuildWorker) => Self::BuildWorker,
+            (RaycastTarget::WorldGrid | RaycastTarget::GridEntity, _, InputAction::BuildWorker) => {
+                Self::BuildWorker
+            }
             (_, _, InputAction::PauseMenu) => Self::PauseMenu,
             (_, _, InputAction::AttackMode) => Self::AttackMode,
             (RaycastTarget::None, _, _) => Self::None,

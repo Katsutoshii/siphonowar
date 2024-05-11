@@ -1,3 +1,5 @@
+use bevy::input::ButtonState;
+
 use super::*;
 
 // Tag component used to mark which setting is currently selected
@@ -24,51 +26,83 @@ impl SpawnHudNode for HudControlsPane {
                 for button in [
                     HudControlsButton {
                         text: "1".to_string(),
+                        description: "".to_string(),
+                        action: None,
                     },
                     HudControlsButton {
                         text: "2".to_string(),
+                        description: "".to_string(),
+                        action: None,
                     },
                     HudControlsButton {
                         text: "3".to_string(),
+                        description: "".to_string(),
+                        action: None,
                     },
                     HudControlsButton {
                         text: "4".to_string(),
+                        description: "".to_string(),
+                        action: None,
                     },
                     HudControlsButton {
                         text: "Q".to_string(),
+                        description: "Worker".to_string(),
+                        action: Some(ControlAction::BuildWorker),
                     },
                     HudControlsButton {
                         text: "W".to_string(),
+                        description: "".to_string(),
+                        action: None,
                     },
                     HudControlsButton {
                         text: "E".to_string(),
+                        description: "".to_string(),
+                        action: None,
                     },
                     HudControlsButton {
                         text: "R".to_string(),
+                        description: "".to_string(),
+                        action: None,
                     },
                     HudControlsButton {
                         text: "A".to_string(),
+                        description: "".to_string(),
+                        action: None,
                     },
                     HudControlsButton {
                         text: "S".to_string(),
+                        description: "".to_string(),
+                        action: None,
                     },
                     HudControlsButton {
                         text: "D".to_string(),
+                        description: "".to_string(),
+                        action: None,
                     },
                     HudControlsButton {
                         text: "F".to_string(),
+                        description: "".to_string(),
+                        action: None,
                     },
                     HudControlsButton {
                         text: "Z".to_string(),
+                        description: "Auto".to_string(),
+                        action: None,
                     },
                     HudControlsButton {
                         text: "X".to_string(),
+                        description: "Head".to_string(),
+                        action: None,
                     },
                     HudControlsButton {
                         text: "C".to_string(),
+                        description: "Connect".to_string(),
+                        action: None,
                     },
                     HudControlsButton {
                         text: "V".to_string(),
+                        description: "Pair".to_string(),
+                        action: None,
                     },
                 ] {
                     button.spawn(parent, assets);
@@ -77,24 +111,28 @@ impl SpawnHudNode for HudControlsPane {
     }
 }
 
-#[derive(Component, Reflect, Default)]
+#[derive(Component, Reflect, Default, Clone)]
 #[reflect(Component)]
 pub struct HudControlsButton {
     pub text: String,
+    pub description: String,
+    pub action: Option<ControlAction>,
 }
 impl SpawnHudNode for HudControlsButton {
     fn spawn(&self, parent: &mut ChildBuilder, _assets: &HudAssets) {
         parent
             .spawn((
-                HudControlsButton {
-                    text: self.text.clone(),
-                },
+                self.clone(),
                 ButtonBundle {
                     style: Style {
                         width: Val::Px(60.0),
                         height: Val::Px(60.0),
                         justify_self: JustifySelf::Center,
                         align_self: AlignSelf::Center,
+                        display: Display::Flex,
+                        flex_direction: FlexDirection::Column,
+                        justify_content: JustifyContent::SpaceEvenly,
+                        margin: UiRect::all(Val::Px(10.0)),
                         ..default()
                     },
                     background_color: Color::DARK_GRAY.with_a(0.4).into(),
@@ -106,7 +144,22 @@ impl SpawnHudNode for HudControlsButton {
                     text: Text::from_section(
                         &self.text,
                         TextStyle {
-                            font_size: 24.0,
+                            font_size: 18.0,
+                            color: Color::WHITE,
+                            ..default()
+                        },
+                    ),
+                    style: Style {
+                        margin: UiRect::all(Val::Px(10.0)),
+                        ..default()
+                    },
+                    ..default()
+                });
+                parent.spawn(TextBundle {
+                    text: Text::from_section(
+                        &self.description,
+                        TextStyle {
+                            font_size: 12.0,
                             color: Color::WHITE,
                             ..default()
                         },
@@ -121,14 +174,36 @@ impl SpawnHudNode for HudControlsButton {
     }
 }
 impl HudControlsButton {
+    pub fn update(
+        mut buttons: Query<(&HudControlsButton, &mut Interaction)>,
+        mut events: EventReader<ControlEvent>,
+    ) {
+        let events: Vec<&ControlEvent> = events.read().collect();
+        for (button, mut interaction) in buttons.iter_mut() {
+            for event in events.iter() {
+                if button.action == Some(event.action) {
+                    match event.state {
+                        ButtonState::Pressed => *interaction = Interaction::Pressed,
+                        ButtonState::Released => *interaction = Interaction::None,
+                    }
+                }
+            }
+        }
+    }
+
     // Handle changing all buttons color based on mouse interaction
     pub fn button_system(
         mut interaction_query: Query<
-            (&Interaction, &mut BackgroundColor, Option<&SelectedOption>),
-            (Changed<Interaction>, With<Button>, With<HudControlsButton>),
+            (
+                &HudControlsButton,
+                &Interaction,
+                &mut BackgroundColor,
+                Option<&SelectedOption>,
+            ),
+            Changed<Interaction>,
         >,
     ) {
-        for (interaction, mut color, selected) in &mut interaction_query {
+        for (_button, interaction, mut color, selected) in &mut interaction_query {
             *color = match (*interaction, selected) {
                 (Interaction::Pressed, _) | (Interaction::None, Some(_)) => PRESSED_BUTTON.into(),
                 (Interaction::Hovered, Some(_)) => HOVERED_PRESSED_BUTTON.into(),

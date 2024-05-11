@@ -21,7 +21,7 @@ impl Plugin for HudPlugin {
             .add_systems(
                 Update,
                 (
-                    HudControlsButton::button_system,
+                    (HudControlsButton::update, HudControlsButton::button_system).chain(),
                     HudSelectedPane::update,
                     HudUnitButton::update,
                 ),
