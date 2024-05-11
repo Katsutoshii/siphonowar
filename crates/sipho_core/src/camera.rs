@@ -154,7 +154,6 @@ impl CameraController {
             controller.world2d_bounds = grid_spec.world2d_bounds();
             controller.world2d_bounds.min += world2d_size;
             controller.world2d_bounds.max -= world2d_size;
-            dbg!(&controller.world2d_bounds);
         }
     }
 

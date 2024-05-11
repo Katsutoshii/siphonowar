@@ -40,6 +40,7 @@ default = ["debug"]
 # Enable a small amount of optimization in debug mode
 [profile.dev]
 opt-level = 1
+strip = "debuginfo"
 
 # Enable max optimizations for dependencies, but not for our code:
 [profile.dev.package."*"]

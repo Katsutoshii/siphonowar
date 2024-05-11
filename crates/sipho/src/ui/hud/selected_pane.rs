@@ -129,7 +129,7 @@ impl HudUnitButton {
         for (button, children) in buttons.iter() {
             for child in children.iter() {
                 if let Ok(mut text) = text.get_mut(*child) {
-                    text.sections[0].value = button.text.clone();
+                    text.sections[0].value.clone_from(&button.text);
                 }
             }
         }
