@@ -34,7 +34,7 @@ impl PathToHead {
 
     // Point everything to its head.
     pub fn update(
-        mut paths: Query<&mut PathToHead>,
+        mut paths: Query<&mut PathToHead, Without<ZooidHead>>,
         attachments: Query<&AttachedTo>,
         heads: Query<(Entity, &AttachedTo), With<ZooidHead>>,
     ) {

@@ -51,13 +51,13 @@ impl SpawnHudNode for HudControlsPane {
                     },
                     HudControlsButton {
                         text: "W".to_string(),
-                        description: "".to_string(),
-                        action: None,
+                        description: "Armor".to_string(),
+                        action: Some(ControlAction::BuildArmor),
                     },
                     HudControlsButton {
                         text: "E".to_string(),
-                        description: "".to_string(),
-                        action: None,
+                        description: "Shocker".to_string(),
+                        action: Some(ControlAction::BuildShocker),
                     },
                     HudControlsButton {
                         text: "R".to_string(),
@@ -66,8 +66,8 @@ impl SpawnHudNode for HudControlsPane {
                     },
                     HudControlsButton {
                         text: "A".to_string(),
-                        description: "".to_string(),
-                        action: None,
+                        description: "Attack".to_string(),
+                        action: Some(ControlAction::AttackMode),
                     },
                     HudControlsButton {
                         text: "S".to_string(),
@@ -87,22 +87,22 @@ impl SpawnHudNode for HudControlsPane {
                     HudControlsButton {
                         text: "Z".to_string(),
                         description: "Auto".to_string(),
-                        action: None,
+                        action: Some(ControlAction::SpawnZooid),
                     },
                     HudControlsButton {
                         text: "X".to_string(),
                         description: "Head".to_string(),
-                        action: None,
+                        action: Some(ControlAction::SpawnHead),
                     },
                     HudControlsButton {
                         text: "C".to_string(),
                         description: "Connect".to_string(),
-                        action: None,
+                        action: Some(ControlAction::TieSelection),
                     },
                     HudControlsButton {
                         text: "V".to_string(),
                         description: "Pair".to_string(),
-                        action: None,
+                        action: Some(ControlAction::TieCursor),
                     },
                 ] {
                     button.spawn(parent, assets);

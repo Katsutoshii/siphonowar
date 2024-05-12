@@ -19,6 +19,7 @@ impl Plugin for SystemSetPlugin {
 /// Stage of computation for a given frame.
 #[derive(Debug, Hash, PartialEq, Eq, Clone, SystemSet)]
 pub enum FixedUpdateStage {
+    Control,
     /// Spawn entities that are not objects.
     /// Can reference transforms from objects spawned in last frame's ObjectSpawn.
     Spawn,
@@ -44,6 +45,7 @@ pub enum FixedUpdateStage {
 impl FixedUpdateStage {
     pub fn get_config() -> SystemSetConfigs {
         (
+            Self::Control,
             Self::Spawn,
             Self::PostSpawn,
             Self::FindNeighbors,

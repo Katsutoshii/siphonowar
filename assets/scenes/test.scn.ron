@@ -57,6 +57,8 @@
         Escape: PauseMenu,
         KeyO: Fuse,
         KeyQ: BuildWorker,
+        KeyW: BuildArmor,
+        KeyE: BuildShocker,
       },
       mouse: {
         Left: Primary,

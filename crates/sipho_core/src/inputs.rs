@@ -29,10 +29,13 @@ impl Plugin for InputActionPlugin {
             .add_event::<InputEvent>()
             .add_systems(
                 PreUpdate,
-                (InputEvent::update, ControlEvent::update)
-                    .chain()
+                (InputEvent::update)
                     .after(InputSystem)
                     .run_if(in_state(DebugState::NoDebug)),
+            )
+            .add_systems(
+                FixedUpdate,
+                ControlEvent::update.in_set(FixedUpdateStage::Control),
             );
     }
 }
@@ -56,6 +59,8 @@ pub enum InputAction {
     PauseMenu,
     Fuse,
     BuildWorker,
+    BuildArmor,
+    BuildShocker,
 }
 
 /// Specifies input mapping.
@@ -383,6 +388,8 @@ pub enum ControlAction {
     Fuse,
     PauseMenu,
     BuildWorker,
+    BuildArmor,
+    BuildShocker,
 }
 impl ControlAction {
     pub fn get_repeat_duration(self) -> Duration {
@@ -391,7 +398,7 @@ impl ControlAction {
             Self::Select => Duration::from_millis(5),
             Self::DragCamera => Duration::from_millis(5),
             Self::PanCamera => Duration::from_millis(5),
-            Self::BuildWorker => Duration::from_millis(5),
+            Self::BuildWorker | Self::BuildArmor | Self::BuildShocker => Duration::from_millis(1),
             _ => Duration::from_millis(0),
         }
     }
@@ -424,6 +431,14 @@ impl From<(RaycastTarget, ControlMode, InputAction)> for ControlAction {
             (RaycastTarget::WorldGrid | RaycastTarget::GridEntity, _, InputAction::BuildWorker) => {
                 Self::BuildWorker
             }
+            (RaycastTarget::WorldGrid | RaycastTarget::GridEntity, _, InputAction::BuildArmor) => {
+                Self::BuildArmor
+            }
+            (
+                RaycastTarget::WorldGrid | RaycastTarget::GridEntity,
+                _,
+                InputAction::BuildShocker,
+            ) => Self::BuildShocker,
             (_, _, InputAction::PauseMenu) => Self::PauseMenu,
             (_, _, InputAction::AttackMode) => Self::AttackMode,
             (RaycastTarget::None, _, _) => Self::None,

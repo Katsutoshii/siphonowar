@@ -89,7 +89,8 @@ impl BubbleSpawner {
 
         let camera_transform = camera.single();
         commands.spawn((
-            Name::new("BubbleEmitter"),
+            Name::new("BubbleSpawner"),
+            BubbleSpawner,
             ParticleEffectBundle {
                 effect: ParticleEffect::new(effect),
                 transform: Transform {

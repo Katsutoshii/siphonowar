@@ -4,6 +4,22 @@ use bevy::{input::ButtonState, prelude::*};
 
 use crate::prelude::*;
 
+/// Plugin for an spacial entity paritioning grid with optional debug functionality.
+pub struct SelectorPlugin;
+impl Plugin for SelectorPlugin {
+    fn build(&self, app: &mut App) {
+        app.init_resource::<SelectorAssets>()
+            .register_type::<Selected>()
+            .add_systems(Startup, (Selector::setup,))
+            .add_systems(
+                FixedUpdate,
+                Selector::update
+                    .in_set(GameStateSet::Running)
+                    .in_set(FixedUpdateStage::Spawn),
+            );
+    }
+}
+
 #[derive(Component, Default, PartialEq, Debug, Clone, Copy, Reflect)]
 #[reflect(Component)]
 pub enum Selected {
@@ -39,21 +55,6 @@ impl HighlightBundle {
     }
 }
 
-/// Plugin for an spacial entity paritioning grid with optional debug functionality.
-pub struct SelectorPlugin;
-impl Plugin for SelectorPlugin {
-    fn build(&self, app: &mut App) {
-        app.init_resource::<SelectorAssets>()
-            .register_type::<Selected>()
-            .add_systems(Startup, (Selector::setup,))
-            .add_systems(
-                Update,
-                Selector::update
-                    .in_set(GameStateSet::Running)
-                    .in_set(FixedUpdateStage::Spawn),
-            );
-    }
-}
 #[derive(Component)]
 pub struct Highlight;
 #[derive(Component)]

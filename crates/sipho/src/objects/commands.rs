@@ -108,13 +108,13 @@ impl ObjectCommands<'_, '_> {
         }
         let commands = match spec.object {
             Object::Worker => {
-                let mesh = self.assets.worker_mesh.clone();
+                let mesh = self.assets.object_meshes[&Object::Worker].clone();
                 let background = self.background_bundle(team_material.clone(), mesh.clone());
                 let mut commands = self.commands.spawn((
                     ZooidWorker::default(),
                     NearestZooidHead::default(),
                     ObjectBundle {
-                        mesh: self.assets.worker_mesh.clone(),
+                        mesh: mesh.clone(),
                         material: team_material.primary,
                         ..ObjectBundle::new(config, spec, &self.time)
                     },
@@ -125,12 +125,12 @@ impl ObjectCommands<'_, '_> {
                 commands
             }
             Object::Shocker => {
-                let mesh = self.assets.shocker_mesh.clone();
+                let mesh = self.assets.object_meshes[&Object::Shocker].clone();
                 let background = self.background_bundle(team_material.clone(), mesh.clone());
                 let mut commands = self.commands.spawn((
                     NearestZooidHead::default(),
                     ObjectBundle {
-                        mesh: mesh.clone(),
+                        mesh,
                         material: team_material.primary,
                         ..ObjectBundle::new(config, spec, &self.time)
                     },
@@ -141,12 +141,12 @@ impl ObjectCommands<'_, '_> {
                 commands
             }
             Object::Armor => {
-                let mesh = self.assets.armor_mesh.clone();
+                let mesh = self.assets.object_meshes[&Object::Armor].clone();
                 let background = self.background_bundle(team_material.clone(), mesh.clone());
                 let mut commands = self.commands.spawn((
                     NearestZooidHead::default(),
                     ObjectBundle {
-                        mesh: mesh.clone(),
+                        mesh,
                         material: team_material.primary,
                         ..ObjectBundle::new(config, spec, &self.time)
                     },
@@ -157,7 +157,7 @@ impl ObjectCommands<'_, '_> {
                 commands
             }
             Object::Head => {
-                let mesh = self.assets.worker_mesh.clone();
+                let mesh = self.assets.object_meshes[&Object::Head].clone();
                 let selected = spec.selected;
                 let background = self.background_bundle(team_material.clone(), mesh.clone());
                 let mut commands = self.commands.spawn((
@@ -169,6 +169,10 @@ impl ObjectCommands<'_, '_> {
                         ..ObjectBundle::new(config, spec, &self.time)
                     },
                 ));
+                commands.insert(PathToHead {
+                    head: Some(commands.id()),
+                    ..default()
+                });
                 commands.with_children(|parent| {
                     parent.spawn(background);
                     if selected.is_selected() {
@@ -185,7 +189,7 @@ impl ObjectCommands<'_, '_> {
                 commands
             }
             Object::Plankton => {
-                let mesh = self.assets.worker_mesh.clone();
+                let mesh = self.assets.object_meshes[&Object::Plankton].clone();
                 let background = self.background_bundle(team_material.clone(), mesh.clone());
                 let mut commands = self.commands.spawn((
                     Plankton,
@@ -203,7 +207,7 @@ impl ObjectCommands<'_, '_> {
             Object::Food => self.commands.spawn((
                 PathToHeadFollower::default(),
                 ObjectBundle {
-                    mesh: self.assets.worker_mesh.clone(),
+                    mesh: self.assets.object_meshes[&Object::Food].clone(),
                     material: team_material.secondary,
                     ..ObjectBundle::new(config, spec, &self.time)
                 },
