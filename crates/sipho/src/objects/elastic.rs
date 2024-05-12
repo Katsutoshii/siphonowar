@@ -225,19 +225,33 @@ impl Elastic {
         }
     }
     pub fn update(
-        mut elastic_query: Query<(Entity, &Elastic, &mut Transform)>,
-        object_query: Query<(Entity, &Position, &Objectives)>,
+        mut elastic_query: Query<(Entity, &Elastic, &mut Transform, &mut Visibility)>,
+        object_query: Query<(Entity, &Position, &Objectives, &Visibility), Without<Elastic>>,
         mut phys_query: Query<&mut Force>,
         mut mass_query: Query<&mut Mass>,
         mut attachments: Query<&mut AttachedTo>,
         mut firework_events: EventWriter<FireworkSpec>,
         mut commands: Commands,
     ) {
-        for (entity, elastic, mut transform) in elastic_query.iter_mut() {
-            if let (Ok((entity1, position1, objective1)), Ok((entity2, position2, objective2))) = (
+        for (entity, elastic, mut transform, mut visibility) in elastic_query.iter_mut() {
+            if let (
+                Ok((entity1, position1, objective1, visibility1)),
+                Ok((entity2, position2, objective2, visibility2)),
+            ) = (
                 object_query.get(elastic.first()),
                 object_query.get(elastic.second()),
             ) {
+                let both_hidden =
+                    visibility1 == Visibility::Hidden || visibility2 == Visibility::Hidden;
+                let visibility_check = *visibility.bypass_change_detection();
+                if visibility_check != Visibility::Hidden && both_hidden {
+                    *visibility = Visibility::Hidden;
+                }
+                // If hidden and should be visibile.
+                else if visibility_check == Visibility::Hidden && !both_hidden {
+                    *visibility = Visibility::Visible;
+                }
+
                 let delta = position2.0 - position1.0;
                 let direction = delta.normalize_or_zero();
                 let magnitude = delta.length();

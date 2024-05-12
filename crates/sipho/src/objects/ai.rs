@@ -59,7 +59,6 @@ impl EnemyAI {
         attached_to: Query<&AttachedTo>,
         positions: Query<&Position>,
         mut commands: ObjectCommands,
-        control_events: EventReader<ControlEvent>,
         mut elastic_events: EventWriter<SpawnElasticEvent>,
     ) {
         for (mut head, entity, team, mut consumer) in query.iter_mut() {
@@ -67,18 +66,14 @@ impl EnemyAI {
             let useful_objective = leaves
                 .iter()
                 .map(|x| objective_query.get(*x).unwrap())
-                .find(|x| match x.last() {
-                    Objective::Idle => false,
-                    _ => true,
-                });
+                .find(|x| !matches!(x.last(), Objective::Idle));
             // Force all of the arms to have useful objects if it can.
             if let Some(useful_objective) = useful_objective {
                 let useful_objective = useful_objective.clone();
                 for leaf in leaves {
                     let mut objective = objective_query.get_mut(leaf).unwrap();
-                    match objective.last() {
-                        Objective::Idle => objective.push(useful_objective.last().clone()),
-                        _ => {}
+                    if objective.last() == &Objective::Idle {
+                        objective.push(useful_objective.last().clone())
                     }
                 }
             }
@@ -90,7 +85,7 @@ impl EnemyAI {
                 let direction = Vec2::Y;
                 let spawn_velocity: Vec2 = direction;
                 head.make_linked(
-                    &Velocity { 0: spawn_velocity },
+                    &Velocity(spawn_velocity),
                     &mut elastic_events,
                     position,
                     team,

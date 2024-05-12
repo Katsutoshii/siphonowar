@@ -2,7 +2,6 @@ use std::collections::VecDeque;
 
 use crate::prelude::*;
 use bevy::utils::{Entry, HashMap, HashSet};
-use sipho_core::grid::fog::FogConfig;
 
 use super::elastic::SpawnElasticEvent;
 use super::zooid_worker::ZooidWorker;
@@ -141,8 +140,9 @@ impl ZooidHead {
         entity
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn make_linked(
-        self: &mut Self,
+        &mut self,
         velocity: &Velocity,
         elastic_events: &mut EventWriter<SpawnElasticEvent>,
         position: &Position,
@@ -155,7 +155,7 @@ impl ZooidHead {
             position: position.0 + velocity.0,
             velocity: Some(*velocity),
             team: *team,
-            object: object,
+            object,
             // objectives: Objectives::new(Objective::FollowEntity(head_id)),
             ..default()
         }) {
@@ -181,7 +181,6 @@ impl ZooidHead {
         positions: Query<&Position>,
         mut commands: ObjectCommands,
         configs: Res<ObjectConfigs>,
-        fog_config: Res<FogConfig>,
         mut control_events: EventReader<ControlEvent>,
         mut elastic_events: EventWriter<SpawnElasticEvent>,
     ) {
@@ -218,7 +217,7 @@ impl ZooidHead {
                     let spawn_velocity: Vec2 = direction * config.spawn_velocity;
                     Self::make_linked(
                         &mut head,
-                        &Velocity { 0: spawn_velocity },
+                        &Velocity(spawn_velocity),
                         &mut elastic_events,
                         position,
                         team,
