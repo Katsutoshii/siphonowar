@@ -30,7 +30,8 @@ struct SpawnCommand {
     count: usize,
     team: Team,
     object: Object,
-    ai: Option<bool>,
+    #[arg(short, long, default_value_t = false)]
+    ai: bool,
 }
 impl SpawnCommand {
     pub fn update(
@@ -63,7 +64,7 @@ impl SpawnCommand {
                                 position,
                                 ..default()
                             }) {
-                                if ai.unwrap_or(false) {
+                                if ai {
                                     entity_command.insert(EnemyAI {});
                                 }
                             }
