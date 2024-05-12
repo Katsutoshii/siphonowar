@@ -239,7 +239,7 @@
       Head: ObjectConfig(
         physics_material: SlowZooid,
         neighbor_radius: 128.0,
-        nav_flow_factor: 1.,
+        nav_flow_factor: 5.,
         attack_velocity: 0.,
         attack_radius: 265.0,
         spawn_velocity: 2.0,

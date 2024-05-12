@@ -162,7 +162,7 @@ impl ObjectCommands<'_, '_> {
                 let background = self.background_bundle(team_material.clone(), mesh.clone());
                 let mut commands = self.commands.spawn((
                     ZooidHead::default(),
-                    Consumer::new(100),
+                    Consumer::new(20),
                     ObjectBundle {
                         mesh: mesh.clone(),
                         material: team_material.primary,

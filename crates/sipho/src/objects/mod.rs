@@ -1,5 +1,6 @@
 use crate::prelude::*;
 
+pub mod ai;
 mod assets;
 mod builder;
 mod carry;
@@ -12,8 +13,8 @@ mod neighbors;
 mod object;
 mod path_to_head;
 mod plankton;
-mod zooid_head;
-mod zooid_worker;
+pub mod zooid_head;
+pub mod zooid_worker;
 
 pub use {
     assets::ObjectAssets,
@@ -26,6 +27,7 @@ pub use {
     neighbors::{AlliedCollisions, AlliedNeighbors, EnemyCollisions, EnemyNeighbors},
     object::Object,
     path_to_head::{PathToHead, PathToHeadFollower},
+    zooid_head::ZooidHead,
 };
 
 /// Plugin for running zooids simulation.
@@ -45,6 +47,7 @@ impl Plugin for ObjectsPlugin {
             path_to_head::PathToHeadPlugin,
             damage::DamagePlugin,
             builder::ObjectBuilderPlugin,
+            ai::EnemyAIPlugin,
         ))
         .init_resource::<ObjectAssets>();
     }

@@ -25,7 +25,7 @@ fn fragment(mesh: VertexOutput) -> @location(0) vec4<f32> {
     let col = u32(g.x);
     let sand = textureSample(sand_texture, texture_sampler, ((mesh.uv) * 10 + noise) % 1);
     var wave = color * 0.1;
-    wave += 0.1 * wave_color * perlin_noise_2d(g * 10.8 + path2 * time * 1.5);
+    wave += 0.1 * wave_color * perlin_noise_2d(g * 1.1 + path1 * time * 2.0);
     wave += 0.2 * color * abs(perlin_noise_2d(g * 2.0 + path3 * time));
     wave += color * perlin_noise_2d(g * 1.0 + path4 * time);
     let res = (wave * 0.07 + vec4<f32>(0., 0.05 + 0.01 * cos(time * 0.001), 0.2 + 0.05 * sin(time * 0.001), 0.1));

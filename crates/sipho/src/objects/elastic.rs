@@ -55,7 +55,7 @@ impl Default for Elastic {
     }
 }
 impl Elastic {
-    pub const MAX_LENGTH: f32 = 96.0;
+    pub const MAX_LENGTH: f32 = 110.0;
     pub fn first(&self) -> Entity {
         self.0 .0
     }
