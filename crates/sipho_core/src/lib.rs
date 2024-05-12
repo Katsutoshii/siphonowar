@@ -28,9 +28,9 @@ pub mod prelude {
         error::Error,
         game_state::{AssetLoadState, DebugState, GameState},
         grid::{
-            EntityGridEvent, EntitySet, Grid2, Grid2Plugin, GridEntity, GridSize, GridSpec,
-            Obstacle, RowCol, RowColDistance, SparseGrid2, TeamEntitySets, VisibilityUpdate,
-            VisibilityUpdateEvent,
+            EntityGridEvent, EntitySet, FogEntity, Grid2, Grid2Plugin, GridEntity, GridSize,
+            GridSpec, Obstacle, RowCol, RowColDistance, SparseGrid2, TeamEntitySets,
+            VisibilityUpdate, VisibilityUpdateEvent,
         },
         inputs::{ControlAction, ControlEvent, ControlMode, ControlState},
         meshes,

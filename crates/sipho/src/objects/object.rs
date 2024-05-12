@@ -53,15 +53,17 @@ pub enum Object {
     Food,
     Shocker,
     Armor,
+    BuilderPreview,
 }
 impl Object {
-    pub const ALL: [Object; 6] = [
+    pub const ALL: [Object; 7] = [
         Self::Worker,
         Self::Head,
         Self::Plankton,
         Self::Food,
         Self::Shocker,
         Self::Armor,
+        Self::BuilderPreview,
     ];
 
     /// Returns true if an object can attack.
@@ -110,6 +112,7 @@ impl Object {
             Self::Plankton => zindex::PLANKTON,
             Self::Shocker => zindex::ZOOIDS_MIN,
             Self::Armor => zindex::ZOOIDS_MIN,
+            Self::BuilderPreview => zindex::ZOOIDS_MIN,
         }
     }
     pub fn update_force(

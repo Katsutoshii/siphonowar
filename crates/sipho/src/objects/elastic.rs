@@ -55,6 +55,7 @@ impl Default for Elastic {
     }
 }
 impl Elastic {
+    pub const MAX_LENGTH: f32 = 96.0;
     pub fn first(&self) -> Entity {
         self.0 .0
     }
@@ -115,6 +116,7 @@ impl ElasticCommands<'_, '_> {
                     position2.0,
                     magnitude,
                     zindex::ZOOIDS_MIN,
+                    8.,
                 ),
                 ..default()
             },
@@ -144,8 +146,8 @@ impl Elastic {
         position2: Vec2,
         magnitude: f32,
         depth: f32,
+        width: f32,
     ) -> Transform {
-        let width = 8.;
         let delta = position2 - position1;
         Transform {
             translation: ((position1 + position2) / 2.).extend(depth),
@@ -239,7 +241,7 @@ impl Elastic {
                 let delta = position2.0 - position1.0;
                 let direction = delta.normalize_or_zero();
                 let magnitude = delta.length();
-                if magnitude > 96.0 {
+                if magnitude > Elastic::MAX_LENGTH {
                     snap(&mut commands, entity, elastic, &mut attachments);
                     firework_events.send(FireworkSpec {
                         position: ((position1.0 + position2.0) / 2.0).extend(0.0),
@@ -256,8 +258,13 @@ impl Elastic {
                     Force(direction * force * objective2.get_force_factor());
 
                 // Set transform.
-                *transform =
-                    Self::get_transform(position1.0, position2.0, magnitude, zindex::ZOOIDS_MIN);
+                *transform = Self::get_transform(
+                    position1.0,
+                    position2.0,
+                    magnitude,
+                    zindex::ZOOIDS_MIN,
+                    8.,
+                );
             } else {
                 // Clean up invalid connections.
                 snap(&mut commands, entity, elastic, &mut attachments);

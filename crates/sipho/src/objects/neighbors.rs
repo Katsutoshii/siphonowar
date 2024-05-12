@@ -1,20 +1,24 @@
-use bevy::utils::{FloatOrd, HashSet};
+use bevy::utils::{smallvec::SmallVec, FloatOrd, HashSet};
 
 use crate::prelude::*;
 
 pub struct NeighborsPlugin;
 impl Plugin for NeighborsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(
-            FixedUpdate,
-            (update
-                .in_set(FixedUpdateStage::FindNeighbors)
-                .in_set(GameStateSet::Running),),
-        );
+        app.register_type::<AlliedNeighbors>()
+            .register_type::<EnemyNeighbors>()
+            .register_type::<AlliedCollisions>()
+            .register_type::<EnemyCollisions>()
+            .add_systems(
+                FixedUpdate,
+                (update
+                    .in_set(FixedUpdateStage::FindNeighbors)
+                    .in_set(GameStateSet::Running),),
+            );
     }
 }
 
-#[derive(PartialEq, Clone, Copy, Debug)]
+#[derive(PartialEq, Clone, Copy, Debug, Reflect)]
 pub struct Neighbor {
     pub entity: Entity,
     pub object: Object,
@@ -26,17 +30,21 @@ pub struct Neighbor {
 pub const MAX_NEIGHBORS: usize = 16;
 pub const MAX_COLLISIONS: usize = 4;
 
-#[derive(Component, Deref, DerefMut, Default)]
-pub struct EnemyNeighbors(pub ArrayVec<Neighbor, MAX_NEIGHBORS>);
+#[derive(Component, Deref, DerefMut, Default, Reflect)]
+#[reflect(Component)]
+pub struct EnemyNeighbors(pub SmallVec<[Neighbor; MAX_NEIGHBORS]>);
 
-#[derive(Component, Deref, DerefMut, Default)]
-pub struct AlliedNeighbors(pub ArrayVec<Neighbor, MAX_NEIGHBORS>);
+#[derive(Component, Deref, DerefMut, Default, Reflect)]
+#[reflect(Component)]
+pub struct AlliedNeighbors(pub SmallVec<[Neighbor; MAX_NEIGHBORS]>);
 
-#[derive(Component, Deref, DerefMut, Default)]
-pub struct AlliedCollisions(pub ArrayVec<Neighbor, MAX_COLLISIONS>);
+#[derive(Component, Deref, DerefMut, Default, Reflect)]
+#[reflect(Component)]
+pub struct AlliedCollisions(pub SmallVec<[Neighbor; MAX_COLLISIONS]>);
 
-#[derive(Component, Deref, DerefMut, Default)]
-pub struct EnemyCollisions(pub ArrayVec<Neighbor, MAX_COLLISIONS>);
+#[derive(Component, Deref, DerefMut, Default, Reflect)]
+#[reflect(Component)]
+pub struct EnemyCollisions(pub SmallVec<[Neighbor; MAX_COLLISIONS]>);
 
 #[derive(Bundle, Default)]
 pub struct NeighborsBundle {
@@ -143,8 +151,10 @@ pub fn update(
             {
                 enemy_neighbors.push(neighbor);
                 let other_config = configs.get(&neighbor.object).unwrap();
-                if config.is_colliding(other_config, neighbor.distance_squared) {
-                    let _ = colliding_neighbors.try_push(neighbor);
+                if config.is_colliding(other_config, neighbor.distance_squared)
+                    && colliding_neighbors.len() < MAX_COLLISIONS
+                {
+                    colliding_neighbors.push(neighbor);
                 }
             }
         },

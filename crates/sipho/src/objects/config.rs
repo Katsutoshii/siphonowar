@@ -67,7 +67,7 @@ impl Default for ObjectConfig {
     fn default() -> Self {
         Self {
             physics_material: PhysicsMaterialType::Default,
-            neighbor_radius: 10.0,
+            neighbor_radius: 256.0,
             nav_flow_factor: 1.,
             attack_velocity: 10.,
             attack_radius: 256.,

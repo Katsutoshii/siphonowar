@@ -11,7 +11,7 @@ pub mod visualizer;
 
 pub use {
     entity::{EntityGridEvent, EntitySet, GridEntity, TeamEntitySets},
-    fog::{VisibilityUpdate, VisibilityUpdateEvent},
+    fog::{FogEntity, VisibilityUpdate, VisibilityUpdateEvent},
     grid2::{Grid2, Grid2Plugin},
     obstacles::Obstacle,
     rowcol::{RowCol, RowColDistance},

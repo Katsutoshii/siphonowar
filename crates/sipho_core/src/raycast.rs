@@ -62,7 +62,7 @@ impl RaycastCommands<'_, '_> {
                 .get_n_entities_in_radius(event.world_position, radius, &Team::ALL, n);
         for (entity, _target, mesh_handle, transform) in entities
             .iter()
-            .map(|&entity| self.grid_meshes.get(entity).unwrap())
+            .filter_map(|&entity| self.grid_meshes.get(entity).ok())
         {
             let mesh = self.assets.get(mesh_handle).unwrap();
 

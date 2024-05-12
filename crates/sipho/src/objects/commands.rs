@@ -47,6 +47,7 @@ pub struct ObjectBundle {
     pub carried_by: CarriedBy,
     pub grid_raycast_target: GridRaycastTarget,
     pub name: Name,
+    pub fog_entity: FogEntity,
 }
 impl ObjectBundle {
     /// Returns random value [0, 1.)
@@ -207,6 +208,7 @@ impl ObjectCommands<'_, '_> {
                     ..ObjectBundle::new(config, spec, &self.time)
                 },
             )),
+            Object::BuilderPreview => unreachable!(),
         };
         Some(commands)
     }

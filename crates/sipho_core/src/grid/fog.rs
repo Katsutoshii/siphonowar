@@ -71,6 +71,10 @@ pub struct VisibilityUpdateEvent {
     pub removals: Vec<VisibilityUpdate>,
 }
 
+/// Tag component to show that this entity should be affected by fog of war.
+#[derive(Component, Default)]
+pub struct FogEntity;
+
 /// Stores visibility per team.
 #[derive(Clone, Default)]
 pub struct TeamVisibility {
@@ -88,7 +92,7 @@ impl TeamVisibility {
 
 impl Grid2<TeamVisibility> {
     pub fn update_visibility(
-        mut query: Query<(&GridEntity, &mut Visibility)>,
+        mut query: Query<(&GridEntity, &mut Visibility), With<FogEntity>>,
         grid: ResMut<Self>,
         configs: Res<FogConfig>,
     ) {
