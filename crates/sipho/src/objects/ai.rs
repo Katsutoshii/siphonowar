@@ -18,8 +18,10 @@ impl Plugin for EnemyAIPlugin {
     }
 }
 
-#[derive(Component, Debug, Reflect)]
-pub struct EnemyAI {}
+#[derive(Component, Debug, Reflect, Default)]
+pub struct EnemyAI {
+    free_workers: HashSet<Entity>,
+}
 
 // Runs BFS to find the last entity of the shortest limb.
 // Index goes from [0, len]. When 0, we spawn off of the head.
@@ -54,45 +56,65 @@ pub fn get_all_leaves(head: Entity, attached_to: &Query<&AttachedTo>) -> Vec<Ent
 
 impl EnemyAI {
     pub fn update(
-        mut query: Query<(&mut ZooidHead, Entity, &Team, &mut Consumer), With<EnemyAI>>,
+        mut query: Query<(&mut ZooidHead, Entity, &Team, &mut Consumer, &mut EnemyAI)>,
         mut objective_query: Query<&mut Objectives>,
         attached_to: Query<&AttachedTo>,
         positions: Query<&Position>,
         mut commands: ObjectCommands,
         mut elastic_events: EventWriter<SpawnElasticEvent>,
     ) {
-        for (mut head, entity, team, mut consumer) in query.iter_mut() {
-            let leaves = get_all_leaves(entity, &attached_to);
+        for (mut head, head_entity, team, mut consumer, mut ai) in query.iter_mut() {
+            ai.free_workers.retain(|x| positions.contains(*x));
+            let leaves = get_all_leaves(head_entity, &attached_to);
             let useful_objective = leaves
                 .iter()
+                .chain(ai.free_workers.iter())
                 .map(|x| objective_query.get(*x).unwrap())
                 .find(|x| !matches!(x.last(), Objective::Idle));
             // Force all of the arms to have useful objects if it can.
             if let Some(useful_objective) = useful_objective {
                 let useful_objective = useful_objective.clone();
-                for leaf in leaves {
-                    let mut objective = objective_query.get_mut(leaf).unwrap();
+                for leaf in leaves.iter().chain(ai.free_workers.iter()) {
+                    let mut objective = objective_query.get_mut(*leaf).unwrap();
                     if objective.last() == &Objective::Idle {
+                        objective.pop();
                         objective.push(useful_objective.last().clone())
                     }
                 }
             }
-            let entity = head.get_next_limb(entity, &attached_to);
+            let (entity, arm_length) = head.get_next_limb(head_entity, &attached_to);
 
             let position = positions.get(entity).unwrap();
             if consumer.consumed > 0 {
                 consumer.consumed -= 1;
                 let direction = Vec2::Y;
                 let spawn_velocity: Vec2 = direction;
-                head.make_linked(
-                    &Velocity(spawn_velocity),
-                    &mut elastic_events,
-                    position,
-                    team,
-                    Object::Worker,
-                    &mut commands,
-                    entity,
-                );
+                if arm_length < 7 {
+                    head.make_linked(
+                        &Velocity(spawn_velocity),
+                        &mut elastic_events,
+                        position,
+                        team,
+                        Object::Worker,
+                        &mut commands,
+                        entity,
+                    );
+                } else {
+                    let position = positions.get(head_entity).unwrap();
+                    ai.free_workers.insert(
+                        commands
+                            .spawn(ObjectSpec {
+                                position: position.0 + spawn_velocity,
+                                velocity: Some(Velocity(spawn_velocity)),
+                                team: *team,
+                                object: Object::Worker,
+                                // objectives: Objectives::new(Objective::FollowEntity(head_id)),
+                                ..default()
+                            })
+                            .unwrap()
+                            .id(),
+                    );
+                }
             }
         }
     }

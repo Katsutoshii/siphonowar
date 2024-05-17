@@ -106,21 +106,21 @@ impl ZooidHead {
 
     // Runs BFS to find the last entity of the shortest limb.
     // Index goes from [0, len]. When 0, we spawn off of the head.
-    pub fn get_next_limb(&mut self, entity: Entity, attached_to: &Query<&AttachedTo>) -> Entity {
+    pub fn get_next_limb(
+        &mut self,
+        entity: Entity,
+        attached_to: &Query<&AttachedTo>,
+    ) -> (Entity, usize) {
         let max_arms = 10;
         let head_attached_to = attached_to.get(entity).unwrap();
-        let num_attachments = head_attached_to.len();
-        self.spawn_index += 1;
-        if num_attachments < max_arms {
-            return entity;
+        if head_attached_to.len() < max_arms {
+            return (entity, 0);
         }
-        let start = head_attached_to[self.spawn_index % max_arms.min(num_attachments)];
-        // BFS to find the first leaf on this limb.
+        // BFS to find the nearest leaf.
         let mut visited = HashSet::<Entity>::new();
-        let mut queue = VecDeque::<Entity>::new();
-        queue.push_front(start);
-        visited.insert(entity);
-        while let Some(entity) = queue.pop_back() {
+        let mut queue = VecDeque::<(Entity, usize)>::new();
+        queue.push_front((entity, 0));
+        while let Some((entity, depth)) = queue.pop_front() {
             if !visited.insert(entity) {
                 continue;
             }
@@ -131,13 +131,13 @@ impl ZooidHead {
                     .copied()
                     .collect();
                 if next.is_empty() {
-                    return entity;
+                    return (entity, depth);
                 } else {
-                    queue.extend(next.into_iter());
+                    queue.extend(next.into_iter().map(|x| (x, depth + 1)));
                 }
             }
         }
-        entity
+        (entity, 0)
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -165,6 +165,8 @@ impl ZooidHead {
             });
         }
     }
+
+    pub fn get_shortest_leg_length() {}
 
     /// System to spawn zooids on Z key.
     #[allow(clippy::too_many_arguments)]
@@ -200,7 +202,7 @@ impl ZooidHead {
 
                 // Find the shortest leg to spawn an entity onto.
                 // Spawn first entity.
-                let entity = head.get_next_limb(head_id, &attachments);
+                let (entity, _) = head.get_next_limb(head_id, &attachments);
 
                 let position = positions.get(entity).unwrap();
                 let food_needed = match spawn_type {

@@ -65,7 +65,7 @@ impl SpawnCommand {
                                 ..default()
                             }) {
                                 if ai {
-                                    entity_command.insert(EnemyAI {});
+                                    entity_command.insert(EnemyAI::default());
                                 }
                             }
                         }

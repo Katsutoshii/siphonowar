@@ -60,7 +60,7 @@ impl DashAttacker {
 
     pub fn next_state(&mut self, in_radius: bool) -> DashAttackerState {
         if !in_radius {
-            self.timer.set_duration(Self::attack_cooldown());
+            self.timer.set_duration(Duration::from_millis(0));
             return DashAttackerState::Cooldown;
         }
         match self.state {
