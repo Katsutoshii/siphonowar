@@ -3,7 +3,6 @@ use bevy::ecs::system::{QueryLens, SystemParam};
 use bevy::utils::smallvec::SmallVec;
 use bevy::utils::FloatOrd;
 use sipho_core::grid::fog::FogConfig;
-use sipho_core::physics::Mass;
 
 use super::ObjectAssets;
 

@@ -7,9 +7,7 @@ pub mod error;
 pub mod game_state;
 pub mod grid;
 pub mod inputs;
-pub mod meshes;
 pub mod nav;
-pub mod physics;
 pub mod pool;
 pub mod raycast;
 pub mod shader_plane;
@@ -33,11 +31,7 @@ pub mod prelude {
             VisibilityUpdate, VisibilityUpdateEvent,
         },
         inputs::{ControlAction, ControlEvent, ControlMode, ControlState},
-        meshes,
         nav::{NavigationCostEvent, NavigationGrid2, SparseFlowGrid2},
-        physics::{
-            self, Force, PhysicsBundle, PhysicsMaterial, PhysicsMaterialType, Position, Velocity,
-        },
         pool::EntityPool,
         raycast::{GridRaycastTarget, RaycastCommands, RaycastEvent, RaycastTarget},
         shader_plane::{ShaderPlaneAssets, ShaderPlaneMaterial, ShaderPlanePlugin},
@@ -49,6 +43,7 @@ pub mod prelude {
     };
     pub use arrayvec::ArrayVec;
     pub use bevy::prelude::*;
+    pub use bevy_newtonian2d::*;
 }
 
 use prelude::*;
@@ -64,7 +59,7 @@ impl Plugin for CorePlugin {
             inputs::InputActionPlugin,
             grid::GridPlugin,
             nav::NavigationPlugin,
-            physics::PhysicsPlugin,
+            bevy_newtonian2d::PhysicsPlugin,
             cursor::CursorPlugin,
             camera::CameraPlugin,
         ));

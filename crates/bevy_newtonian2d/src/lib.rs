@@ -1,5 +1,5 @@
-use crate::prelude::*;
-use bevy::{prelude::*, utils::HashMap};
+/// Super basic Newtonian physics simulation for Bevy.
+use bevy::prelude::*;
 use derive_more::{Add, AddAssign, Sub, SubAssign};
 use std::ops::Mul;
 
@@ -7,21 +7,46 @@ use std::ops::Mul;
 pub struct PhysicsPlugin;
 impl Plugin for PhysicsPlugin {
     fn build(&self, app: &mut App) {
-        app.register_type::<PhysicsMaterialType>()
-            .register_type::<HashMap<PhysicsMaterialType, PhysicsMaterial>>()
-            .register_type::<PhysicsMaterial>()
-            .register_type::<PhysicsMaterials>()
+        app.register_type::<PhysicsMaterial>()
             .register_type::<Mass>()
             .register_type::<Velocity>()
             .register_type::<Force>()
-            .add_systems(Update, update)
+            .init_state::<PhysicsSimulationState>()
+            .add_systems(Update, update.in_set(PhysicsSystem::UpdateTransform))
+            .configure_sets(
+                FixedUpdate,
+                (PhysicsSystem::AccumulateForces, PhysicsSystem::ApplyForces).chain(),
+            )
+            .configure_sets(Update, PhysicsSystem::UpdateTransform)
             .add_systems(
                 FixedUpdate,
                 (fixed_update_children, fixed_update)
                     .chain()
-                    .in_set(FixedUpdateStage::Physics)
-                    .in_set(GameStateSet::Running),
+                    .in_set(PhysicsSystem::ApplyForces)
+                    .run_if(in_state(PhysicsSimulationState::Running)),
             );
+    }
+}
+
+/// Tracks Mass per entity.
+#[derive(
+    Component,
+    Debug,
+    Clone,
+    Copy,
+    Deref,
+    DerefMut,
+    Add,
+    AddAssign,
+    Sub,
+    SubAssign,
+    PartialEq,
+    Reflect,
+)]
+pub struct Mass(pub f32);
+impl Default for Mass {
+    fn default() -> Self {
+        Self(1.0)
     }
 }
 
@@ -46,28 +71,6 @@ impl Position {
     pub const ZERO: Self = Self(Vec2::ZERO);
 }
 
-/// Tracks velocity per entity.
-#[derive(
-    Component,
-    Debug,
-    Clone,
-    Copy,
-    Deref,
-    DerefMut,
-    Add,
-    AddAssign,
-    Sub,
-    SubAssign,
-    PartialEq,
-    Reflect,
-)]
-pub struct Mass(pub f32);
-
-impl Default for Mass {
-    fn default() -> Self {
-        Self(1.0)
-    }
-}
 /// Tracks velocity per entity.
 #[derive(
     Component,
@@ -139,14 +142,12 @@ pub fn fixed_update(
             &mut Velocity,
             &mut Force,
             &Mass,
-            &PhysicsMaterialType,
+            &PhysicsMaterial,
         ),
         Without<Parent>,
     >,
-    materials: Res<PhysicsMaterials>,
 ) {
-    for (mut position, mut velocity, mut force, mass, material_type) in &mut query {
-        let material = materials.get(material_type).unwrap();
+    for (mut position, mut velocity, mut force, mass, material) in &mut query {
         let prev_velocity = *velocity;
 
         velocity.0 += force.0 / (mass.0).max(0.1);
@@ -189,21 +190,8 @@ pub fn fixed_update_children(
     }
 }
 
-#[derive(Resource, Clone, Default, Deref, DerefMut, Reflect)]
-#[reflect(Resource)]
-pub struct PhysicsMaterials(HashMap<PhysicsMaterialType, PhysicsMaterial>);
-
-#[derive(Component, Clone, Copy, Default, PartialEq, Eq, Hash, Reflect, Debug)]
-pub enum PhysicsMaterialType {
-    #[default]
-    Default,
-    Zooid,
-    SlowZooid,
-    ArmorZooid,
-    Plankton,
-    Food,
-}
-#[derive(Clone, Reflect, Debug)]
+#[derive(Clone, Reflect, Component, Debug)]
+#[reflect(Component)]
 pub struct PhysicsMaterial {
     max_velocity: f32,
     velocity_smoothing: f32,
@@ -223,5 +211,23 @@ pub struct PhysicsBundle {
     pub mass: Mass,
     pub velocity: Velocity,
     pub force: Force,
-    pub material: PhysicsMaterialType,
+    pub material: PhysicsMaterial,
+}
+
+/// Set enum for the systems relating to transform propagation
+#[derive(Debug, Hash, PartialEq, Eq, Clone, SystemSet)]
+pub enum PhysicsSystem {
+    /// Propagates changes in transform to children's [`GlobalTransform`]
+    AccumulateForces,
+    ApplyForces,
+    UpdateTransform,
+}
+
+#[derive(States, Default, Debug, Clone, PartialEq, Eq, Hash)]
+pub enum PhysicsSimulationState {
+    /// Game is running.
+    #[default]
+    Running,
+    /// Game is paused.
+    Paused,
 }

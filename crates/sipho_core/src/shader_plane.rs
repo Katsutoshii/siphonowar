@@ -107,7 +107,9 @@ impl<M: ShaderPlaneMaterial> FromWorld for ShaderPlaneAssets<M> {
         let assets = Self {
             mesh: {
                 let mut meshes = world.get_resource_mut::<Assets<Mesh>>().unwrap();
-                meshes.add(Mesh::from(meshes::UNIT_SQUARE))
+                meshes.add(Mesh::from(Rectangle {
+                    half_size: Vec2 { x: 0.5, y: 0.5 },
+                }))
             },
             shader_material: {
                 let material = M::from_world(world);

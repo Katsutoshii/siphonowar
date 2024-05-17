@@ -7,7 +7,6 @@ impl Plugin for ObjectConfigPlugin {
         app.register_type::<Vec2>()
             .register_type::<ObjectiveConfig>()
             .register_type::<InteractionConfig>()
-            .register_type::<HashMap<PhysicsMaterialType, InteractionConfig>>()
             .register_type::<HashMap<Object, ObjectConfig>>()
             .register_type::<HashMap<Object, InteractionConfig>>()
             .register_type::<ObjectConfig>()
@@ -49,7 +48,7 @@ pub struct ObjectConfigs(pub HashMap<Object, ObjectConfig>);
 #[derive(Clone, Reflect, Debug)]
 /// Specifies stats per object type.
 pub struct ObjectConfig {
-    pub physics_material: PhysicsMaterialType,
+    pub physics_material: PhysicsMaterial,
     pub neighbor_radius: f32,
     pub nav_flow_factor: f32,
     pub attack_velocity: f32,
@@ -66,7 +65,7 @@ pub struct ObjectConfig {
 impl Default for ObjectConfig {
     fn default() -> Self {
         Self {
-            physics_material: PhysicsMaterialType::Default,
+            physics_material: PhysicsMaterial::default(),
             neighbor_radius: 256.0,
             nav_flow_factor: 1.,
             attack_velocity: 10.,

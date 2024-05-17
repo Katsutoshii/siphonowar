@@ -31,8 +31,6 @@ pub enum FixedUpdateStage {
     AI,
     /// Compute forces between objects
     AccumulateForces,
-    /// Apply physics integration.
-    Physics,
     /// Operations after applying physics integration.
     PostPhysics,
     /// Process despawn events and clean up references.
@@ -50,8 +48,7 @@ impl FixedUpdateStage {
             Self::PostSpawn,
             Self::FindNeighbors,
             Self::AI,
-            Self::AccumulateForces,
-            Self::Physics,
+            Self::AccumulateForces.in_set(PhysicsSystem::AccumulateForces),
             Self::PostPhysics,
             Self::PreDespawn,
             Self::Despawn,

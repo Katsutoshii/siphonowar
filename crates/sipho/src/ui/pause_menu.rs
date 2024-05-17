@@ -254,6 +254,7 @@ impl PauseMenu {
         mut app_exit_events: EventWriter<AppExit>,
         mut menu_state: ResMut<NextState<MenuState>>,
         mut game_state: ResMut<NextState<GameState>>,
+        mut physics_state: ResMut<NextState<PhysicsSimulationState>>,
     ) {
         for (interaction, menu_button_action) in &interaction_query {
             if *interaction == Interaction::Pressed {
@@ -263,6 +264,7 @@ impl PauseMenu {
                     }
                     PauseMenuButtonAction::Play => {
                         game_state.set(GameState::Running);
+                        physics_state.set(PhysicsSimulationState::Running);
                         menu_state.set(MenuState::Disabled);
                     }
                     PauseMenuButtonAction::Settings => menu_state.set(MenuState::Settings),

@@ -1,21 +1,13 @@
 [package]
 edition = "2021"
-name = "sipho_core"
+name = "bevy_newtonian2d"
 version = "0.1.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-arrayvec = "0.7.4"
 bevy = {version = "0.13.2", features = ["dynamic_linking", "file_watcher"]}
-bevy_mod_raycast = "0.17.0"
-clap = "4.5.2"
 derive_more = "0.99.17"
-image = "0.24.9"
-rand = "0.8.5"
-serde = "1.0.192"
-
-bevy_newtonian2d = {path = "../bevy_newtonian2d"}
 
 [lints]
 workspace = true

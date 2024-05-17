@@ -1,5 +1,3 @@
-use sipho_core::physics::Mass;
-
 use crate::prelude::*;
 
 use super::neighbors::EnemyCollisions;

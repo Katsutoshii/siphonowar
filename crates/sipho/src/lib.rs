@@ -4,15 +4,15 @@ pub mod scene;
 pub mod ui;
 
 pub mod prelude {
-    pub use sipho_core::prelude::*;
-    pub use sipho_vfx::prelude::*;
-
     pub use crate::{
         objectives::{Objective, ObjectiveConfig, ObjectiveDebugger, Objectives},
         objects::*,
         ui::{Selected, Waypoint},
         SiphonowarPlugin,
     };
+    pub use bevy_newtonian2d::*;
+    pub use sipho_core::prelude::*;
+    pub use sipho_vfx::prelude::*;
 }
 
 use prelude::*;

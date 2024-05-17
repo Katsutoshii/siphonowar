@@ -69,12 +69,12 @@ impl ObjectBundle {
                 ..default()
             },
             physics: PhysicsBundle {
-                material: config.physics_material,
+                material: config.physics_material.clone(),
                 position: Position(spec.position),
                 velocity: spec
                     .velocity
                     .unwrap_or(Velocity(Vec2::ONE) * config.spawn_velocity),
-                mass: physics::Mass(1.0),
+                mass: Mass(1.0),
                 ..default()
             },
             health: Health::new(config.health),

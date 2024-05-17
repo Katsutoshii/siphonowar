@@ -66,6 +66,7 @@ pub enum DebugState {
 fn toggle_pause_game(
     state: Res<State<GameState>>,
     mut next_state: ResMut<NextState<GameState>>,
+    mut next_physics_state: ResMut<NextState<PhysicsSimulationState>>,
     mut controls: EventReader<ControlEvent>,
 ) {
     for control in controls.read() {
@@ -73,8 +74,14 @@ fn toggle_pause_game(
             continue;
         }
         match state.get() {
-            GameState::Paused => next_state.set(GameState::Running),
-            GameState::Running => next_state.set(GameState::Paused),
+            GameState::Paused => {
+                next_state.set(GameState::Running);
+                next_physics_state.set(PhysicsSimulationState::Running);
+            }
+            GameState::Running => {
+                next_state.set(GameState::Paused);
+                next_physics_state.set(PhysicsSimulationState::Paused);
+            }
             _ => {}
         }
     }
