@@ -61,7 +61,32 @@ enum UiNode {
     Text(TextBundle),
     Image(ImageBundle),
     PauseMenu(PauseMenuBundle),
-    PauseMenuButton((ButtonBundle, PauseMenuButtonAction)),
+    PauseMenuButton(PauseMenuButtonBundle),
+}
+
+#[derive(Bundle)]
+struct PauseMenuButtonBundle {
+    pub action: PauseMenuButtonAction,
+    pub button: ButtonBundle,
+}
+impl Default for PauseMenuButtonBundle {
+    fn default() -> Self {
+        Self {
+            action: PauseMenuButtonAction::Play,
+            button: ButtonBundle {
+                style: Style {
+                    width: Val::Px(360.0),
+                    height: Val::Px(64.0),
+                    margin: UiRect::all(Val::Px(20.0)),
+                    justify_content: JustifyContent::Center,
+                    align_items: AlignItems::Center,
+                    ..default()
+                },
+                background_color: NORMAL_BUTTON.into(),
+                ..default()
+            },
+        }
+    }
 }
 
 // Tag component used to mark which setting is currently selected
@@ -101,14 +126,6 @@ pub struct PauseMenu;
 impl PauseMenu {
     fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         // Common style for all buttons on the screen
-        let button_style = Style {
-            width: Val::Px(360.0),
-            height: Val::Px(64.0),
-            margin: UiRect::all(Val::Px(20.0)),
-            justify_content: JustifyContent::Center,
-            align_items: AlignItems::Center,
-            ..default()
-        };
         let button_icon_style = Style {
             width: Val::Px(30.0),
             // This takes the icons out of the flexbox flow, to be positioned exactly
@@ -149,59 +166,47 @@ impl PauseMenu {
                 })
                 .into_tree(),
                 // Resume button
-                (
-                    ButtonBundle {
-                        style: button_style.clone(),
-                        background_color: NORMAL_BUTTON.into(),
+                PauseMenuButtonBundle {
+                    action: PauseMenuButtonAction::Play,
+                    ..default()
+                }
+                .with_children([
+                    ImageBundle {
+                        style: button_icon_style.clone(),
+                        image: UiImage::new(asset_server.load("textures/icons/right.png")),
                         ..default()
-                    },
-                    PauseMenuButtonAction::Play,
-                )
-                    .with_children([
-                        ImageBundle {
-                            style: button_icon_style.clone(),
-                            image: UiImage::new(asset_server.load("textures/icons/right.png")),
-                            ..default()
-                        }
-                        .into_tree(),
-                        TextBundle::from_section("Resume", button_text_style.clone()).into_tree(),
-                    ]),
+                    }
+                    .into_tree(),
+                    TextBundle::from_section("Resume", button_text_style.clone()).into_tree(),
+                ]),
                 // Settings button
-                (
-                    ButtonBundle {
-                        style: button_style.clone(),
-                        background_color: NORMAL_BUTTON.into(),
+                PauseMenuButtonBundle {
+                    action: PauseMenuButtonAction::Settings,
+                    ..default()
+                }
+                .with_children([
+                    ImageBundle {
+                        style: button_icon_style.clone(),
+                        image: UiImage::new(asset_server.load("textures/icons/wrench.png")),
                         ..default()
-                    },
-                    PauseMenuButtonAction::Settings,
-                )
-                    .with_children([
-                        ImageBundle {
-                            style: button_icon_style.clone(),
-                            image: UiImage::new(asset_server.load("textures/icons/wrench.png")),
-                            ..default()
-                        }
-                        .into_tree(),
-                        TextBundle::from_section("Settings", button_text_style.clone()).into_tree(),
-                    ]),
+                    }
+                    .into_tree(),
+                    TextBundle::from_section("Settings", button_text_style.clone()).into_tree(),
+                ]),
                 // Quit button
-                (
-                    ButtonBundle {
-                        style: button_style,
-                        background_color: NORMAL_BUTTON.into(),
+                PauseMenuButtonBundle {
+                    action: PauseMenuButtonAction::Quit,
+                    ..default()
+                }
+                .with_children([
+                    ImageBundle {
+                        style: button_icon_style,
+                        image: UiImage::new(asset_server.load("textures/icons/exit_right.png")),
                         ..default()
-                    },
-                    PauseMenuButtonAction::Quit,
-                )
-                    .with_children([
-                        ImageBundle {
-                            style: button_icon_style,
-                            image: UiImage::new(asset_server.load("textures/icons/exit_right.png")),
-                            ..default()
-                        }
-                        .into_tree(),
-                        TextBundle::from_section("Quit", button_text_style).into_tree(),
-                    ]),
+                    }
+                    .into_tree(),
+                    TextBundle::from_section("Quit", button_text_style).into_tree(),
+                ]),
                 // Help text
                 TextBundle::from_section(
                     [
