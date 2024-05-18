@@ -1,11 +1,9 @@
-use crate::prelude::*;
-
 use bevy::reflect::TypePath;
 use bevy::render::render_resource::*;
 use bevy::ui::RelativeCursorPosition;
+use bevy_bundletree::*;
 
-use super::assets::HudAssets;
-use super::SpawnHudNode;
+use super::*;
 
 pub struct MinimapPlugin;
 impl Plugin for MinimapPlugin {
@@ -66,13 +64,10 @@ impl Default for MinimapUiMaterialInput {
 
 #[derive(Component)]
 pub struct MinimapUi;
-impl SpawnHudNode for MinimapUi {
-    fn spawn(&self, parent: &mut ChildBuilder, assets: &HudAssets) {
-        parent.spawn((
-            MinimapUi,
-            RaycastTarget::Minimap,
-            RelativeCursorPosition::default(),
-            MaterialNodeBundle {
+impl MakeBundleTree<HudUiNode, &HudAssets> for MinimapUi {
+    fn tree(self, assets: &HudAssets) -> BundleTree<HudUiNode> {
+        BundleTree::new(MinimapUiBundle {
+            material_node: MaterialNodeBundle {
                 style: Style {
                     width: Val::Px(300.0),
                     height: Val::Px(300.0),
@@ -81,7 +76,26 @@ impl SpawnHudNode for MinimapUi {
                 material: assets.minimap_material.clone(),
                 ..default()
             },
-        ));
+            ..default()
+        })
+    }
+}
+
+#[derive(Bundle)]
+pub struct MinimapUiBundle {
+    minimap: MinimapUi,
+    raycast_target: RaycastTarget,
+    relative_cursor_position: RelativeCursorPosition,
+    material_node: MaterialNodeBundle<MinimapUiMaterial>,
+}
+impl Default for MinimapUiBundle {
+    fn default() -> Self {
+        Self {
+            minimap: MinimapUi,
+            raycast_target: RaycastTarget::Minimap,
+            relative_cursor_position: RelativeCursorPosition::default(),
+            material_node: MaterialNodeBundle::default(),
+        }
     }
 }
 
