@@ -9,7 +9,7 @@ pub struct HudSelectedPane;
 impl MakeBundleTree<HudUiNode, &HudAssets> for HudSelectedPane {
     fn tree(self, assets: &HudAssets) -> BundleTree<HudUiNode> {
         BundleTree::new(HudSelectedPaneBundle::default()).with_children({
-            let mut children = vec![];
+            let mut children = Vec::new();
             for button in [
                 // Row 1
                 HudUnitButton::default(),
@@ -127,7 +127,7 @@ impl MakeBundleTree<HudUiNode, &HudAssets> for HudUnitButton {
             data: self.clone(),
             ..default()
         })
-        .with_children(vec![BundleTree::new(TextBundle {
+        .with_children([BundleTree::new(TextBundle {
             text: Text::from_section(
                 self.text,
                 TextStyle {

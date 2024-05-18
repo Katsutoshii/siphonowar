@@ -2,7 +2,7 @@ use bevy::input::ButtonState;
 
 use super::*;
 
-// Tag component used to mark which setting is currently selected
+/// Tag component used to mark which setting is currently selected
 #[derive(Component)]
 pub struct SelectedOption;
 
@@ -152,7 +152,7 @@ impl MakeBundleTree<HudUiNode, &HudAssets> for HudControlsButton {
             data: self.clone(),
             ..default()
         })
-        .with_children(vec![
+        .with_children([
             BundleTree::new(TextBundle {
                 text: Text::from_section(
                     self.text,

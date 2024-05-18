@@ -53,10 +53,8 @@ impl Default for HudRootBundle {
 }
 
 #[allow(clippy::large_enum_variant)]
-#[derive(Default, From)]
+#[derive(From)]
 pub enum HudUiNode {
-    #[default]
-    None,
     Root(#[from] HudRootBundle),
     Node(#[from] NodeBundle),
     Text(#[from] TextBundle),
@@ -65,22 +63,9 @@ pub enum HudUiNode {
     SelectedPane(#[from] HudSelectedPaneBundle),
     Minimap(#[from] MinimapUiBundle),
 }
-impl SpawnableBundle for HudUiNode {
+impl BundleEnum for HudUiNode {
     fn spawn<'w>(self, commands: &'w mut Commands) -> EntityCommands<'w> {
         match self {
-            Self::None => commands.spawn(()),
-            Self::Root(bundle) => commands.spawn(bundle),
-            Self::Node(bundle) => commands.spawn(bundle),
-            Self::Text(bundle) => commands.spawn(bundle),
-            Self::ControlsButton(bundle) => commands.spawn(bundle),
-            Self::UnitButton(bundle) => commands.spawn(bundle),
-            Self::SelectedPane(bundle) => commands.spawn(bundle),
-            Self::Minimap(bundle) => commands.spawn(bundle),
-        }
-    }
-    fn spawn_child<'w>(self, commands: &'w mut ChildBuilder<'_>) -> EntityCommands<'w> {
-        match self {
-            Self::None => commands.spawn(()),
             Self::Root(bundle) => commands.spawn(bundle),
             Self::Node(bundle) => commands.spawn(bundle),
             Self::Text(bundle) => commands.spawn(bundle),
@@ -99,8 +84,11 @@ pub const PRESSED_BUTTON: Color = Color::rgb(0.35, 0.35, 0.35);
 pub const HOVERED_PRESSED_BUTTON: Color = Color::rgb(0.45, 0.45, 0.45);
 
 fn setup(mut commands: Commands, assets: Res<HudAssets>) {
-    commands.spawn_tree(BundleTree::new(HudRootBundle::default()).with_children(
-        vec![BundleTree::new(NodeBundle {
+    commands.spawn_tree(
+        // Root
+        BundleTree::new(HudRootBundle::default()).with_children([
+            // Flex Row
+            BundleTree::new(NodeBundle {
                 style: Style {
                     width: Val::Percent(100.0),
                     display: Display::Flex,
@@ -109,10 +97,12 @@ fn setup(mut commands: Commands, assets: Res<HudAssets>) {
                     ..default()
                 },
                 ..default()
-            }).with_children(vec![
+            })
+            .with_children([
                 HudControlsPane.tree(&assets),
                 HudSelectedPane.tree(&assets),
                 MinimapUi.tree(&assets),
-            ])],
-    ));
+            ]),
+        ]),
+    );
 }
