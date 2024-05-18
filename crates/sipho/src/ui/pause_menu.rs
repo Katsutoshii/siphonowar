@@ -1,6 +1,7 @@
 use bevy::app::AppExit;
 
 use crate::prelude::*;
+use bevy_bundletree::*;
 
 pub struct PauseMenuPlugin;
 impl Plugin for PauseMenuPlugin {
@@ -54,9 +55,46 @@ impl MenuState {
     }
 }
 
+#[derive(BundleEnum, IntoBundleTree)]
+enum UiNode {
+    Node(NodeBundle),
+    Text(TextBundle),
+    Image(ImageBundle),
+    PauseMenu(PauseMenuBundle),
+    PauseMenuButton((ButtonBundle, PauseMenuButtonAction)),
+}
+
 // Tag component used to mark which setting is currently selected
 #[derive(Component)]
 struct SelectedOption;
+
+#[derive(Bundle)]
+pub struct PauseMenuBundle {
+    pub pause_menu: PauseMenu,
+    pub name: Name,
+    pub node: NodeBundle,
+}
+impl Default for PauseMenuBundle {
+    fn default() -> Self {
+        Self {
+            pause_menu: PauseMenu,
+            name: Name::new("Pause Menu"),
+            node: NodeBundle {
+                style: Style {
+                    width: Val::Percent(100.0),
+                    height: Val::Percent(100.0),
+                    align_items: AlignItems::Center,
+                    justify_content: JustifyContent::Center,
+                    position_type: PositionType::Absolute,
+                    ..default()
+                },
+                visibility: Visibility::Hidden,
+                z_index: ZIndex::Global(10),
+                ..default()
+            },
+        }
+    }
+}
 
 #[derive(Component)]
 pub struct PauseMenu;
@@ -85,142 +123,112 @@ impl PauseMenu {
             ..default()
         };
 
-        commands
-            .spawn((
-                PauseMenu,
-                Name::new("Pause Menu"),
-                NodeBundle {
-                    style: Style {
-                        width: Val::Percent(100.0),
-                        height: Val::Percent(100.0),
-                        align_items: AlignItems::Center,
-                        justify_content: JustifyContent::Center,
-                        position_type: PositionType::Absolute,
-                        ..default()
-                    },
-                    visibility: Visibility::Hidden,
-                    z_index: ZIndex::Global(10),
+        let tree: BundleTree<UiNode> = PauseMenuBundle::default().with_children([
+            // Flex column
+            NodeBundle {
+                style: Style {
+                    flex_direction: FlexDirection::Column,
+                    align_items: AlignItems::Center,
                     ..default()
                 },
-            ))
-            .with_children(|parent| {
-                parent
-                    .spawn(NodeBundle {
-                        style: Style {
-                            flex_direction: FlexDirection::Column,
-                            align_items: AlignItems::Center,
-                            ..default()
-                        },
+                ..default()
+            }
+            .with_children([
+                // Game title
+                TextBundle::from_section(
+                    "Siphonowar",
+                    TextStyle {
+                        font: asset_server.load("fonts/FiraSans-Bold.ttf"),
+                        font_size: 36.0,
+                        color: TEXT_COLOR,
+                    },
+                )
+                .with_style(Style {
+                    margin: UiRect::all(Val::Px(50.0)),
+                    ..default()
+                })
+                .into_tree(),
+                // Resume button
+                (
+                    ButtonBundle {
+                        style: button_style.clone(),
+                        background_color: NORMAL_BUTTON.into(),
                         ..default()
-                    })
-                    .with_children(|parent| {
-                        // Display the game name
-                        parent.spawn(
-                            TextBundle::from_section(
-                                "Siphonowar",
-                                TextStyle {
-                                    font: asset_server.load("fonts/FiraSans-Bold.ttf"),
-                                    font_size: 36.0,
-                                    color: TEXT_COLOR,
-                                },
-                            )
-                            .with_style(Style {
-                                margin: UiRect::all(Val::Px(50.0)),
-                                ..default()
-                            }),
-                        );
-
-                        // Display three buttons for each action available from the main menu:
-                        // - resume
-                        // - settings
-                        // - quit
-                        parent
-                            .spawn((
-                                ButtonBundle {
-                                    style: button_style.clone(),
-                                    background_color: NORMAL_BUTTON.into(),
-                                    ..default()
-                                },
-                                PauseMenuButtonAction::Play,
-                            ))
-                            .with_children(|parent| {
-                                let icon = asset_server.load("textures/icons/right.png");
-                                parent.spawn(ImageBundle {
-                                    style: button_icon_style.clone(),
-                                    image: UiImage::new(icon),
-                                    ..default()
-                                });
-                                parent.spawn(TextBundle::from_section(
-                                    "Resume",
-                                    button_text_style.clone(),
-                                ));
-                            });
-                        parent
-                            .spawn((
-                                ButtonBundle {
-                                    style: button_style.clone(),
-                                    background_color: NORMAL_BUTTON.into(),
-                                    ..default()
-                                },
-                                PauseMenuButtonAction::Settings,
-                            ))
-                            .with_children(|parent| {
-                                let icon = asset_server.load("textures/icons/wrench.png");
-                                parent.spawn(ImageBundle {
-                                    style: button_icon_style.clone(),
-                                    image: UiImage::new(icon),
-                                    ..default()
-                                });
-                                parent.spawn(TextBundle::from_section(
-                                    "Settings",
-                                    button_text_style.clone(),
-                                ));
-                            });
-                        parent
-                            .spawn((
-                                ButtonBundle {
-                                    style: button_style,
-                                    background_color: NORMAL_BUTTON.into(),
-                                    ..default()
-                                },
-                                PauseMenuButtonAction::Quit,
-                            ))
-                            .with_children(|parent| {
-                                let icon = asset_server.load("textures/icons/exit_right.png");
-                                parent.spawn(ImageBundle {
-                                    style: button_icon_style,
-                                    image: UiImage::new(icon),
-                                    ..default()
-                                });
-                                parent.spawn(TextBundle::from_section("Quit", button_text_style));
-                            });
-
-                        parent.spawn(
-                            TextBundle::from_section(
-                                [
-                                    "Create your spawner: 'x'",
-                                    "Move camera: move mouse to border",
-                                    "Move waypoint: right click",
-                                    "Spawn zooids: 'z'",
-                                    "Despawn zooids: 'd'",
-                                    "Save scene: 's'",
-                                    "Open editor: 'e'",
-                                    "Spawn food: 'f'",
-                                ]
-                                .join("\n"),
-                                TextStyle {
-                                    font_size: 18.0,
-                                    ..default()
-                                },
-                            )
-                            .with_style(Style {
-                                align_self: AlignSelf::Center,
-                                justify_content: JustifyContent::Center,
-                                ..default()
-                            }),
-                        );
-                    });
-            });
+                    },
+                    PauseMenuButtonAction::Play,
+                )
+                    .with_children([
+                        ImageBundle {
+                            style: button_icon_style.clone(),
+                            image: UiImage::new(asset_server.load("textures/icons/right.png")),
+                            ..default()
+                        }
+                        .into_tree(),
+                        TextBundle::from_section("Resume", button_text_style.clone()).into_tree(),
+                    ]),
+                // Settings button
+                (
+                    ButtonBundle {
+                        style: button_style.clone(),
+                        background_color: NORMAL_BUTTON.into(),
+                        ..default()
+                    },
+                    PauseMenuButtonAction::Settings,
+                )
+                    .with_children([
+                        ImageBundle {
+                            style: button_icon_style.clone(),
+                            image: UiImage::new(asset_server.load("textures/icons/wrench.png")),
+                            ..default()
+                        }
+                        .into_tree(),
+                        TextBundle::from_section("Settings", button_text_style.clone()).into_tree(),
+                    ]),
+                // Quit button
+                (
+                    ButtonBundle {
+                        style: button_style,
+                        background_color: NORMAL_BUTTON.into(),
+                        ..default()
+                    },
+                    PauseMenuButtonAction::Quit,
+                )
+                    .with_children([
+                        ImageBundle {
+                            style: button_icon_style,
+                            image: UiImage::new(asset_server.load("textures/icons/exit_right.png")),
+                            ..default()
+                        }
+                        .into_tree(),
+                        TextBundle::from_section("Quit", button_text_style).into_tree(),
+                    ]),
+                // Help text
+                TextBundle::from_section(
+                    [
+                        "Create your spawner: 'x'",
+                        "Move camera: move mouse to border",
+                        "Move waypoint: right click",
+                        "Spawn zooids: 'z'",
+                        "Despawn zooids: 'd'",
+                        "Save scene: 's'",
+                        "Open editor: 'e'",
+                        "Spawn food: 'f'",
+                    ]
+                    .join("\n"),
+                    TextStyle {
+                        font_size: 18.0,
+                        ..default()
+                    },
+                )
+                .with_style(Style {
+                    align_self: AlignSelf::Center,
+                    justify_content: JustifyContent::Center,
+                    ..default()
+                })
+                .into_tree(),
+            ]),
+        ]);
+        commands.spawn_tree(tree);
     }
 
     // Handle changing all buttons color based on mouse interaction
