@@ -290,9 +290,8 @@ pub struct FogAssets {
 impl FromWorld for FogAssets {
     fn from_world(world: &mut World) -> Self {
         info!("FogAssets::from_world");
-        let assets = Self {
+        Self {
             texture: {
-                let mut images = world.get_resource_mut::<Assets<Image>>().unwrap();
                 let size = Extent3d {
                     width: 256,
                     height: 256,
@@ -315,9 +314,8 @@ impl FromWorld for FogAssets {
                     ..default()
                 };
                 image.resize(size);
-                images.add(image)
+                world.add_asset(image)
             },
-        };
-        assets
+        }
     }
 }

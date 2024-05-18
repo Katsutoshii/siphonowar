@@ -10,12 +10,7 @@ pub struct HudAssets {
 impl FromWorld for HudAssets {
     fn from_world(world: &mut World) -> Self {
         Self {
-            minimap_material: {
-                let mut materials = world
-                    .get_resource_mut::<Assets<MinimapUiMaterial>>()
-                    .unwrap();
-                materials.add(MinimapUiMaterial::default())
-            },
+            minimap_material: { world.add_asset(MinimapUiMaterial::default()) },
         }
     }
 }

@@ -92,7 +92,7 @@ pub struct EffectAssets {
 }
 impl FromWorld for EffectAssets {
     fn from_world(world: &mut World) -> Self {
-        let mut assets = world.get_resource_mut::<Assets<EffectAsset>>().unwrap();
+        let mut assets = world.assets::<EffectAsset>();
         Self {
             fireworks: [
                 FireworkColor::Blue,

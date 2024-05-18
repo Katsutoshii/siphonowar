@@ -222,41 +222,23 @@ pub struct SelectorAssets {
 impl FromWorld for SelectorAssets {
     fn from_world(world: &mut World) -> Self {
         Self {
-            mesh: {
-                let mut meshes = world.get_resource_mut::<Assets<Mesh>>().unwrap();
-                meshes.add(Mesh::from(Cuboid::from_size(Vec2::splat(1.).extend(0.))))
-            },
-            blue_material: {
-                let mut materials = world
-                    .get_resource_mut::<Assets<StandardMaterial>>()
-                    .unwrap();
-                materials.add(StandardMaterial {
-                    base_color: Color::rgba(0.3, 0.3, 1.0, 0.04),
-                    alpha_mode: AlphaMode::Blend,
-                    unlit: true,
-                    ..default()
-                })
-            },
-            white_material: {
-                let mut materials = world
-                    .get_resource_mut::<Assets<StandardMaterial>>()
-                    .unwrap();
-                materials.add(StandardMaterial {
-                    base_color: Color::WHITE.with_a(0.25),
-                    alpha_mode: AlphaMode::Blend,
-                    ..default()
-                })
-            },
-            hover_material: {
-                let mut materials = world
-                    .get_resource_mut::<Assets<StandardMaterial>>()
-                    .unwrap();
-                materials.add(StandardMaterial {
-                    base_color: Color::WHITE.with_a(0.1),
-                    alpha_mode: AlphaMode::Blend,
-                    ..default()
-                })
-            },
+            mesh: world.add_asset(Mesh::from(Cuboid::from_size(Vec2::splat(1.).extend(0.)))),
+            blue_material: world.add_asset(StandardMaterial {
+                base_color: Color::rgba(0.3, 0.3, 1.0, 0.04),
+                alpha_mode: AlphaMode::Blend,
+                unlit: true,
+                ..default()
+            }),
+            white_material: world.add_asset(StandardMaterial {
+                base_color: Color::WHITE.with_a(0.25),
+                alpha_mode: AlphaMode::Blend,
+                ..default()
+            }),
+            hover_material: world.add_asset(StandardMaterial {
+                base_color: Color::WHITE.with_a(0.1),
+                alpha_mode: AlphaMode::Blend,
+                ..default()
+            }),
         }
     }
 }

@@ -15,6 +15,7 @@ pub mod smallset;
 pub mod system_sets;
 pub mod team;
 pub mod window;
+pub mod world_assets;
 pub mod zindex;
 
 pub mod prelude {
@@ -39,6 +40,7 @@ pub mod prelude {
         system_sets::{FixedUpdateStage, GameStateSet},
         team::{Team, TeamConfig, TeamMaterials, TEAM_BLUE, TEAM_NONE, TEAM_RED},
         window::{self, ScalableWindow},
+        world_assets::WorldAssets,
         zindex, CorePlugin,
     };
     pub use arrayvec::ArrayVec;

@@ -87,33 +87,15 @@ pub struct CursorAssets {
 impl FromWorld for CursorAssets {
     fn from_world(world: &mut World) -> Self {
         let assets = Self {
-            mesh: {
-                let mut meshes = world.get_resource_mut::<Assets<Mesh>>().unwrap();
-                meshes.add(Mesh::from(RegularPolygon {
-                    circumcircle: Circle {
-                        radius: 2f32.sqrt() / 2.,
-                    },
-                    sides: 3,
-                }))
-            },
-            cursor: {
-                world
-                    .get_resource_mut::<AssetServer>()
-                    .unwrap()
-                    .load("textures/cursor/paper-arrow-s.png")
-            },
-            attack: {
-                world
-                    .get_resource_mut::<AssetServer>()
-                    .unwrap()
-                    .load("textures/cursor/plain-dagger-s.png")
-            },
-            blue_material: {
-                let mut materials = world
-                    .get_resource_mut::<Assets<StandardMaterial>>()
-                    .unwrap();
-                materials.add(StandardMaterial::from(Color::ALICE_BLUE.with_a(0.5)))
-            },
+            mesh: world.add_asset(Mesh::from(RegularPolygon {
+                circumcircle: Circle {
+                    radius: 2f32.sqrt() / 2.,
+                },
+                sides: 3,
+            })),
+            cursor: world.load_asset("textures/cursor/paper-arrow-s.png"),
+            attack: world.load_asset("textures/cursor/plain-dagger-s.png"),
+            blue_material: world.add_asset(StandardMaterial::from(Color::ALICE_BLUE.with_a(0.5))),
         };
         let mut load_state = world.get_resource_mut::<AssetLoadState>().unwrap();
         load_state.track(&assets.cursor);

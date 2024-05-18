@@ -104,19 +104,14 @@ pub struct ShaderPlaneAssets<M: ShaderPlaneMaterial> {
 }
 impl<M: ShaderPlaneMaterial> FromWorld for ShaderPlaneAssets<M> {
     fn from_world(world: &mut World) -> Self {
-        let assets = Self {
-            mesh: {
-                let mut meshes = world.get_resource_mut::<Assets<Mesh>>().unwrap();
-                meshes.add(Mesh::from(Rectangle {
-                    half_size: Vec2 { x: 0.5, y: 0.5 },
-                }))
-            },
+        Self {
+            mesh: world.add_asset(Mesh::from(Rectangle {
+                half_size: Vec2 { x: 0.5, y: 0.5 },
+            })),
             shader_material: {
                 let material = M::from_world(world);
-                let mut materials = world.get_resource_mut::<Assets<M>>().unwrap();
-                materials.add(material)
+                world.add_asset(material)
             },
-        };
-        assets
+        }
     }
 }

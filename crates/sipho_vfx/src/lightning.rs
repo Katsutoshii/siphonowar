@@ -141,20 +141,14 @@ impl FromWorld for LightningAssets {
     fn from_world(world: &mut World) -> Self {
         Self {
             lightning_material: {
-                let mut materials = world
-                    .get_resource_mut::<Assets<StandardMaterial>>()
-                    .unwrap();
-                materials.add(StandardMaterial {
+                world.add_asset(StandardMaterial {
                     base_color: Color::WHITE,
                     emissive: Color::WHITE,
                     diffuse_transmission: 1.0,
                     ..default()
                 })
             },
-            lightning_mesh: {
-                let asset_server = world.get_resource_mut::<AssetServer>().unwrap();
-                asset_server.load("models/lightning/lightning.glb#Mesh0/Primitive0")
-            },
+            lightning_mesh: world.load_asset("models/lightning/lightning.glb#Mesh0/Primitive0"),
         }
     }
 }
