@@ -9,7 +9,7 @@ pub struct SelectedOption;
 pub struct HudControlsPane;
 impl MakeBundleTree<HudUiNode, &HudAssets> for HudControlsPane {
     fn tree(self, assets: &HudAssets) -> BundleTree<HudUiNode> {
-        BundleTree::new(NodeBundle {
+        NodeBundle {
             style: Style {
                 width: Val::Px(300.0),
                 height: Val::Px(300.0),
@@ -20,7 +20,7 @@ impl MakeBundleTree<HudUiNode, &HudAssets> for HudControlsPane {
             },
             background_color: Color::DARK_GRAY.with_a(0.2).into(),
             ..default()
-        })
+        }
         .with_children({
             let mut children = vec![];
             for button in [
@@ -148,12 +148,12 @@ impl Default for HudControlsButtonBundle {
 }
 impl MakeBundleTree<HudUiNode, &HudAssets> for HudControlsButton {
     fn tree(self, _assets: &HudAssets) -> BundleTree<HudUiNode> {
-        BundleTree::new(HudControlsButtonBundle {
+        HudControlsButtonBundle {
             data: self.clone(),
             ..default()
-        })
+        }
         .with_children([
-            BundleTree::new(TextBundle {
+            TextBundle {
                 text: Text::from_section(
                     self.text,
                     TextStyle {
@@ -167,8 +167,9 @@ impl MakeBundleTree<HudUiNode, &HudAssets> for HudControlsButton {
                     ..default()
                 },
                 ..default()
-            }),
-            BundleTree::new(TextBundle {
+            }
+            .into_tree(),
+            TextBundle {
                 text: Text::from_section(
                     self.description,
                     TextStyle {
@@ -182,7 +183,8 @@ impl MakeBundleTree<HudUiNode, &HudAssets> for HudControlsButton {
                     ..default()
                 },
                 ..default()
-            }),
+            }
+            .into_tree(),
         ])
     }
 }

@@ -8,7 +8,7 @@ use super::*;
 pub struct HudSelectedPane;
 impl MakeBundleTree<HudUiNode, &HudAssets> for HudSelectedPane {
     fn tree(self, assets: &HudAssets) -> BundleTree<HudUiNode> {
-        BundleTree::new(HudSelectedPaneBundle::default()).with_children({
+        HudSelectedPaneBundle::default().with_children({
             let mut children = Vec::new();
             for button in [
                 // Row 1
@@ -123,11 +123,11 @@ impl Default for HudUnitButtonBundle {
 }
 impl MakeBundleTree<HudUiNode, &HudAssets> for HudUnitButton {
     fn tree(self, _assets: &HudAssets) -> BundleTree<HudUiNode> {
-        BundleTree::new(HudUnitButtonBundle {
+        HudUnitButtonBundle {
             data: self.clone(),
             ..default()
-        })
-        .with_children([BundleTree::new(TextBundle {
+        }
+        .with_children([TextBundle {
             text: Text::from_section(
                 self.text,
                 TextStyle {
@@ -142,7 +142,8 @@ impl MakeBundleTree<HudUiNode, &HudAssets> for HudUnitButton {
                 ..default()
             },
             ..default()
-        })])
+        }
+        .into_tree()])
     }
 }
 impl HudUnitButton {

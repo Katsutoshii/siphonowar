@@ -15,7 +15,7 @@ strum_macros = "0.26.2"
 sipho_core = {path = "../sipho_core"}
 sipho_vfx = {path = "../sipho_vfx"}
 bevy_newtonian2d = {path = "../bevy_newtonian2d"}
-bevy_bundletree = {path = "../bevy_bundletree"}
+bevy_bundletree = "0.1"
 
 [lints]
 workspace = true

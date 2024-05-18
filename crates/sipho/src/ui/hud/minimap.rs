@@ -66,7 +66,7 @@ impl Default for MinimapUiMaterialInput {
 pub struct MinimapUi;
 impl MakeBundleTree<HudUiNode, &HudAssets> for MinimapUi {
     fn tree(self, assets: &HudAssets) -> BundleTree<HudUiNode> {
-        BundleTree::new(MinimapUiBundle {
+        MinimapUiBundle {
             material_node: MaterialNodeBundle {
                 style: Style {
                     width: Val::Px(300.0),
@@ -77,7 +77,8 @@ impl MakeBundleTree<HudUiNode, &HudAssets> for MinimapUi {
                 ..default()
             },
             ..default()
-        })
+        }
+        .into_tree()
     }
 }
 
