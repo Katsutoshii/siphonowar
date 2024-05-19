@@ -104,7 +104,6 @@ impl EnemyAI {
 
             let position = positions.get(entity).unwrap();
             if consumer.consumed > 0 {
-                consumer.consumed -= 1;
                 let direction = Vec2::Y;
                 let spawn_velocity: Vec2 = direction;
                 if arm_length < 7 {
@@ -117,16 +116,22 @@ impl EnemyAI {
                         &mut commands,
                         entity,
                     );
-                } else {
+                    consumer.consumed -= 1;
+                } else if consumer.consumed >= 3 {
                     let position = positions.get(head_entity).unwrap();
                     if let Some(new_entity) = commands.spawn(ObjectSpec {
                         position: position.0 + spawn_velocity,
                         velocity: Some(Velocity(spawn_velocity)),
                         team: *team,
-                        object: Object::Worker,
+                        object: if ai.free_workers.len() % 6 == 0 {
+                            Object::Shocker
+                        } else {
+                            Object::Worker
+                        },
                         // objectives: Objectives::new(Objective::FollowEntity(head_id)),
                         ..default()
                     }) {
+                        consumer.consumed -= 3;
                         ai.free_workers.insert(new_entity.id());
                     }
                 }
