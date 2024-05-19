@@ -101,26 +101,28 @@ impl ElasticCommands<'_, '_> {
             }
         }
 
-        let position1 = self.positions.get(entity1).unwrap();
-        let position2 = self.positions.get(entity2).unwrap();
-        let magnitude = position1.distance(position2.0);
+        let position1 = self.positions.get(entity1);
+        let position2 = self.positions.get(entity2);
+        if let (Ok(position1), Ok(position2)) = (position1, position2) {
+            let magnitude = position1.distance(position2.0);
 
-        self.commands.spawn(ElasticBundle {
-            elastic: Elastic((entity1, entity2)),
-            pbr: PbrBundle {
-                mesh: self.assets.connector_mesh.clone(),
-                material: self.assets.get_team_material(team).background,
-                transform: Elastic::get_transform(
-                    position1.0,
-                    position2.0,
-                    magnitude,
-                    zindex::ZOOIDS_MIN,
-                    8.,
-                ),
+            self.commands.spawn(ElasticBundle {
+                elastic: Elastic((entity1, entity2)),
+                pbr: PbrBundle {
+                    mesh: self.assets.connector_mesh.clone(),
+                    material: self.assets.get_team_material(team).background,
+                    transform: Elastic::get_transform(
+                        position1.0,
+                        position2.0,
+                        magnitude,
+                        zindex::ZOOIDS_MIN,
+                        8.,
+                    ),
+                    ..default()
+                },
                 ..default()
-            },
-            ..default()
-        });
+            });
+        }
     }
 }
 

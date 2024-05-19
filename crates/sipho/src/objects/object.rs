@@ -242,7 +242,10 @@ impl Object {
         let magnitude = interaction.separation_force * (-distance_squared / (radius_squared) + 1.);
         Force(
             position_delta.normalize_or_zero()
-                * magnitude.clamp(-interaction.cohesion_force, interaction.separation_force),
+                * magnitude.clamp(
+                    -interaction.cohesion_force,
+                    interaction.separation_force * 2.0,
+                ),
         )
     }
 

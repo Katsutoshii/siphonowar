@@ -65,6 +65,24 @@ impl EnemyAI {
     ) {
         for (mut head, head_entity, team, mut consumer, mut ai) in query.iter_mut() {
             ai.free_workers.retain(|x| positions.contains(*x));
+            // Apply free worker useful objectives
+            let useful_objective = ai
+                .free_workers
+                .iter()
+                .map(|x| objective_query.get(*x).unwrap())
+                .find(|x| !matches!(x.last(), Objective::Idle));
+            // Force all of the arms to have useful objects if it can.
+            if let Some(useful_objective) = useful_objective {
+                let useful_objective = useful_objective.clone();
+                for leaf in ai.free_workers.iter() {
+                    let mut objective = objective_query.get_mut(*leaf).unwrap();
+                    if objective.last() == &Objective::Idle {
+                        objective.pop();
+                        objective.push(useful_objective.last().clone())
+                    }
+                }
+            }
+
             let leaves = get_all_leaves(head_entity, &attached_to);
             let useful_objective = leaves
                 .iter()
@@ -74,7 +92,7 @@ impl EnemyAI {
             // Force all of the arms to have useful objects if it can.
             if let Some(useful_objective) = useful_objective {
                 let useful_objective = useful_objective.clone();
-                for leaf in leaves.iter().chain(ai.free_workers.iter()) {
+                for leaf in leaves.iter() {
                     let mut objective = objective_query.get_mut(*leaf).unwrap();
                     if objective.last() == &Objective::Idle {
                         objective.pop();
@@ -101,19 +119,16 @@ impl EnemyAI {
                     );
                 } else {
                     let position = positions.get(head_entity).unwrap();
-                    ai.free_workers.insert(
-                        commands
-                            .spawn(ObjectSpec {
-                                position: position.0 + spawn_velocity,
-                                velocity: Some(Velocity(spawn_velocity)),
-                                team: *team,
-                                object: Object::Worker,
-                                // objectives: Objectives::new(Objective::FollowEntity(head_id)),
-                                ..default()
-                            })
-                            .unwrap()
-                            .id(),
-                    );
+                    if let Some(new_entity) = commands.spawn(ObjectSpec {
+                        position: position.0 + spawn_velocity,
+                        velocity: Some(Velocity(spawn_velocity)),
+                        team: *team,
+                        object: Object::Worker,
+                        // objectives: Objectives::new(Objective::FollowEntity(head_id)),
+                        ..default()
+                    }) {
+                        ai.free_workers.insert(new_entity.id());
+                    }
                 }
             }
         }
