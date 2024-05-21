@@ -46,9 +46,13 @@ fn fragment(in: FullscreenVertexOutput) -> @location(0) vec4<f32> {
 
     let noise = 0.2 * perlin_noise_2d(uv);
     let pulse = sin(time - frequency * uv);
-    let dist = vec2<f32>(uv.x, uv.y);
-    let shifted_uv = uv + amplitude * noise * vec2(pulse.y, pulse.x); // y-axis only; 
-    let interp_uv = mix(shifted_uv, uv, dist) + 0.01 * noise;
+
+    // Distance to the center of the screen. The greater the distance, the more distortion.
+    let distance_to_center = length(uv.xy - 0.5);
+    let shifted_uv = uv + amplitude * noise * vec2(pulse.y, pulse.x);
+    let noise_amount = 0.02;
+    let shift_amount = max(mix(distance_to_center, noise, noise_amount), 0.15);
+    let interp_uv = mix(uv, shifted_uv, shift_amount);
 
     return vec4<f32>(
         textureSample(screen_texture, texture_sampler, interp_uv + vec2<f32>(offset_strength, -offset_strength)).r,
