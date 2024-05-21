@@ -1,3 +1,4 @@
+pub mod camera;
 pub mod objectives;
 pub mod objects;
 pub mod scene;
@@ -30,6 +31,7 @@ impl Plugin for SiphonowarPlugin {
                 .set(window::custom_plugin())
                 .set(ImagePlugin::default_linear()),
             CorePlugin,
+            camera::CameraPlugin,
             objects::ObjectsPlugin,
             objectives::ObjectivePlugin,
             scene::LoadableScenePlugin,

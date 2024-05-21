@@ -1,13 +1,6 @@
-use std::f32::consts::PI;
-
 use bevy::{
-    core_pipeline::{
-        bloom::{BloomCompositeMode, BloomPrefilterSettings, BloomSettings},
-        tonemapping::Tonemapping,
-    },
     input::{mouse::MouseWheel, ButtonState},
     prelude::*,
-    render::view::RenderLayers,
     window::PrimaryWindow,
 };
 
@@ -22,92 +15,25 @@ impl CameraAspectRatio for Camera {
         viewport_size / viewport_size.y
     }
 }
-pub struct CameraPlugin;
-impl Plugin for CameraPlugin {
+
+pub struct CameraControllerPlugin;
+impl Plugin for CameraControllerPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(ClearColor(Color::BLACK))
-            .add_event::<CameraMoveEvent>()
-            .add_systems(Startup, MainCamera::startup)
-            .insert_resource(AmbientLight {
-                color: Color::WHITE,
-                brightness: 1000.,
-            })
-            .add_systems(
-                Update,
-                (
-                    CameraController::update_bounds,
-                    CameraController::update_screen_control,
-                    CameraController::update_control,
-                )
-                    .chain()
-                    .in_set(FixedUpdateStage::Spawn),
-            );
+        app.add_event::<CameraMoveEvent>().add_systems(
+            Update,
+            (
+                CameraController::update_bounds,
+                CameraController::update_screen_control,
+                CameraController::update_control,
+            )
+                .chain(),
+        );
     }
 }
 
 #[derive(Event)]
 pub struct CameraMoveEvent {
     pub position: Vec3,
-}
-
-/// Used to help identify our main camera
-#[derive(Component)]
-pub struct MainCamera;
-impl MainCamera {
-    pub const THETA: f32 = PI / 8.;
-    pub const FOV: f32 = PI / 4.;
-
-    pub fn startup(mut commands: Commands) {
-        commands.spawn((
-            Camera3dBundle {
-                camera: Camera {
-                    hdr: true, // 1. HDR is required for bloom
-                    ..default()
-                },
-                projection: PerspectiveProjection {
-                    fov: Self::FOV,
-                    near: 0.1,
-                    far: 2000.,
-                    ..default()
-                }
-                .into(),
-                transform: Transform::from_xyz(
-                    0.0,
-                    -zindex::CAMERA * Self::THETA.tan(),
-                    zindex::CAMERA,
-                )
-                .with_rotation(Quat::from_axis_angle(Vec3::X, Self::THETA)),
-                tonemapping: Tonemapping::TonyMcMapface,
-                ..default()
-            },
-            BloomSettings {
-                intensity: 0.15 * 2.0,
-                low_frequency_boost: 0.7,
-                low_frequency_boost_curvature: 0.95,
-                high_pass_frequency: 1.0,
-                prefilter_settings: BloomPrefilterSettings {
-                    threshold: 0.0,
-                    threshold_softness: 0.0,
-                },
-                composite_mode: BloomCompositeMode::EnergyConserving,
-            },
-            CameraController::default(),
-            InheritedVisibility::default(),
-            RenderLayers::from_layers(&[0, 1]),
-            MainCamera,
-        ));
-        commands.spawn(DirectionalLightBundle {
-            transform: Transform::from_xyz(0.0, 0.0, zindex::CAMERA)
-                .with_rotation(Quat::from_axis_angle(Vec3::ONE, -PI / 6.)),
-            directional_light: DirectionalLight {
-                color: Color::ANTIQUE_WHITE,
-                illuminance: 4500.,
-                shadows_enabled: true,
-                ..default()
-            },
-            ..default()
-        });
-    }
 }
 
 #[derive(Component)]
@@ -143,17 +69,18 @@ impl CameraController {
 
     fn update_bounds(
         grid_spec: Res<GridSpec>,
-        mut controller_query: Query<(&mut Self, &GlobalTransform), With<MainCamera>>,
+        mut controller_query: Query<(&mut Self, &GlobalTransform)>,
         window: Query<&Window, With<PrimaryWindow>>,
     ) {
         if !grid_spec.is_changed() {
             return;
         }
-        let (mut controller, camera_transform) = controller_query.single_mut();
-        if let Some(world2d_size) = Self::get_world2d_size(camera_transform, window.single()) {
-            controller.world2d_bounds = grid_spec.world2d_bounds();
-            controller.world2d_bounds.min += world2d_size;
-            controller.world2d_bounds.max -= world2d_size;
+        if let Ok((mut controller, camera_transform)) = controller_query.get_single_mut() {
+            if let Some(world2d_size) = Self::get_world2d_size(camera_transform, window.single()) {
+                controller.world2d_bounds = grid_spec.world2d_bounds();
+                controller.world2d_bounds.min += world2d_size;
+                controller.world2d_bounds.max -= world2d_size;
+            }
         }
     }
 
@@ -168,7 +95,7 @@ impl CameraController {
     }
 
     pub fn update_control(
-        mut controller_query: Query<(&mut Self, &mut Transform), With<MainCamera>>,
+        mut controller_query: Query<(&mut Self, &mut Transform)>,
         mut controls: EventReader<ControlEvent>,
         mut event_writer: EventWriter<CameraMoveEvent>,
         mut mouse_wheel: EventReader<MouseWheel>,

@@ -13,12 +13,18 @@
 fn fragment(mesh: VertexOutput) -> @location(0) vec4<f32> {
     let g = grid_coords(size, mesh.world_position.xy);
 
-    var output_color = color;
-    let noise_amount = 0.2;
-    let sin_t = sin(0.2 * globals.time);
-    let sin_xt = sin(0.13 * globals.time);
-    let noise = (2. + sin_t) / 3. * perlin_noise_2d(vec2<f32>(g.x + sin_t, g.y - sin_xt) * 0.1);
 
+    let path2 = vec2<f32>(-1.0, 0.33);
+
+    var output_color = color;
+    let sin_t = sin(1.4 * globals.time);
+    let sin_xt = sin(2.26 * globals.time);
+    let noise1_xy = vec2<f32>(g.x + sin_t, g.y - sin_xt) * 0.2;
+    let noise1 = perlin_noise_2d(noise1_xy);
+    let noise2_xy = vec2<f32>(g.x + 0.2 * sin_xt, g.y + 0.5 * sin_t) * path2 * 0.2;
+    let noise2 = perlin_noise_2d(noise2_xy);
+    let noise = (noise1 + noise2) / 2;
+    let noise_amount = 0.3;
 
     var uv = mesh.uv;
     uv.y = 1.0 - uv.y;

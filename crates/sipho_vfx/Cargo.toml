@@ -17,3 +17,7 @@ sipho_core = {path = "../sipho_core"}
 
 [lints]
 workspace = true
+
+[features]
+# Defines a feature named `webp` that does not enable any other features.
+webgl2 = []

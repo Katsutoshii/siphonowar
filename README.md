@@ -11,4 +11,12 @@ Core RTS implementation.
 * Spatial grid for quickly querying entities in radius.
 
 ### sipho_vfx
+
+* Postprocessing
+* Fireworks
+* Lightning 
+
 ### sipho
+
+* Object interactions and behaviors
+

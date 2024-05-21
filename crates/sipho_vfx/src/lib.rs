@@ -4,11 +4,13 @@ use sipho_core::prelude::*;
 pub mod bubbles;
 pub mod fireworks;
 pub mod lightning;
+pub mod post_processing;
 
 pub mod prelude {
     pub use crate::{
         fireworks::{FireworkColor, FireworkCommands, FireworkSpec},
         lightning::{Lightning, LightningCommands},
+        post_processing::{PostProcessLabel, PostProcessSettings},
         VfxPlugin, VfxSize,
     };
     pub use sipho_core::prelude::*;
@@ -30,6 +32,7 @@ impl Plugin for VfxPlugin {
             lightning::LightningPlugin,
             fireworks::FireworkPlugin,
             bubbles::BubblesPlugin,
+            post_processing::PostProcessPlugin,
         ));
     }
 }
