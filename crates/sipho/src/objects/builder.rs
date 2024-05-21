@@ -112,19 +112,20 @@ impl ObjectBuilderQueryDataItem<'_> {
             let magnitude = neighbor.delta.length();
             if magnitude <= Elastic::MAX_LENGTH {
                 let width = 6.;
-                let (position, path_to_head) = objects.get(neighbor.entity).unwrap();
-                if path_to_head.head.is_some() {
-                    elastic.show(
-                        Elastic::get_transform(
-                            self.position.0,
-                            position.0,
-                            neighbor.delta.length(),
-                            self.transform.translation.z,
-                            width,
-                        ),
-                        neighbor.entity,
-                    );
-                    return;
+                if let Ok((position, path_to_head)) = objects.get(neighbor.entity) {
+                    if path_to_head.head.is_some() {
+                        elastic.show(
+                            Elastic::get_transform(
+                                self.position.0,
+                                position.0,
+                                neighbor.delta.length(),
+                                self.transform.translation.z,
+                                width,
+                            ),
+                            neighbor.entity,
+                        );
+                        return;
+                    }
                 }
             }
         }
