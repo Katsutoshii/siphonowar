@@ -1,7 +1,7 @@
 #import bevy_pbr::{mesh_view_bindings::globals, forward_io::VertexOutput};
 #import "shaders/perlin_noise_2d.wgsl"::{perlin_noise_2d};
 #import "shaders/grid.wgsl"::{GridSize, grid_index, grid_offset, grid_coords};
-#import "shaders/sampler.wgsl"::{textureSample5};
+#import "shaders/sampler.wgsl"::{textureSample9};
 
 @group(2) @binding(0) var<uniform> color: vec4<f32>;
 @group(2) @binding(1) var<uniform> size: GridSize;
@@ -30,7 +30,7 @@ fn fragment(mesh: VertexOutput) -> @location(0) vec4<f32> {
     uv.y = 1.0 - uv.y;
 
     let e = 0.004;
-    var fog_amount = textureSample5(visibility_texture, texture_sampler, uv, e).a;
+    var fog_amount = textureSample9(visibility_texture, texture_sampler, uv, e).a;
     let alpha = 1.0 - fog_amount;
     output_color.a *= alpha + noise_amount * max(noise, 0.);
     return output_color;

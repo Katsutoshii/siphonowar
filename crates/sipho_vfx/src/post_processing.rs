@@ -29,6 +29,7 @@ use bevy::{
         RenderApp,
     },
 };
+use sipho_core::camera::MainCamera;
 
 /// It is generally encouraged to set up post processing effects as a plugin
 pub struct PostProcessPlugin;
@@ -47,7 +48,8 @@ impl Plugin for PostProcessPlugin {
             // This plugin will prepare the component for the GPU by creating a uniform buffer
             // and writing the data to that buffer every frame.
             UniformComponentPlugin::<PostProcessSettings>::default(),
-        ));
+        ))
+        .add_systems(PostUpdate, PostProcessSettings::update);
 
         // We need to get the render app from the main app
         let Ok(render_app) = app.get_sub_app_mut(RenderApp) else {
@@ -178,6 +180,7 @@ impl ViewNode for PostProcessNode {
             &post_process_pipeline.layout,
             // It's important for this to match the BindGroupLayout defined in the PostProcessPipeline
             &BindGroupEntries::sequential((
+                // Globals
                 globals_buffer.clone(),
                 // Make sure to use the source view
                 post_process.source,
@@ -293,7 +296,32 @@ impl FromWorld for PostProcessPipeline {
 #[allow(unexpected_cfgs)]
 pub struct PostProcessSettings {
     pub intensity: f32,
+
+    pub camera_position: Vec3,
+    pub view_proj: Mat4,
+    pub inverse_proj: Mat4,
+    pub view: Mat4,
+    pub inverse_view: Mat4,
+
     // WebGL2 structs must be 16 byte aligned.
     #[cfg(feature = "webgl2")]
     _webgl2_padding: Vec3,
+}
+impl PostProcessSettings {
+    pub fn update(
+        mut settings: Query<&mut PostProcessSettings>,
+        camera_query: Query<(&Transform, &Camera), With<MainCamera>>,
+    ) {
+        for mut setting in &mut settings {
+            // update camera info in settings binding
+            for (camera_transform, camera) in &camera_query {
+                // pass render camera in because `view` during postprocessing is of a default camera
+                setting.camera_position = camera_transform.translation;
+                setting.view_proj = camera.projection_matrix();
+                setting.inverse_proj = setting.view_proj.inverse();
+                setting.view = camera_transform.compute_matrix();
+                setting.inverse_view = setting.view.inverse();
+            }
+        }
+    }
 }
