@@ -38,18 +38,7 @@
         Middle: DragCamera,
       }
     ),
-    "sipho_core::grid::obstacles::ObstaclesSpec": ([
-      ((134, 134), Full),
-      ((134, 135), Full),
-      ((134, 136), Full),
-      ((134, 137), Full),
-      ((134, 138), Full),
-      ((137, 122), Full),
-      ((134, 125), Full),
-      ((135, 125), DownRight),
-      ((135, 126), Full),
-      ((134, 126), UpLeft),
-    ]),
+    "sipho_core::grid::obstacles::ObstaclesSpec": ([]),
     "sipho::objects::config::ObjectConfigs": ObjectConfigs({
       Worker: ObjectConfig(
         physics_material: PhysicsMaterial(

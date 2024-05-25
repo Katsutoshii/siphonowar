@@ -2,6 +2,7 @@ pub mod camera;
 pub mod objectives;
 pub mod objects;
 pub mod scene;
+pub mod terrain;
 pub mod ui;
 
 pub mod prelude {
@@ -17,7 +18,6 @@ pub mod prelude {
 }
 
 use prelude::*;
-use std::f32::consts::PI;
 
 pub struct SiphonowarPlugin;
 impl Plugin for SiphonowarPlugin {
@@ -37,50 +37,7 @@ impl Plugin for SiphonowarPlugin {
             scene::LoadableScenePlugin,
             ui::UiPlugin,
             sipho_vfx::VfxPlugin,
-        ))
-        .add_systems(Startup, spawn_gltf);
+            terrain::TerrainPlugin,
+        ));
     }
-}
-
-fn spawn_gltf(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    // mut meshes: ResMut<Assets<Mesh>>,
-    // mut materials: ResMut<Assets<StandardMaterial>>,
-) {
-    info!("Spawn gltf");
-    commands.spawn((
-        Name::new("Rocks"),
-        SceneBundle {
-            scene: asset_server.load("models/rocks/RocksLowPoly.gltf#Scene0"),
-            transform: Transform {
-                scale: Vec3 {
-                    x: 8.,
-                    y: 1.5,
-                    z: 8.,
-                },
-                translation: Vec3 {
-                    x: -150.,
-                    y: 490.,
-                    z: -10.,
-                },
-                rotation: Quat::from_axis_angle(Vec3::X, PI / 2.),
-            },
-            ..default()
-        },
-    ));
-    // commands.spawn(PbrBundle {
-    //     mesh: meshes.add(Mesh::from(meshes::UNIT_SQUARE)),
-    //     material: materials.add(StandardMaterial {
-    //         base_color: Color::BLACK,
-    //         alpha_mode: AlphaMode::Blend,
-    //         ..default()
-    //     }),
-    //     transform: Transform {
-    //         translation: Vec3::Z * 1000.,
-    //         scale: Vec3::splat(1000.),
-    //         ..default()
-    //     },
-    //     ..default()
-    // });
 }

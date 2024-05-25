@@ -9,8 +9,15 @@ use bevy::{
 pub struct ObstaclesPlugin;
 impl Plugin for ObstaclesPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(ShaderPlanePlugin::<ObstaclesShaderMaterial>::default())
-            .add_plugins(Grid2Plugin::<Obstacle>::default())
+        let debug_obstacles = false;
+        if debug_obstacles {
+            app.add_plugins(ShaderPlanePlugin::<ObstaclesShaderMaterial>::default())
+                .add_systems(
+                    Update,
+                    (ObstaclesShaderMaterial::update,).in_set(GameStateSet::Running),
+                );
+        }
+        app.add_plugins(Grid2Plugin::<Obstacle>::default())
             .register_type::<ObstaclesSpec>()
             .register_type::<Obstacle>()
             .register_type::<Vec<(RowCol, Obstacle)>>()
@@ -18,15 +25,8 @@ impl Plugin for ObstaclesPlugin {
             .register_type::<RowCol>()
             .add_systems(
                 FixedUpdate,
-                (
-                    Grid2::<Obstacle>::update.after(Grid2::<Obstacle>::resize_on_change),
-                    Grid2::<Obstacle>::bounce_off_obstacles.in_set(FixedUpdateStage::PostPhysics),
-                )
+                (Grid2::<Obstacle>::bounce_off_obstacles.in_set(FixedUpdateStage::PostPhysics),)
                     .in_set(GameStateSet::Running),
-            )
-            .add_systems(
-                Update,
-                (ObstaclesShaderMaterial::update,).in_set(GameStateSet::Running),
             );
     }
 }
@@ -50,17 +50,6 @@ pub enum Obstacle {
 pub struct ObstaclesSpec(pub Vec<(RowCol, Obstacle)>);
 
 impl Grid2<Obstacle> {
-    pub fn update(mut grid: ResMut<Self>, spec: Res<ObstaclesSpec>) {
-        if !spec.is_changed() {
-            return;
-        }
-        // Reset all to 0.
-        grid.cells.fill(Obstacle::Empty);
-        for &((row, col), face) in spec.iter() {
-            grid[(row, col)] = face;
-        }
-    }
-
     pub fn is_clear(&self, rowcol: RowCol) -> bool {
         self[rowcol] == Obstacle::Empty && !self.is_boundary(rowcol)
     }
@@ -142,7 +131,7 @@ pub struct ObstaclesShaderMaterial {
     #[uniform(1)]
     size: GridSize,
     #[storage(2, read_only)]
-    grid: Vec<u32>,
+    pub grid: Vec<u32>,
 }
 impl Default for ObstaclesShaderMaterial {
     fn default() -> Self {
@@ -171,19 +160,19 @@ impl ShaderPlaneMaterial for ObstaclesShaderMaterial {
 impl ObstaclesShaderMaterial {
     /// Update the grid shader material.
     pub fn update(
-        grid_spec: Res<GridSpec>,
-        spec: Res<ObstaclesSpec>,
+        grid: Res<Grid2<Obstacle>>,
         assets: Res<ShaderPlaneAssets<Self>>,
         mut shader_assets: ResMut<Assets<Self>>,
     ) {
-        if !spec.is_changed() {
+        if !grid.is_changed() {
             return;
         }
         let material = shader_assets.get_mut(&assets.shader_material).unwrap();
 
-        material.grid.fill(Obstacle::Empty as u32);
-        for &(rowcol, face) in spec.iter() {
-            material.grid[grid_spec.flat_index(rowcol)] = face as u32;
+        for row in 0..grid.rows {
+            for col in 0..grid.cols {
+                material.grid[grid.flat_index((row, col))] = grid[(row, col)] as u32;
+            }
         }
     }
 }

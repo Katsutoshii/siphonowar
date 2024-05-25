@@ -18,13 +18,11 @@ fn fragment(mesh: VertexOutput) -> @location(0) vec4<f32> {
     let path4 = vec2<f32>(-0.2, -0.2);
     var time = globals.time;
 
-    let h = grid_coords(size, mesh.world_position.xy) / (5.0);
-    let noise = 0.008 * vec2<f32>(perlin_noise_2d(h + path1 * 0.), perlin_noise_2d(h + path2 * 0.));
-    let g = h + noise;
     let granularity = 10.0;
     let repeat_uv = (mesh.uv * granularity) % 1.0;
-    let sand = textureSample(sand_texture, texture_sampler, repeat_uv);
+    var sand = textureSample(sand_texture, texture_sampler, repeat_uv);
+    sand.a = 0.2;
     var wave = color * 0.1;
     let res = (wave * 0.07 + vec4<f32>(0., 0.05 + 0.01 * cos(time * 0.001), 0.2 + 0.05 * sin(time * 0.001), 0.1));
-    return vec4<f32>(0.07, 0.15, 0.15, 0.01) / 2.0 + (sand / 20.0) + res / 1.5;
+    return vec4<f32>(0.09, 0.15, 0.25, 0.1) / 2.0 + (sand / 10.0) + res / 1.5;
 }

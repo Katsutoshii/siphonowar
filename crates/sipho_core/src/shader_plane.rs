@@ -50,6 +50,7 @@ pub trait ShaderPlaneMaterial: Material + FromWorld {
         if Self::raycast_target() != RaycastTarget::None {
             plane.insert(Self::raycast_target());
         }
+        // plane.insert(Visibility::Hidden);
     }
 
     /// When the spec is changed, respawn the visualizer entity with the new size.

@@ -62,11 +62,13 @@ impl TeamMaterials {
             primary: assets.add(StandardMaterial {
                 base_color: color,
                 perceptual_roughness: 1.0,
+                emissive: color,
                 ..default()
             }),
             secondary: assets.add(StandardMaterial {
                 base_color: color,
                 perceptual_roughness: 1.0,
+                emissive: color,
                 ..default()
             }),
             background: assets.add(StandardMaterial {

@@ -1,6 +1,6 @@
 use rand::Rng;
 
-use crate::prelude::*;
+use crate::{prelude::*, terrain::Terrain};
 
 pub struct PlanktonPlugin;
 impl Plugin for PlanktonPlugin {
@@ -11,7 +11,10 @@ impl Plugin for PlanktonPlugin {
                 .in_set(FixedUpdateStage::Spawn)
                 .in_set(GameStateSet::Running),),
         )
-        .add_systems(OnExit(GameState::Loading), Plankton::spawn_random);
+        .add_systems(
+            OnExit(GameState::Loading),
+            Plankton::spawn_random.after(Terrain::setup_obstacles),
+        );
     }
 }
 
