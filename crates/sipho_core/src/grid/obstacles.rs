@@ -57,7 +57,7 @@ impl Grid2<Obstacle> {
     fn obstacle_force(
         &self,
         position: Vec2,
-        _velocity: Velocity,
+        velocity: Velocity,
         rowcol: RowCol,
         direction: (i16, i16),
     ) -> Force {
@@ -76,12 +76,11 @@ impl Grid2<Obstacle> {
             let d = obstacle_position - position; // Distance to the obstacle per each axis.
             let magnitude = ((max_d - d.abs()) / max_d).clamp(Vec2::ZERO, Vec2::ONE); // [0, 1], [far from obstacle, near to obstacle]
 
-            // Only apply obstacle force when moving towards the obstacle.
-            // let directional_adjustment = 1.0
-            //     + d.normalize_or_zero()
-            //         .dot(velocity.0.normalize_or_zero())
-            //         .max(0.);
-            let directional_adjustment = 1.;
+            // d points towards the obstacle.
+            // when d and v point in the same direction
+            // Apply greater force when moving towards the obstacle.
+            let directional_adjustment = 1.0 + d.dot(velocity.0).clamp(0., 0.5);
+            // let directional_adjustment = 1.;
             let direction = Vec2::new(direction.1 as f32, direction.0 as f32);
             force += Force(-magnitude * directional_adjustment * direction);
         }
