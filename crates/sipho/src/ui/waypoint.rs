@@ -66,6 +66,7 @@ impl Waypoint {
         mut objectives: Query<&mut Objectives>,
         assets: Res<WaypointAssets>,
         obstacles: Res<Grid2<Obstacle>>,
+        // mut audio: EventWriter<AudioEvent>,
     ) {
         for control in control_events.read() {
             if !(control.is_pressed(ControlAction::Move)

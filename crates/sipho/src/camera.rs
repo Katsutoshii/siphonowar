@@ -42,7 +42,7 @@ pub fn startup(mut commands: Commands) {
             .into(),
             transform: Transform::from_xyz(
                 0.0,
-                -zindex::CAMERA * MainCamera::THETA.tan(),
+                -MainCamera::y_offset(zindex::CAMERA),
                 zindex::CAMERA,
             )
             .with_rotation(Quat::from_axis_angle(Vec3::X, MainCamera::THETA)),

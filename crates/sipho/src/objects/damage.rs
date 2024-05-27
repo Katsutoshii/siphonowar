@@ -47,6 +47,7 @@ impl Health {
         mut objects: Query<(Entity, &Object, &Health, &Position, &Team)>,
         mut object_commands: ObjectCommands,
         mut firework_events: EventWriter<FireworkSpec>,
+        mut audio: EventWriter<AudioEvent>,
     ) {
         for (entity, object, health, position, team) in &mut objects {
             if health.health <= 0 {
@@ -63,6 +64,10 @@ impl Health {
                         ..default()
                     });
                 }
+                audio.send(AudioEvent {
+                    sample: AudioSample::Punch,
+                    position: Some(position.0),
+                });
             }
         }
     }
@@ -88,6 +93,7 @@ impl DamageEvent {
         )>,
         mut events: EventReader<DamageEvent>,
         mut firework_events: EventWriter<FireworkSpec>,
+        mut audio_events: EventWriter<AudioEvent>,
     ) {
         for event in events.read() {
             let knockback_amount = 3.;
@@ -118,6 +124,10 @@ impl DamageEvent {
                     size,
                     color: team.into(),
                     position: position.extend(zindex::ZOOIDS_MAX),
+                });
+                audio_events.send(AudioEvent {
+                    sample: AudioSample::RandomPop,
+                    position: Some(*position),
                 });
                 if event.stun {
                     if let Objective::Stunned(_) = objectives.last() {

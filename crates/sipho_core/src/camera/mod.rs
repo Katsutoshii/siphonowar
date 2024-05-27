@@ -12,6 +12,11 @@ impl MainCamera {
     pub const THETA: f32 = PI / 8.;
     pub const FOV: f32 = PI / 4.;
 }
+impl MainCamera {
+    pub fn y_offset(z: f32) -> f32 {
+        Self::THETA.tan() * z
+    }
+}
 
 pub trait CameraAspectRatio {
     fn aspect_ratio(&self) -> Vec2;

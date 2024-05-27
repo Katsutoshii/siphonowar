@@ -166,7 +166,7 @@ impl MinimapUiMaterial {
             }
 
             for event in camera_moves.read() {
-                let position = event.position.xy() + event.position.z * MainCamera::THETA.tan();
+                let position = event.position.xy() + MainCamera::y_offset(event.position.z);
                 material.input.camera_position = spec.to_uv(position);
                 material.input.viewport_size =
                     DEFAULT_VIEWPORT_SIZE * (event.position.z / zindex::CAMERA);

@@ -1,3 +1,4 @@
+pub mod ambience;
 pub mod camera;
 pub mod objectives;
 pub mod objects;
@@ -14,6 +15,7 @@ pub mod prelude {
     };
     pub use bevy_newtonian2d::*;
     pub use sipho_core::prelude::*;
+    pub use sipho_sfx::prelude::*;
     pub use sipho_vfx::prelude::*;
 }
 
@@ -37,7 +39,9 @@ impl Plugin for SiphonowarPlugin {
             scene::LoadableScenePlugin,
             ui::UiPlugin,
             sipho_vfx::VfxPlugin,
+            sipho_sfx::SiphoSfxPlugin,
             terrain::TerrainPlugin,
+            ambience::AmbiencePlugin,
         ));
     }
 }

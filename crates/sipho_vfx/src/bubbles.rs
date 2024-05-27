@@ -95,7 +95,7 @@ impl BubbleSpawner {
                 effect: ParticleEffect::new(effect),
                 transform: Transform {
                     translation: camera_transform.translation().xy().extend(0.)
-                        + Vec3::Y * (zindex::CAMERA * MainCamera::THETA.tan()),
+                        + Vec3::Y * MainCamera::y_offset(zindex::CAMERA),
                     ..default()
                 },
                 ..default()
