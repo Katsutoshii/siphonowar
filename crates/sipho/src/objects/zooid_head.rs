@@ -145,6 +145,7 @@ impl ZooidHead {
         &mut self,
         velocity: &Velocity,
         elastic_events: &mut EventWriter<SpawnElasticEvent>,
+        audio: &mut EventWriter<AudioEvent>,
         position: &Position,
         team: &Team,
         object: Object,
@@ -159,6 +160,10 @@ impl ZooidHead {
             // objectives: Objectives::new(Objective::FollowEntity(head_id)),
             ..default()
         }) {
+            audio.send(AudioEvent {
+                sample: AudioSample::RandomBubble,
+                position: Some(position.0),
+            });
             elastic_events.send(SpawnElasticEvent {
                 elastic: Elastic((entity, entity_commands.id())),
                 team: *team,
@@ -185,6 +190,7 @@ impl ZooidHead {
         configs: Res<ObjectConfigs>,
         mut control_events: EventReader<ControlEvent>,
         mut elastic_events: EventWriter<SpawnElasticEvent>,
+        mut audio: EventWriter<AudioEvent>,
     ) {
         let config = configs.get(&Object::Worker).unwrap();
         for control_event in control_events.read() {
@@ -221,6 +227,7 @@ impl ZooidHead {
                         &mut head,
                         &Velocity(spawn_velocity),
                         &mut elastic_events,
+                        &mut audio,
                         position,
                         team,
                         match spawn_type {

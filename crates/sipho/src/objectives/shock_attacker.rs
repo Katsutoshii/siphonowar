@@ -92,6 +92,7 @@ impl ShockAttacker {
         mut damage_events: EventWriter<DamageEvent>,
         mut lightning: LightningCommands,
         mut firework_events: EventWriter<FireworkSpec>,
+        mut audio: EventWriter<AudioEvent>,
     ) {
         for (entity, object, mut velocity, navigator, mut attacker, position, enemies) in
             query.iter_mut()
@@ -126,6 +127,10 @@ impl ShockAttacker {
                         position: navigator.target.extend(zindex::ZOOIDS_MAX),
                         color: FireworkColor::White,
                         size: VfxSize::Small,
+                    });
+                    audio.send(AudioEvent {
+                        sample: AudioSample::RandomZap,
+                        position: Some(position.0),
                     });
                 }
             }

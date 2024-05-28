@@ -57,7 +57,7 @@ impl AudioEmitterBundle {
                 audio: AudioBundle {
                     source: assets.samples[&AudioSample::Punch].clone(),
                     settings: PlaybackSettings {
-                        volume: Volume::new(0.4),
+                        volume: Volume::new(0.8),
                         ..Self::DEFAULT_SETTINGS
                     },
                 },
@@ -70,12 +70,38 @@ impl AudioEmitterBundle {
                 audio: AudioBundle {
                     source: assets.samples[&AudioSample::Pop(i)].clone(),
                     settings: PlaybackSettings {
+                        volume: Volume::new(0.6),
                         ..Self::DEFAULT_SETTINGS
                     },
                 },
                 ..default()
             },
-
+            AudioSample::Bubble(i) => Self {
+                emitter: AudioEmitter {
+                    sample: AudioSample::RandomBubble,
+                },
+                audio: AudioBundle {
+                    source: assets.samples[&AudioSample::Bubble(i)].clone(),
+                    settings: PlaybackSettings {
+                        volume: Volume::new(0.8),
+                        ..Self::DEFAULT_SETTINGS
+                    },
+                },
+                ..default()
+            },
+            AudioSample::Zap(i) => Self {
+                emitter: AudioEmitter {
+                    sample: AudioSample::RandomZap,
+                },
+                audio: AudioBundle {
+                    source: assets.samples[&AudioSample::Zap(i)].clone(),
+                    settings: PlaybackSettings {
+                        volume: Volume::new(0.3),
+                        ..Self::DEFAULT_SETTINGS
+                    },
+                },
+                ..default()
+            },
             _ => Self { ..default() },
         }
     }
@@ -108,6 +134,26 @@ impl SpatialAudioManager {
                     .id()
             })
             .collect();
+        let bubbles: Vec<Entity> = (0..6)
+            .map(|i| {
+                commands
+                    .spawn(AudioEmitterBundle::new(
+                        AudioSample::Bubble(i % 3 + 1),
+                        &assets,
+                    ))
+                    .id()
+            })
+            .collect();
+        let zaps: Vec<Entity> = (0..6)
+            .map(|i| {
+                commands
+                    .spawn(AudioEmitterBundle::new(
+                        AudioSample::Zap(i % 3 + 1),
+                        &assets,
+                    ))
+                    .id()
+            })
+            .collect();
         commands
             .spawn(SpatialAudioManagerBundle::default())
             .push_children(&[underwater])
@@ -125,6 +171,18 @@ impl SpatialAudioManager {
                         AudioSample::Punch,
                         AudioSampler::Random(RandomSampler {
                             available: punches.into_iter().collect(),
+                        }),
+                    ),
+                    (
+                        AudioSample::RandomBubble,
+                        AudioSampler::Random(RandomSampler {
+                            available: bubbles.into_iter().collect(),
+                        }),
+                    ),
+                    (
+                        AudioSample::RandomZap,
+                        AudioSampler::Random(RandomSampler {
+                            available: zaps.into_iter().collect(),
                         }),
                     ),
                 ]

@@ -25,13 +25,24 @@ impl Consumer {
         Self { consumed }
     }
     pub fn update(
-        mut query: Query<(Entity, &mut Consumer, &mut Mass, &EnemyCollisions)>,
+        mut query: Query<(
+            Entity,
+            &mut Consumer,
+            &mut Mass,
+            &Position,
+            &EnemyCollisions,
+        )>,
         mut damage_events: EventWriter<DamageEvent>,
+        mut audio: EventWriter<AudioEvent>,
     ) {
-        for (entity, mut consumer, mut mass, colliders) in query.iter_mut() {
+        for (entity, mut consumer, mut mass, position, colliders) in query.iter_mut() {
             for neighbor in colliders.iter() {
                 if neighbor.object == Object::Food {
                     consumer.consumed += 1;
+                    audio.send(AudioEvent {
+                        sample: AudioSample::RandomBubble,
+                        position: Some(position.0),
+                    });
                     damage_events.send(DamageEvent {
                         damager: entity,
                         damaged: neighbor.entity,

@@ -62,6 +62,7 @@ impl EnemyAI {
         positions: Query<&Position>,
         mut commands: ObjectCommands,
         mut elastic_events: EventWriter<SpawnElasticEvent>,
+        mut audio: EventWriter<AudioEvent>,
     ) {
         for (mut head, head_entity, team, mut consumer, mut ai) in query.iter_mut() {
             ai.free_workers.retain(|x| positions.contains(*x));
@@ -110,6 +111,7 @@ impl EnemyAI {
                     head.make_linked(
                         &Velocity(spawn_velocity),
                         &mut elastic_events,
+                        &mut audio,
                         position,
                         team,
                         Object::Worker,

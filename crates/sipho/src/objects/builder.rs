@@ -186,6 +186,7 @@ impl ObjectBuilder {
         team_config: Res<TeamConfig>,
         object_configs: Res<ObjectConfigs>,
         mut elastic_events: EventWriter<SpawnElasticEvent>,
+        mut audio: EventWriter<AudioEvent>,
     ) {
         let mut builder = builder.single_mut();
         let mut elastic_builder = elastic_builder.single_mut();
@@ -221,6 +222,10 @@ impl ObjectBuilder {
                                             elastic_events.send(SpawnElasticEvent {
                                                 elastic: Elastic((neighbor, entity_commands.id())),
                                                 team: team_config.player_team,
+                                            });
+                                            audio.send(AudioEvent {
+                                                sample: AudioSample::RandomBubble,
+                                                position: Some(event.position),
                                             });
                                         }
                                     }

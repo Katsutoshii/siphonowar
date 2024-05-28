@@ -20,6 +20,10 @@ pub enum AudioSample {
     Punch,
     RandomPop,
     Pop(u8),
+    RandomBubble,
+    Bubble(u8),
+    RandomZap,
+    Zap(u8),
 }
 impl AudioSample {
     pub fn get_path(self) -> &'static str {
@@ -35,6 +39,14 @@ impl AudioSample {
             Self::Pop(6) => "sounds/pops/pop(6).ogg",
             Self::Pop(7) => "sounds/pops/pop(7).ogg",
             Self::Pop(_) | Self::RandomPop => unreachable!(),
+            Self::Bubble(1) => "sounds/bubbles/bubble(1).ogg",
+            Self::Bubble(2) => "sounds/bubbles/bubble(2).ogg",
+            Self::Bubble(3) => "sounds/bubbles/bubble(3).ogg",
+            Self::Bubble(_) | Self::RandomBubble => unreachable!(),
+            Self::Zap(1) => "sounds/zaps/zap(1).ogg",
+            Self::Zap(2) => "sounds/zaps/zap(2).ogg",
+            Self::Zap(3) => "sounds/zaps/zap(3).ogg",
+            Self::Zap(_) | Self::RandomZap => unreachable!(),
             Self::None => unreachable!(),
         }
     }
@@ -59,6 +71,12 @@ impl FromWorld for AudioAssets {
                 AudioSample::Pop(5),
                 AudioSample::Pop(6),
                 AudioSample::Pop(7),
+                AudioSample::Bubble(1),
+                AudioSample::Bubble(2),
+                AudioSample::Bubble(3),
+                AudioSample::Zap(1),
+                AudioSample::Zap(2),
+                AudioSample::Zap(3),
             ]
             .map(|s| (s, world.load_asset(s.get_path())))
             .into_iter()
