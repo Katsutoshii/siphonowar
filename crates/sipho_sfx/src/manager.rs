@@ -44,6 +44,7 @@ impl AudioEmitterBundle {
                 audio: AudioBundle {
                     source: assets.samples[&AudioSample::Underwater].clone(),
                     settings: PlaybackSettings {
+                        volume: Volume::new(1.1),
                         mode: PlaybackMode::Loop,
                         ..Self::DEFAULT_SETTINGS
                     },
@@ -70,7 +71,7 @@ impl AudioEmitterBundle {
                 audio: AudioBundle {
                     source: assets.samples[&AudioSample::Pop(i)].clone(),
                     settings: PlaybackSettings {
-                        volume: Volume::new(0.6),
+                        volume: Volume::new(0.5),
                         ..Self::DEFAULT_SETTINGS
                     },
                 },
