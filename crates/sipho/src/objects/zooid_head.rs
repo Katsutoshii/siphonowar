@@ -194,7 +194,7 @@ impl ZooidHead {
     ) {
         let config = configs.get(&Object::Worker).unwrap();
         for control_event in control_events.read() {
-            let spawn_type = if control_event.is_pressed(ControlAction::SpawnZooid) {
+            let spawn_type = if control_event.is_pressed(ControlAction::Grow) {
                 SpawnedType::Worker
             } else if control_event.is_pressed(ControlAction::SpawnShocker) {
                 SpawnedType::Shocker

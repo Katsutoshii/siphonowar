@@ -1,5 +1,6 @@
 use crate::prelude::*;
 use bevy::utils::HashMap;
+use sipho_core::inputs::InputAction;
 
 pub struct ObjectConfigPlugin;
 impl Plugin for ObjectConfigPlugin {
@@ -7,6 +8,8 @@ impl Plugin for ObjectConfigPlugin {
         app.register_type::<Vec2>()
             .register_type::<ObjectiveConfig>()
             .register_type::<InteractionConfig>()
+            .register_type::<ObjectControlConfig>()
+            .register_type::<HashMap<InputAction, ControlAction>>()
             .register_type::<HashMap<Object, ObjectConfig>>()
             .register_type::<HashMap<Object, InteractionConfig>>()
             .register_type::<ObjectConfig>()
@@ -16,6 +19,9 @@ impl Plugin for ObjectConfigPlugin {
             .insert_resource(ObjectConfigs::default());
     }
 }
+
+#[derive(Clone, Default, Deref, DerefMut, Reflect, Debug)]
+pub struct ObjectControlConfig(pub HashMap<InputAction, ControlAction>);
 
 #[derive(Resource, Clone, Default, Deref, DerefMut, Reflect, Debug)]
 #[reflect(Resource)]
@@ -59,8 +65,8 @@ pub struct ObjectConfig {
     pub health: i32,
     pub idle_speed: f32,
     pub spawn_cost: i32,
-    // Interactions
     pub interactions: InteractionConfigs,
+    pub controls: ObjectControlConfig,
 }
 impl Default for ObjectConfig {
     fn default() -> Self {
@@ -83,6 +89,7 @@ impl Default for ObjectConfig {
                 }
                 interactions
             }),
+            controls: ObjectControlConfig::default(),
         }
     }
 }

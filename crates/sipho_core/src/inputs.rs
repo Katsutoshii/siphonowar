@@ -20,6 +20,7 @@ impl Plugin for InputActionPlugin {
         app.register_type::<KeyCode>()
             .register_type::<MouseButton>()
             .register_type::<InputAction>()
+            .register_type::<ControlAction>()
             .register_type::<HashMap<MouseButton, InputAction>>()
             .register_type::<HashMap<KeyCode, InputAction>>()
             .register_type::<InputConfig>()
@@ -27,6 +28,7 @@ impl Plugin for InputActionPlugin {
             .init_resource::<ControlState>()
             .add_event::<ControlEvent>()
             .add_event::<InputEvent>()
+            .add_event::<RaycastEvent>()
             .add_systems(
                 PreUpdate,
                 (InputEvent::update)
@@ -41,26 +43,38 @@ impl Plugin for InputActionPlugin {
 }
 
 /// Describes an action input by the user.
-#[derive(PartialEq, Eq, Clone, Copy, Debug, Hash, Reflect)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug, Hash, Reflect, Default)]
 pub enum InputAction {
+    #[default]
     Primary,
     Secondary,
     DragCamera,
     AttackMode,
-    SpawnHead,
-    SpawnZooid,
     SpawnShocker,
     SpawnRed,
     SpawnBlue,
-    SpawnPlankton,
-    SpawnFood,
-    TieSelection,
-    TieCursor,
-    PauseMenu,
     Fuse,
-    BuildWorker,
-    BuildArmor,
-    BuildShocker,
+    PauseMenu,
+
+    // Control groups
+    Control1,
+    Control2,
+    Control3,
+    Control4,
+
+    // Grid controls
+    Grid11,
+    Grid12,
+    Grid13,
+    Grid14,
+    Grid21,
+    Grid22,
+    Grid23,
+    Grid24,
+    Grid31,
+    Grid32,
+    Grid33,
+    Grid34,
 }
 
 /// Specifies input mapping.
@@ -84,7 +98,16 @@ impl InputEvent {
         mut keyboard_inputs: EventReader<KeyboardInput>,
         mut mouse_inputs: EventReader<MouseButtonInput>,
         config: Res<InputConfig>,
+        cursor: CursorParam,
+        raycast: RaycastCommands,
+        mut raycasts: EventWriter<RaycastEvent>,
     ) {
+        if let Some(ray) = cursor.ray3d() {
+            if let Some(event) = raycast.raycast(ray) {
+                raycasts.send(event);
+            }
+        }
+
         for event in keyboard_inputs.read() {
             let KeyboardInput {
                 key_code, state, ..
@@ -261,10 +284,9 @@ impl ControlEvent {
     }
     #[allow(clippy::too_many_arguments)]
     pub fn update(
-        raycast: RaycastCommands,
+        mut raycast_events: EventReader<RaycastEvent>,
         mut input_events: EventReader<InputEvent>,
         mut control_events: EventWriter<ControlEvent>,
-        cursor: CursorParam,
         grid_spec: Option<Res<GridSpec>>,
         time: Res<Time>,
         mut state: ResMut<ControlState>,
@@ -275,15 +297,11 @@ impl ControlEvent {
             return;
         };
 
-        let raycast_event = if let Some(ray) = cursor.ray3d() {
-            raycast.raycast(ray)
-        } else {
-            None
-        };
+        let raycast_event = raycast_events.read().next();
 
         // If no inputs, send hover.
         if input_events.is_empty() {
-            if let Some(raycast_event) = &raycast_event {
+            if let Some(raycast_event) = raycast_event {
                 if raycast_event.target == RaycastTarget::GridEntity {
                     let new_hover = if let Some(hovered_entity) = state.hovered_entity {
                         hovered_entity != raycast_event.entity
@@ -319,20 +337,9 @@ impl ControlEvent {
         for event in input_events.read() {
             if let Some(raycast_event) = &raycast_event {
                 let action = ControlAction::from((raycast_event.target, state.mode, event.action));
-
-                // Only update state if no inputs were held last frame.
-                if state.held_actions.is_empty() {
-                    match action {
-                        ControlAction::AttackMode => {
-                            state.mode = ControlMode::Attack;
-                        }
-                        ControlAction::AttackMove => {
-                            state.mode = ControlMode::Normal;
-                        }
-                        _ => {}
-                    }
+                if let ControlAction::AttackMove = action {
+                    state.mode = ControlMode::Normal;
                 }
-
                 if event.state == ButtonState::Pressed {
                     state.press_action(action, raycast_event.target);
                 } else if event.state == ButtonState::Released
@@ -373,23 +380,23 @@ pub enum ControlAction {
     SelectHover,
     Move,
     AttackMove,
-    AttackMode,
+    Attack,
     PanCamera,
     DragCamera,
     SpawnHead,
-    SpawnZooid,
+    Grow,
     SpawnShocker,
     SpawnRed,
     SpawnBlue,
-    SpawnPlankton,
-    SpawnFood,
-    TieSelection,
-    TieCursor,
+    Plankton,
+    TieAll,
+    Tie,
     Fuse,
     PauseMenu,
-    BuildWorker,
-    BuildArmor,
-    BuildShocker,
+    // Build
+    Worker,
+    Armor,
+    Shocker,
 }
 impl ControlAction {
     pub fn get_repeat_duration(self) -> Duration {
@@ -398,7 +405,7 @@ impl ControlAction {
             Self::Select => Duration::from_millis(5),
             Self::DragCamera => Duration::from_millis(5),
             Self::PanCamera => Duration::from_millis(5),
-            Self::BuildWorker | Self::BuildArmor | Self::BuildShocker => Duration::from_millis(1),
+            Self::Worker | Self::Armor | Self::Shocker => Duration::from_millis(1),
             _ => Duration::from_millis(0),
         }
     }
@@ -417,32 +424,13 @@ impl From<(RaycastTarget, ControlMode, InputAction)> for ControlAction {
                 Self::AttackMove
             }
             (RaycastTarget::WorldGrid, _, InputAction::Secondary) => Self::Move,
-            (RaycastTarget::WorldGrid, _, InputAction::SpawnHead) => Self::SpawnHead,
-            (RaycastTarget::WorldGrid, _, InputAction::SpawnZooid) => Self::SpawnZooid,
             (RaycastTarget::WorldGrid, _, InputAction::SpawnShocker) => Self::SpawnShocker,
             (RaycastTarget::WorldGrid, _, InputAction::SpawnRed) => Self::SpawnRed,
             (RaycastTarget::WorldGrid, _, InputAction::SpawnBlue) => Self::SpawnBlue,
-            (RaycastTarget::WorldGrid, _, InputAction::SpawnPlankton) => Self::SpawnPlankton,
-            (RaycastTarget::WorldGrid, _, InputAction::SpawnFood) => Self::SpawnFood,
             (RaycastTarget::WorldGrid, _, InputAction::Fuse) => Self::Fuse,
-            (RaycastTarget::WorldGrid, _, InputAction::TieSelection) => Self::TieSelection,
-            (RaycastTarget::WorldGrid, _, InputAction::TieCursor) => Self::TieCursor,
             (RaycastTarget::WorldGrid, _, InputAction::DragCamera) => Self::DragCamera,
-            (RaycastTarget::WorldGrid | RaycastTarget::GridEntity, _, InputAction::BuildWorker) => {
-                Self::BuildWorker
-            }
-            (RaycastTarget::WorldGrid | RaycastTarget::GridEntity, _, InputAction::BuildArmor) => {
-                Self::BuildArmor
-            }
-            (
-                RaycastTarget::WorldGrid | RaycastTarget::GridEntity,
-                _,
-                InputAction::BuildShocker,
-            ) => Self::BuildShocker,
             (_, _, InputAction::PauseMenu) => Self::PauseMenu,
-            (_, _, InputAction::AttackMode) => Self::AttackMode,
             (RaycastTarget::None, _, _) => Self::None,
-
             _ => Self::None,
         }
     }

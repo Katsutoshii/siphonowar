@@ -1,4 +1,9 @@
-use bevy::input::ButtonState;
+use std::time::Duration;
+
+use bevy::{
+    input::ButtonState,
+    utils::{HashMap, HashSet},
+};
 
 use super::*;
 
@@ -21,103 +26,65 @@ impl MakeBundleTree<HudUiNode, &HudAssets> for HudControlsPane {
             background_color: Color::DARK_GRAY.with_a(0.2).into(),
             ..default()
         }
-        .with_children({
-            let mut children = vec![];
-            for button in [
+        .with_children(
+            [
+                InputAction::Control1,
+                InputAction::Control2,
+                InputAction::Control3,
+                InputAction::Control4,
+                InputAction::Grid11,
+                InputAction::Grid12,
+                InputAction::Grid13,
+                InputAction::Grid14,
+                InputAction::Grid21,
+                InputAction::Grid22,
+                InputAction::Grid23,
+                InputAction::Grid24,
+                InputAction::Grid31,
+                InputAction::Grid32,
+                InputAction::Grid33,
+                InputAction::Grid34,
+            ]
+            .iter()
+            .copied()
+            .map(|action| {
+                let text = match action {
+                    InputAction::Control1 => "1",
+                    InputAction::Control2 => "2",
+                    InputAction::Control3 => "3",
+                    InputAction::Control4 => "4",
+                    InputAction::Grid11 => "Q",
+                    InputAction::Grid12 => "W",
+                    InputAction::Grid13 => "E",
+                    InputAction::Grid14 => "R",
+                    InputAction::Grid21 => "A",
+                    InputAction::Grid22 => "S",
+                    InputAction::Grid23 => "D",
+                    InputAction::Grid24 => "F",
+                    InputAction::Grid31 => "Z",
+                    InputAction::Grid32 => "X",
+                    InputAction::Grid33 => "C",
+                    InputAction::Grid34 => "V",
+                    _ => "",
+                }
+                .to_string();
                 HudControlsButton {
-                    text: "1".to_string(),
-                    description: "".to_string(),
-                    action: None,
-                },
-                HudControlsButton {
-                    text: "2".to_string(),
-                    description: "".to_string(),
-                    action: None,
-                },
-                HudControlsButton {
-                    text: "3".to_string(),
-                    description: "".to_string(),
-                    action: None,
-                },
-                HudControlsButton {
-                    text: "4".to_string(),
-                    description: "".to_string(),
-                    action: None,
-                },
-                HudControlsButton {
-                    text: "Q".to_string(),
-                    description: "Worker".to_string(),
-                    action: Some(ControlAction::BuildWorker),
-                },
-                HudControlsButton {
-                    text: "W".to_string(),
-                    description: "Armor".to_string(),
-                    action: Some(ControlAction::BuildArmor),
-                },
-                HudControlsButton {
-                    text: "E".to_string(),
-                    description: "Shocker".to_string(),
-                    action: Some(ControlAction::BuildShocker),
-                },
-                HudControlsButton {
-                    text: "R".to_string(),
-                    description: "".to_string(),
-                    action: None,
-                },
-                HudControlsButton {
-                    text: "A".to_string(),
-                    description: "Attack".to_string(),
-                    action: Some(ControlAction::AttackMode),
-                },
-                HudControlsButton {
-                    text: "S".to_string(),
-                    description: "".to_string(),
-                    action: None,
-                },
-                HudControlsButton {
-                    text: "D".to_string(),
-                    description: "".to_string(),
-                    action: None,
-                },
-                HudControlsButton {
-                    text: "F".to_string(),
-                    description: "".to_string(),
-                    action: None,
-                },
-                HudControlsButton {
-                    text: "Z".to_string(),
-                    description: "Auto".to_string(),
-                    action: Some(ControlAction::SpawnZooid),
-                },
-                HudControlsButton {
-                    text: "X".to_string(),
-                    description: "Head".to_string(),
-                    action: Some(ControlAction::SpawnHead),
-                },
-                HudControlsButton {
-                    text: "C".to_string(),
-                    description: "Connect".to_string(),
-                    action: Some(ControlAction::TieSelection),
-                },
-                HudControlsButton {
-                    text: "V".to_string(),
-                    description: "Pair".to_string(),
-                    action: Some(ControlAction::TieCursor),
-                },
-            ] {
-                children.push(button.tree(assets));
-            }
-            children
-        })
+                    text,
+                    action,
+                    control: None,
+                }
+                .tree(assets)
+            }),
+        )
     }
 }
 
-#[derive(Component, Reflect, Default, Clone)]
+#[derive(Component, Reflect, Clone, Default)]
 #[reflect(Component)]
 pub struct HudControlsButton {
     pub text: String,
-    pub description: String,
-    pub action: Option<ControlAction>,
+    pub action: InputAction,
+    pub control: Option<ControlAction>,
 }
 #[derive(Bundle)]
 pub struct HudControlsButtonBundle {
@@ -136,7 +103,7 @@ impl Default for HudControlsButtonBundle {
                     align_self: AlignSelf::Center,
                     display: Display::Flex,
                     flex_direction: FlexDirection::Column,
-                    justify_content: JustifyContent::SpaceEvenly,
+                    justify_content: JustifyContent::Default,
                     margin: UiRect::all(Val::Px(10.0)),
                     ..default()
                 },
@@ -157,13 +124,16 @@ impl MakeBundleTree<HudUiNode, &HudAssets> for HudControlsButton {
                 text: Text::from_section(
                     self.text,
                     TextStyle {
-                        font_size: 18.0,
+                        font_size: 14.0,
                         color: Color::WHITE,
                         ..default()
                     },
                 ),
                 style: Style {
+                    justify_self: JustifySelf::Start,
+                    align_self: AlignSelf::Start,
                     margin: UiRect::all(Val::Px(10.0)),
+                    height: Val::Px(20.),
                     ..default()
                 },
                 ..default()
@@ -171,15 +141,18 @@ impl MakeBundleTree<HudUiNode, &HudAssets> for HudControlsButton {
             .into_tree(),
             TextBundle {
                 text: Text::from_section(
-                    self.description,
+                    "",
                     TextStyle {
-                        font_size: 12.0,
+                        font_size: 11.0,
                         color: Color::WHITE,
                         ..default()
                     },
                 ),
                 style: Style {
+                    justify_self: JustifySelf::End,
+                    align_self: AlignSelf::End,
                     margin: UiRect::all(Val::Px(10.0)),
+                    height: Val::Px(20.),
                     ..default()
                 },
                 ..default()
@@ -190,17 +163,96 @@ impl MakeBundleTree<HudUiNode, &HudAssets> for HudControlsButton {
 }
 
 impl HudControlsButton {
+    #[allow(clippy::too_many_arguments)]
     pub fn update(
-        mut buttons: Query<(&HudControlsButton, &mut Interaction)>,
-        mut events: EventReader<ControlEvent>,
+        mut buttons: Query<(Entity, &mut HudControlsButton, &mut Interaction, &Children)>,
+        mut button_text: Query<&mut Text>,
+        mut inputs: EventReader<InputEvent>,
+        selected: Query<(&Object, &Selected), Without<HudControlsButton>>,
+        configs: Res<ObjectConfigs>,
+        mut controls: EventWriter<ControlEvent>,
+        mut raycasts: EventReader<RaycastEvent>,
+        mut state: ResMut<ControlState>,
     ) {
-        let events: Vec<&ControlEvent> = events.read().collect();
-        for (button, mut interaction) in buttons.iter_mut() {
-            for event in events.iter() {
-                if button.action == Some(event.action) {
-                    match event.state {
-                        ButtonState::Pressed => *interaction = Interaction::Pressed,
-                        ButtonState::Released => *interaction = Interaction::None,
+        let objects: HashSet<Object> = selected
+            .iter()
+            .filter_map(|(&object, selected)| {
+                if selected.is_selected() {
+                    Some(object)
+                } else {
+                    None
+                }
+            })
+            .collect();
+
+        let mut map: HashMap<InputAction, ControlAction> = HashMap::with_capacity(4);
+        map.insert(InputAction::Grid24, ControlAction::Plankton);
+        map.insert(InputAction::Grid32, ControlAction::SpawnHead);
+        map.insert(InputAction::Grid33, ControlAction::TieAll);
+        map.insert(InputAction::Grid34, ControlAction::Tie);
+
+        for object in objects.iter() {
+            let config = &configs[object];
+            for (&input, &control) in config.controls.iter() {
+                map.entry(input).or_insert(control);
+            }
+        }
+
+        let mut action_to_button = HashMap::new();
+        for (entity, mut button, _interaction, children) in buttons.iter_mut() {
+            let control = map.get(&button.action).copied();
+            if button.control != control {
+                button.control = control;
+                let text = &mut button_text.get_mut(children[1]).unwrap().sections[0].value;
+                if let Some(control) = map.get(&button.action) {
+                    *text = format!("{:?}", control);
+                } else {
+                    text.clear();
+                }
+            }
+            action_to_button.insert(button.action, entity);
+        }
+
+        if let Some(raycast) = raycasts.read().next() {
+            for input in inputs.read() {
+                if let Some(&entity) = action_to_button.get(&input.action) {
+                    if let Some(&action) = map.get(&input.action) {
+                        if input.state == ButtonState::Pressed {
+                            state.press_action(action, raycast.target);
+                        } else if input.state == ButtonState::Released
+                            && !state.press_durations.contains_key(&action)
+                        {
+                            continue;
+                        }
+
+                        // Only update state if no inputs were held last frame.
+                        if state.held_actions.is_empty() {
+                            if let ControlAction::Attack = action {
+                                state.mode = ControlMode::Attack;
+                            }
+                        }
+                        controls.send(ControlEvent {
+                            action,
+                            state: input.state,
+                            position: raycast.world_position,
+                            entity: raycast.entity,
+                            duration: Duration::default(),
+                        });
+
+                        if input.state == ButtonState::Released {
+                            state.release_action(action);
+                        }
+                    }
+
+                    if let Ok((_entity, button, mut interaction, _children)) =
+                        buttons.get_mut(entity)
+                    {
+                        if button.action == input.action {
+                            match input.state {
+                                ButtonState::Pressed => *interaction = Interaction::Pressed,
+                                ButtonState::Released => *interaction = Interaction::None,
+                            }
+                        }
                     }
                 }
             }

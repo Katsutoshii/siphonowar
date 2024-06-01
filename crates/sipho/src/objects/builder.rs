@@ -167,9 +167,9 @@ impl ObjectBuilder {
 
     pub fn get_buildable_object(action: ControlAction) -> Option<Object> {
         Some(match action {
-            ControlAction::BuildWorker => Object::Worker,
-            ControlAction::BuildShocker => Object::Shocker,
-            ControlAction::BuildArmor => Object::Armor,
+            ControlAction::Worker => Object::Worker,
+            ControlAction::Shocker => Object::Shocker,
+            ControlAction::Armor => Object::Armor,
             _ => return None,
         })
     }

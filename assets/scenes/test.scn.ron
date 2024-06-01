@@ -16,21 +16,31 @@
     ),
     "sipho_core::inputs::InputConfig": InputConfig(
       keyboard: {
-        KeyA: AttackMode,
-        KeyX: SpawnHead,
-        KeyZ: SpawnZooid,
-        KeyL: SpawnShocker,
+        Digit1: Control1,
+        Digit2: Control2,
+        Digit3: Control3,
+        Digit4: Control4,
+
+        KeyQ: Grid11,
+        KeyW: Grid12,
+        KeyE: Grid13,
+        KeyR: Grid14,
+
+        KeyA: Grid21,
+        KeyS: Grid22,
+        KeyD: Grid23,
+        KeyF: Grid24,
+
+        KeyZ: Grid31,
+        KeyX: Grid32,
+        KeyC: Grid33,
+        KeyV: Grid34,
+
         Minus: SpawnRed,
         Equal: SpawnBlue,
-        KeyF: SpawnPlankton,
-        KeyG: SpawnFood,
-        KeyC: TieSelection,
-        KeyV: TieCursor,
+        KeyL: SpawnShocker,
         Escape: PauseMenu,
         KeyO: Fuse,
-        KeyQ: BuildWorker,
-        KeyW: BuildArmor,
-        KeyE: BuildShocker,
       },
       mouse: {
         Left: Primary,
@@ -94,6 +104,9 @@
             alignment_factor: 0.0,
             damage_amount: 1,
           )
+        }),
+        controls: ObjectControlConfig({
+          Grid21: Attack
         })
       ),
       Shocker: ObjectConfig(
@@ -150,6 +163,9 @@
             alignment_factor: 0.0,
             damage_amount: 1,
           )
+        }),
+        controls: ObjectControlConfig({
+          Grid21: Attack
         })
       ),
       Armor: ObjectConfig(
@@ -206,6 +222,9 @@
             alignment_factor: 0.0,
             damage_amount: 1,
           )
+        }),
+        controls: ObjectControlConfig({
+          Grid21: Attack
         })
       ),
       Head: ObjectConfig(
@@ -248,6 +267,12 @@
             alignment_factor: 0.0,
             damage_amount: 0,
           )
+        }),
+        controls: ObjectControlConfig({
+          Grid11: Worker,
+          Grid12: Armor,
+          Grid13: Shocker,
+          Grid31: Grow
         })
       ),
       Plankton: ObjectConfig(
@@ -290,6 +315,9 @@
             alignment_factor: 0.2,
             damage_amount: 0,
           )
+        }),
+        controls: ObjectControlConfig({
+          Grid21: Attack
         })
       ),
       Food: ObjectConfig(
@@ -310,9 +338,10 @@
         radius: 12.0,
         health: 1,
         idle_speed: 0.2,
-        interactions: InteractionConfigs({})
+        interactions: InteractionConfigs({}),
+        controls: ObjectControlConfig({})
       )
-    })
+    }),
   },
   entities: {},
 )

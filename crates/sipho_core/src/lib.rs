@@ -31,7 +31,7 @@ pub mod prelude {
             GridSpec, Obstacle, RowCol, RowColDistance, SparseGrid2, TeamEntitySets,
             VisibilityUpdate, VisibilityUpdateEvent,
         },
-        inputs::{ControlAction, ControlEvent, ControlMode, ControlState},
+        inputs::{ControlAction, ControlEvent, ControlMode, ControlState, InputAction, InputEvent},
         nav::{NavigationCostEvent, NavigationGrid2, SparseFlowGrid2},
         pool::EntityPool,
         raycast::{GridRaycastTarget, RaycastCommands, RaycastEvent, RaycastTarget},

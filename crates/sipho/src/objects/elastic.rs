@@ -165,7 +165,7 @@ impl Elastic {
         mut events: EventWriter<SpawnElasticEvent>,
     ) {
         for control_event in control_events.read() {
-            if control_event.is_pressed(ControlAction::TieCursor) {
+            if control_event.is_pressed(ControlAction::Tie) {
                 let entities = grid.get_entities_in_radius(
                     control_event.position,
                     32.0,
@@ -189,7 +189,7 @@ impl Elastic {
                     *last_entity = Some(dude);
                 }
             }
-            if control_event.is_released(ControlAction::TieCursor) {
+            if control_event.is_released(ControlAction::Tie) {
                 *last_entity = None;
             }
         }
@@ -201,7 +201,7 @@ impl Elastic {
         mut events: EventWriter<SpawnElasticEvent>,
     ) {
         for control_event in control_events.read() {
-            if control_event.is_pressed(ControlAction::TieSelection) {
+            if control_event.is_pressed(ControlAction::TieAll) {
                 // Collect entities to tie together.
                 let mut entities = vec![];
                 for (entity, selected) in query.iter_mut() {

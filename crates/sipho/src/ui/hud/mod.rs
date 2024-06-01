@@ -22,10 +22,16 @@ impl Plugin for HudPlugin {
             .add_systems(
                 Update,
                 (
-                    (HudControlsButton::update, HudControlsButton::button_system).chain(),
+                    HudControlsButton::button_system,
                     HudSelectedPane::update,
                     HudUnitButton::update,
                 ),
+            )
+            .add_systems(
+                FixedUpdate,
+                HudControlsButton::update
+                    .in_set(FixedUpdateStage::Control)
+                    .before(ControlEvent::update),
             );
     }
 }
