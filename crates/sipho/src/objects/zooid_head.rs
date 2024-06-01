@@ -71,7 +71,7 @@ impl ZooidHead {
         query: Query<(&ZooidWorker, Entity, &Selected)>,
     ) {
         for control_event in control_events.read() {
-            if control_event.is_pressed(ControlAction::SpawnHead) {
+            if control_event.is_pressed(ControlAction::Head) {
                 commands.spawn(ObjectSpec {
                     object: Object::Head,
                     position: control_event.position,

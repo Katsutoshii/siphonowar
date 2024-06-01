@@ -187,7 +187,7 @@ impl HudControlsButton {
 
         let mut map: HashMap<InputAction, ControlAction> = HashMap::with_capacity(4);
         map.insert(InputAction::Grid24, ControlAction::Plankton);
-        map.insert(InputAction::Grid32, ControlAction::SpawnHead);
+        map.insert(InputAction::Grid32, ControlAction::Head);
         map.insert(InputAction::Grid33, ControlAction::TieAll);
         map.insert(InputAction::Grid34, ControlAction::Tie);
 

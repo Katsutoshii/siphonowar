@@ -383,7 +383,7 @@ pub enum ControlAction {
     Attack,
     PanCamera,
     DragCamera,
-    SpawnHead,
+    Head,
     Grow,
     SpawnShocker,
     SpawnRed,
