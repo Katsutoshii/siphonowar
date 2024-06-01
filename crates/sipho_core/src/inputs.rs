@@ -204,6 +204,11 @@ impl ControlState {
         self.held_actions.remove(&action);
     }
 
+    pub fn release_all(&mut self) {
+        self.press_durations.clear();
+        self.held_actions.clear();
+    }
+
     pub fn get_duration(&mut self, action: ControlAction) -> Duration {
         if let Some(stopwatches) = self.press_durations.get(&action) {
             stopwatches.elapsed()
@@ -341,6 +346,21 @@ impl ControlEvent {
                     state.mode = ControlMode::Normal;
                 }
                 if event.state == ButtonState::Pressed {
+                    if action == ControlAction::Select {
+                        let held_actions: Vec<ControlAction> =
+                            state.held_actions.keys().copied().collect();
+
+                        for action in held_actions {
+                            control_events.send(ControlEvent {
+                                action,
+                                state: ButtonState::Released,
+                                entity: raycast_event.entity,
+                                position: ControlEvent::compute_position(&grid_spec, raycast_event),
+                                duration: state.get_duration(action),
+                            });
+                            state.release_action(action);
+                        }
+                    }
                     state.press_action(action, raycast_event.target);
                 } else if event.state == ButtonState::Released
                     && !state.press_durations.contains_key(&action)

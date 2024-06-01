@@ -207,6 +207,7 @@ impl ObjectBuilder {
                         );
                     }
                     ButtonState::Released => {
+                        dbg!(&event);
                         if let Some(neighbor) = elastic_builder.builder.neighbor {
                             if let Ok((_position, path_to_head)) = objects.get(neighbor) {
                                 if let Some(head) = path_to_head.head {
