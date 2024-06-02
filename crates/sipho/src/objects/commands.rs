@@ -189,7 +189,7 @@ impl ObjectCommands<'_, '_> {
                         parent.spawn(HighlightBundle::new(
                             mesh.clone(),
                             self.selector_assets.white_material.clone(),
-                            1.2,
+                            1.5,
                         ));
                     }
                 });

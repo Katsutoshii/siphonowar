@@ -242,7 +242,7 @@
           repell_radius: 32.0,
           slow_factor: 0.05,
         ),
-        radius: 35.0,
+        radius: 40.0,
         health: 10,
         idle_speed: 0.3,
         interactions: InteractionConfigs({

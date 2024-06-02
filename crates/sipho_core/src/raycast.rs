@@ -68,10 +68,11 @@ impl RaycastCommands<'_, '_> {
 
             let mut local_transform = transform.compute_transform();
             if local_transform.scale.x <= 20. {
-                local_transform.scale *= 4.0;
+                local_transform.scale *= 6.0;
             } else {
-                local_transform.scale *= 2.0;
+                local_transform.scale *= 3.0;
             }
+            local_transform.scale.z /= 2.0;
 
             let mesh_to_world = local_transform.compute_matrix();
             if let Some(intersection) = bevy_mod_raycast::prelude::ray_intersection_over_mesh(

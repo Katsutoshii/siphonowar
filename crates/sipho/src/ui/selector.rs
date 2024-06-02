@@ -71,10 +71,11 @@ impl Selector {
         mut query: Query<(&mut Self, &mut Transform, &mut Visibility)>,
         highlights: Query<Entity, (With<Highlight>, Without<HoverHighlight>)>,
         hover_highlights: Query<Entity, With<HoverHighlight>>,
-        mut objects: Query<
-            (&Object, &Position, &Team, &Handle<Mesh>),
+        unselected: Query<
+            (&Position, &Team, &Handle<Mesh>),
             (Without<Selected>, With<Selectable>, Without<Self>),
         >,
+        selectable: Query<&Handle<Mesh>, With<Selectable>>,
         selected: Query<Entity, With<Selected>>,
         grid: Res<Grid2<TeamEntitySets>>,
         assets: Res<SelectorAssets>,
@@ -109,8 +110,7 @@ impl Selector {
                             aabb.enforce_minmax();
                             // Check the grid for entities in this bounding box.
                             for entity in grid.get_entities_in_aabb(&aabb) {
-                                if let Ok((_object, position, team, mesh)) = objects.get_mut(entity)
-                                {
+                                if let Ok((position, team, mesh)) = unselected.get(entity) {
                                     if aabb.contains(position.0) {
                                         if *team != config.player_team {
                                             continue;
@@ -137,9 +137,7 @@ impl Selector {
                                 for entity in highlights.iter() {
                                     commands.entity(entity).remove_parent().despawn();
                                 }
-                                if let Ok((_object, _, _team, mesh)) =
-                                    objects.get_mut(control.entity)
-                                {
+                                if let Ok((_, _, mesh)) = unselected.get(control.entity) {
                                     // This entity reference is from PreUpdate, so it may have been deleted.
                                     if commands.get_entity(control.entity).is_none() {
                                         continue;
@@ -161,11 +159,10 @@ impl Selector {
                     }
                 }
                 ControlAction::SelectHover => {
-                    if let Ok((_object, _, _team, mesh)) = objects.get_mut(control.entity) {
-                        for entity in hover_highlights.iter() {
-                            commands.entity(entity).remove_parent().despawn();
-                        }
-
+                    for entity in hover_highlights.iter() {
+                        commands.entity(entity).remove_parent().despawn();
+                    }
+                    if let Ok(mesh) = selectable.get(control.entity) {
                         if control.state == ButtonState::Pressed {
                             // Spawn a lighter highlight on the hovered entity.
                             let child_entity = commands
@@ -191,14 +188,6 @@ impl Selector {
         (
             self,
             Name::new("Selector"),
-            // OutlineBundle {
-            //     outline: OutlineVolume {
-            //         visible: true,
-            //         colour: Color::ANTIQUE_WHITE,
-            //         width: 10.0,
-            //     },
-            //     ..default()
-            // },
             PbrBundle {
                 mesh: assets.mesh.clone(),
                 transform: Transform::default().with_scale(Vec2::splat(1.).extend(1.)),
@@ -222,11 +211,11 @@ pub struct SelectorAssets {
 impl FromWorld for SelectorAssets {
     fn from_world(world: &mut World) -> Self {
         Self {
-            mesh: world.add_asset(Mesh::from(Cuboid::from_size(Vec2::splat(1.).extend(0.)))),
+            mesh: world.add_asset(Mesh::from(Cuboid::from_size(Vec2::splat(1.).extend(0.0)))),
             selector_material: world.add_asset(StandardMaterial {
-                base_color: Color::YELLOW.with_a(0.05),
+                base_color: Color::YELLOW.with_b(0.5).with_a(0.05),
                 alpha_mode: AlphaMode::Blend,
-                emissive: Color::YELLOW,
+                emissive: Color::YELLOW.with_b(0.5),
                 unlit: true,
                 ..default()
             }),
