@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use bevy::{input::ButtonState, prelude::*};
+use bevy::input::ButtonState;
 
 use crate::prelude::*;
 
@@ -22,16 +22,12 @@ impl Plugin for SelectorPlugin {
 
 #[derive(Component, Default, PartialEq, Debug, Clone, Copy, Reflect)]
 #[reflect(Component)]
-pub enum Selected {
-    #[default]
-    Unselected,
-    Selected,
-}
-impl Selected {
-    pub fn is_selected(&self) -> bool {
-        self == &Self::Selected
-    }
-}
+#[component(storage = "SparseSet")]
+pub struct Selected;
+
+#[derive(Component, Default, PartialEq, Debug, Clone, Copy, Reflect)]
+#[reflect(Component)]
+pub struct Selectable;
 
 #[derive(Bundle)]
 pub struct HighlightBundle {
@@ -76,9 +72,10 @@ impl Selector {
         highlights: Query<Entity, (With<Highlight>, Without<HoverHighlight>)>,
         hover_highlights: Query<Entity, With<HoverHighlight>>,
         mut objects: Query<
-            (&Object, &Position, &Team, &mut Selected, &Handle<Mesh>),
-            Without<Self>,
+            (&Object, &Position, &Team, &Handle<Mesh>),
+            (Without<Selected>, With<Selectable>, Without<Self>),
         >,
+        selected: Query<Entity, With<Selected>>,
         grid: Res<Grid2<TeamEntitySets>>,
         assets: Res<SelectorAssets>,
         config: Res<TeamConfig>,
@@ -91,12 +88,8 @@ impl Selector {
                     match control.state {
                         ButtonState::Pressed => {
                             if *visibility == Visibility::Hidden {
-                                // Reset other selections.
-                                for (_object, _transform, _team, mut selected, _mesh) in
-                                    &mut objects
-                                {
-                                    if let Selected::Selected = selected.as_ref() {}
-                                    *selected = Selected::Unselected;
+                                for entity in selected.iter() {
+                                    commands.entity(entity).remove::<Selected>();
                                 }
                                 for entity in highlights.iter() {
                                     commands.entity(entity).remove_parent().despawn();
@@ -116,11 +109,10 @@ impl Selector {
                             aabb.enforce_minmax();
                             // Check the grid for entities in this bounding box.
                             for entity in grid.get_entities_in_aabb(&aabb) {
-                                if let Ok((_object, position, team, mut selected, mesh)) =
-                                    objects.get_mut(entity)
+                                if let Ok((_object, position, team, mesh)) = objects.get_mut(entity)
                                 {
                                     if aabb.contains(position.0) {
-                                        if selected.is_selected() || *team != config.player_team {
+                                        if *team != config.player_team {
                                             continue;
                                         }
                                         let child_entity = commands
@@ -130,8 +122,10 @@ impl Selector {
                                                 1.2,
                                             ))
                                             .id();
-                                        commands.entity(entity).add_child(child_entity);
-                                        *selected = Selected::Selected;
+                                        commands
+                                            .entity(entity)
+                                            .insert(Selected)
+                                            .add_child(child_entity);
                                     }
                                 }
                             }
@@ -143,12 +137,9 @@ impl Selector {
                                 for entity in highlights.iter() {
                                     commands.entity(entity).remove_parent().despawn();
                                 }
-                                if let Ok((_object, _, _team, mut selected, mesh)) =
+                                if let Ok((_object, _, _team, mesh)) =
                                     objects.get_mut(control.entity)
                                 {
-                                    if selected.is_selected() {
-                                        continue;
-                                    }
                                     // This entity reference is from PreUpdate, so it may have been deleted.
                                     if commands.get_entity(control.entity).is_none() {
                                         continue;
@@ -157,19 +148,20 @@ impl Selector {
                                         .spawn(HighlightBundle::new(
                                             mesh.clone(),
                                             assets.white_material.clone(),
-                                            1.2,
+                                            1.5,
                                         ))
                                         .id();
-                                    commands.entity(control.entity).add_child(child_entity);
-
-                                    *selected = Selected::Selected;
+                                    commands
+                                        .entity(control.entity)
+                                        .insert(Selected)
+                                        .add_child(child_entity);
                                 }
                             }
                         }
                     }
                 }
                 ControlAction::SelectHover => {
-                    if let Ok((_object, _, _team, _, mesh)) = objects.get_mut(control.entity) {
+                    if let Ok((_object, _, _team, mesh)) = objects.get_mut(control.entity) {
                         for entity in hover_highlights.iter() {
                             commands.entity(entity).remove_parent().despawn();
                         }
@@ -182,7 +174,7 @@ impl Selector {
                                     HighlightBundle::new(
                                         mesh.clone(),
                                         assets.hover_material.clone(),
-                                        1.25,
+                                        1.6,
                                     ),
                                 ))
                                 .id();
@@ -199,10 +191,18 @@ impl Selector {
         (
             self,
             Name::new("Selector"),
+            // OutlineBundle {
+            //     outline: OutlineVolume {
+            //         visible: true,
+            //         colour: Color::ANTIQUE_WHITE,
+            //         width: 10.0,
+            //     },
+            //     ..default()
+            // },
             PbrBundle {
                 mesh: assets.mesh.clone(),
                 transform: Transform::default().with_scale(Vec2::splat(1.).extend(1.)),
-                material: assets.blue_material.clone(),
+                material: assets.selector_material.clone(),
                 visibility: Visibility::Hidden,
                 ..default()
             },
@@ -214,7 +214,7 @@ impl Selector {
 #[derive(Resource)]
 pub struct SelectorAssets {
     pub mesh: Handle<Mesh>,
-    pub blue_material: Handle<StandardMaterial>,
+    pub selector_material: Handle<StandardMaterial>,
     pub white_material: Handle<StandardMaterial>,
     pub hover_material: Handle<StandardMaterial>,
 }
@@ -223,19 +223,20 @@ impl FromWorld for SelectorAssets {
     fn from_world(world: &mut World) -> Self {
         Self {
             mesh: world.add_asset(Mesh::from(Cuboid::from_size(Vec2::splat(1.).extend(0.)))),
-            blue_material: world.add_asset(StandardMaterial {
-                base_color: Color::rgba(0.3, 0.3, 1.0, 0.04),
+            selector_material: world.add_asset(StandardMaterial {
+                base_color: Color::YELLOW.with_a(0.05),
                 alpha_mode: AlphaMode::Blend,
+                emissive: Color::YELLOW,
                 unlit: true,
                 ..default()
             }),
             white_material: world.add_asset(StandardMaterial {
-                base_color: Color::WHITE.with_a(0.25),
+                base_color: Color::ANTIQUE_WHITE.with_a(0.3),
                 alpha_mode: AlphaMode::Blend,
                 ..default()
             }),
             hover_material: world.add_asset(StandardMaterial {
-                base_color: Color::WHITE.with_a(0.1),
+                base_color: Color::WHITE.with_a(0.15),
                 alpha_mode: AlphaMode::Blend,
                 ..default()
             }),

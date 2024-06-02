@@ -23,7 +23,7 @@ pub struct ObjectSpec {
     pub team: Team,
     pub velocity: Option<Velocity>,
     pub objectives: Objectives,
-    pub selected: Selected,
+    pub selected: bool,
 }
 
 #[derive(Bundle, Default)]
@@ -39,7 +39,6 @@ pub struct ObjectBundle {
     pub visibility: Visibility,
     pub inherited_visibility: InheritedVisibility,
     pub view_visibility: ViewVisibility,
-    pub selected: Selected,
     pub health: Health,
     pub neighbors: NeighborsBundle,
     pub attached_to: AttachedTo,
@@ -48,6 +47,7 @@ pub struct ObjectBundle {
     pub grid_raycast_target: GridRaycastTarget,
     pub name: Name,
     pub fog_entity: FogEntity,
+    pub selectable: Selectable,
 }
 impl ObjectBundle {
     /// Returns random value [0, 1.)
@@ -60,7 +60,6 @@ impl ObjectBundle {
             object: spec.object,
             team: spec.team,
             objectives: spec.objectives,
-            selected: spec.selected,
             transform: Transform {
                 scale: Vec3::splat(config.radius),
                 translation: spec
@@ -79,6 +78,13 @@ impl ObjectBundle {
             },
             health: Health::new(config.health),
             name: Name::new(name),
+            neighbors: NeighborsBundle {
+                grid_entity: GridEntity {
+                    publish_events: true,
+                    ..default()
+                },
+                ..default()
+            },
             ..default()
         }
     }
@@ -157,8 +163,8 @@ impl ObjectCommands<'_, '_> {
                 commands
             }
             Object::Head => {
-                let mesh = self.assets.object_meshes[&Object::Head].clone();
                 let selected = spec.selected;
+                let mesh = self.assets.object_meshes[&Object::Head].clone();
                 let background = self.background_bundle(team_material.clone(), mesh.clone());
                 let mut commands = self.commands.spawn((
                     ZooidHead::default(),
@@ -173,9 +179,13 @@ impl ObjectCommands<'_, '_> {
                     head: Some(commands.id()),
                     ..default()
                 });
+                if selected {
+                    commands.insert(Selected);
+                }
                 commands.with_children(|parent| {
                     parent.spawn(background);
-                    if selected.is_selected() {
+
+                    if selected {
                         parent.spawn(HighlightBundle::new(
                             mesh.clone(),
                             self.selector_assets.white_material.clone(),

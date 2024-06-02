@@ -27,6 +27,7 @@ impl Plugin for CameraPlugin {
 
 /// Used to help identify our main camera
 pub fn startup(mut commands: Commands) {
+    let default_height = 0.75 * zindex::CAMERA;
     commands.spawn((
         Camera3dBundle {
             camera: Camera {
@@ -42,23 +43,23 @@ pub fn startup(mut commands: Commands) {
             .into(),
             transform: Transform::from_xyz(
                 0.0,
-                -MainCamera::y_offset(zindex::CAMERA),
-                zindex::CAMERA,
+                -MainCamera::y_offset(default_height),
+                default_height,
             )
             .with_rotation(Quat::from_axis_angle(Vec3::X, MainCamera::THETA)),
-            tonemapping: Tonemapping::TonyMcMapface,
+            tonemapping: Tonemapping::AcesFitted,
             ..default()
         },
         BloomSettings {
-            intensity: 0.15 * 2.0,
-            low_frequency_boost: 0.7,
-            low_frequency_boost_curvature: 0.95,
+            intensity: 1.2,
+            low_frequency_boost: 0.0,
+            low_frequency_boost_curvature: 1.0,
             high_pass_frequency: 1.0,
             prefilter_settings: BloomPrefilterSettings {
-                threshold: 0.0,
-                threshold_softness: 0.0,
+                threshold: 0.5,
+                threshold_softness: 0.6,
             },
-            composite_mode: BloomCompositeMode::EnergyConserving,
+            composite_mode: BloomCompositeMode::Additive,
         },
         CameraController::default(),
         InheritedVisibility::default(),

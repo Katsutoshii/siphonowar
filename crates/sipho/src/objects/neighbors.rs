@@ -48,11 +48,11 @@ pub struct EnemyCollisions(pub SmallVec<[Neighbor; MAX_COLLISIONS]>);
 
 #[derive(Bundle, Default)]
 pub struct NeighborsBundle {
-    allies: AlliedNeighbors,
-    enemies: EnemyNeighbors,
-    ally_collisions: AlliedCollisions,
-    enemy_collisions: EnemyCollisions,
-    grid_entity: GridEntity,
+    pub allies: AlliedNeighbors,
+    pub enemies: EnemyNeighbors,
+    pub ally_collisions: AlliedCollisions,
+    pub enemy_collisions: EnemyCollisions,
+    pub grid_entity: GridEntity,
 }
 
 pub fn get_neighbors(

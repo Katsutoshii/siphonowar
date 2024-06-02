@@ -57,7 +57,7 @@ impl ZooidHead {
         commands.spawn(ObjectSpec {
             object: Object::Head,
             position: Vec2::ZERO,
-            selected: Selected::Selected,
+            selected: true,
             team: config.player_team,
             ..default()
         });
@@ -68,7 +68,7 @@ impl ZooidHead {
         config: Res<TeamConfig>,
         obj_config: Res<ObjectConfigs>,
         mut control_events: EventReader<ControlEvent>,
-        query: Query<(&ZooidWorker, Entity, &Selected)>,
+        query: Query<(&ZooidWorker, Entity), With<Selected>>,
     ) {
         for control_event in control_events.read() {
             if control_event.is_pressed(ControlAction::Head) {
@@ -82,10 +82,9 @@ impl ZooidHead {
             if control_event.is_pressed(ControlAction::Fuse) {
                 info!("Fusing!");
                 let mut killable = vec![];
-                for (_, entity, selected) in query.iter() {
-                    if selected.is_selected() {
-                        killable.push(entity);
-                    }
+                for (_, entity) in query.iter() {
+                    killable.push(entity);
+
                     if killable.len() >= obj_config.get(&Object::Head).unwrap().spawn_cost as usize
                     {
                         commands.spawn(ObjectSpec {
@@ -176,14 +175,7 @@ impl ZooidHead {
     /// System to spawn zooids on Z key.
     #[allow(clippy::too_many_arguments)]
     pub fn spawn_linked_zooids(
-        mut query: Query<(
-            &mut Self,
-            Entity,
-            &Velocity,
-            &Team,
-            &Selected,
-            &mut Consumer,
-        )>,
+        mut query: Query<(&mut Self, Entity, &Velocity, &Team, &mut Consumer), With<Selected>>,
         attachments: Query<&AttachedTo>,
         positions: Query<&Position>,
         mut commands: ObjectCommands,
@@ -201,11 +193,7 @@ impl ZooidHead {
             } else {
                 continue;
             };
-            for (mut head, head_id, velocity, team, selected, mut consumer) in query.iter_mut() {
-                if !selected.is_selected() {
-                    continue;
-                }
-
+            for (mut head, head_id, velocity, team, mut consumer) in query.iter_mut() {
                 // Find the shortest leg to spawn an entity onto.
                 // Spawn first entity.
                 let (entity, _) = head.get_next_limb(head_id, &attachments);

@@ -1,5 +1,6 @@
 use crate::prelude::*;
 use bevy::{ecs::query::QueryData, input::ButtonState};
+use bevy_mod_outline::{OutlineBundle, OutlineVolume};
 
 use super::{elastic::SpawnElasticEvent, neighbors::NeighborsBundle};
 
@@ -30,6 +31,7 @@ pub struct ObjectBuilderBundle {
     position: Position,
     velocity: Velocity,
     neighbors: NeighborsBundle,
+    // outline: OutlineBundle,
 }
 impl Default for ObjectBuilderBundle {
     fn default() -> Self {
@@ -45,6 +47,14 @@ impl Default for ObjectBuilderBundle {
             position: Position::ZERO,
             velocity: Velocity::ZERO,
             neighbors: NeighborsBundle::default(),
+            // outline: OutlineBundle {
+            //     outline: OutlineVolume {
+            //         visible: true,
+            //         colour: Color::ANTIQUE_WHITE.with_a(0.5),
+            //         width: 2.0,
+            //     },
+            //     ..default()
+            // },
         }
     }
 }
@@ -59,6 +69,7 @@ pub struct ElasticBuilderBundle {
     name: Name,
     builder: ElasticBuilder,
     pbr: PbrBundle,
+    outline: OutlineBundle,
 }
 impl Default for ElasticBuilderBundle {
     fn default() -> Self {
@@ -67,6 +78,14 @@ impl Default for ElasticBuilderBundle {
             builder: ElasticBuilder::default(),
             pbr: PbrBundle {
                 visibility: Visibility::Hidden,
+                ..default()
+            },
+            outline: OutlineBundle {
+                outline: OutlineVolume {
+                    visible: true,
+                    colour: Color::ANTIQUE_WHITE.with_a(0.5),
+                    width: 2.0,
+                },
                 ..default()
             },
         }

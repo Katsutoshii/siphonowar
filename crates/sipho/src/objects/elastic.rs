@@ -196,7 +196,7 @@ impl Elastic {
     }
     pub fn tie_selection(
         mut control_events: EventReader<ControlEvent>,
-        mut query: Query<(Entity, &Selected)>,
+        mut query: Query<Entity, With<Selected>>,
         config: Res<FogConfig>,
         mut events: EventWriter<SpawnElasticEvent>,
     ) {
@@ -204,13 +204,8 @@ impl Elastic {
             if control_event.is_pressed(ControlAction::TieAll) {
                 // Collect entities to tie together.
                 let mut entities = vec![];
-                for (entity, selected) in query.iter_mut() {
-                    match selected {
-                        Selected::Selected { .. } => {
-                            entities.push(entity);
-                        }
-                        Selected::Unselected => {}
-                    }
+                for entity in query.iter_mut() {
+                    entities.push(entity);
                 }
                 if entities.is_empty() {
                     return;

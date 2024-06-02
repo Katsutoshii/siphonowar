@@ -45,6 +45,7 @@ impl IndexMut<Team> for TeamEntitySets {
 #[derive(Component, Reflect, Default, Copy, Clone)]
 #[reflect(Component)]
 pub struct GridEntity {
+    pub publish_events: bool,
     pub rowcol: Option<RowCol>,
 }
 impl GridEntity {
@@ -60,7 +61,9 @@ impl GridEntity {
                 if let Some(event) = grid.update(entity, *team, grid_entity.rowcol, rowcol.unwrap())
                 {
                     grid_entity.rowcol = event.rowcol;
-                    event_writer.send(event);
+                    if grid_entity.publish_events {
+                        event_writer.send(event);
+                    }
                 }
             } else {
                 despawns_writer.send(DespawnEvent(entity));

@@ -75,6 +75,6 @@ fn fragment(in: FullscreenVertexOutput) -> @location(0) vec4<f32> {
     // return vec4<f32>(abs(uv_offset), 0., 1.0);
 
     uv += uv_offset;
-
-    return textureSampleChromaticAbberation(screen_texture, texture_sampler, uv, offset_strength);
+    return textureSample(screen_texture, texture_sampler, uv);
+    // return textureSampleChromaticAbberation(screen_texture, texture_sampler, uv, offset_strength);
 }

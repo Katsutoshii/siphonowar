@@ -50,7 +50,7 @@ impl BubbleSpawner {
         let effect = effects.add(
             EffectAsset::new(
                 2048,
-                Spawner::rate(CpuValue::Uniform((8., 12.))),
+                Spawner::rate(CpuValue::Uniform((10., 15.))),
                 writer.finish(),
             )
             .with_name("emit:burst")

@@ -5,7 +5,10 @@ pub mod pause_menu;
 pub mod selector;
 pub mod waypoint;
 
-pub use {selector::Selected, waypoint::Waypoint};
+pub use {
+    selector::{Selectable, Selected},
+    waypoint::Waypoint,
+};
 
 pub struct UiPlugin;
 impl Plugin for UiPlugin {

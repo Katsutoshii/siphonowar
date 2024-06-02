@@ -168,22 +168,13 @@ impl HudControlsButton {
         mut buttons: Query<(Entity, &mut HudControlsButton, &mut Interaction, &Children)>,
         mut button_text: Query<&mut Text>,
         mut inputs: EventReader<InputEvent>,
-        selected: Query<(&Object, &Selected), Without<HudControlsButton>>,
+        selected: Query<&Object, (With<Selected>, Without<HudControlsButton>)>,
         configs: Res<ObjectConfigs>,
         mut controls: EventWriter<ControlEvent>,
         mut raycasts: EventReader<RaycastEvent>,
         mut state: ResMut<ControlState>,
     ) {
-        let objects: HashSet<Object> = selected
-            .iter()
-            .filter_map(|(&object, selected)| {
-                if selected.is_selected() {
-                    Some(object)
-                } else {
-                    None
-                }
-            })
-            .collect();
+        let objects: HashSet<Object> = selected.iter().copied().collect();
 
         let mut map: HashMap<InputAction, ControlAction> = HashMap::with_capacity(4);
         map.insert(InputAction::Grid24, ControlAction::Plankton);

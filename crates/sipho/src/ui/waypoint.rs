@@ -61,7 +61,7 @@ impl Waypoint {
 
     pub fn update(
         mut control_events: EventReader<ControlEvent>,
-        selection: Query<(Entity, &Selected, &Object, &AttachedTo)>,
+        selection: Query<(Entity, &Object, &AttachedTo), With<Selected>>,
         mut commands: Commands,
         mut objectives: Query<&mut Objectives>,
         assets: Res<WaypointAssets>,
@@ -86,24 +86,22 @@ impl Waypoint {
                 Waypoint::default().bundle(&assets, control.position, control.action);
             let waypoint_entity = commands.spawn(waypoint_bundle).id();
 
-            for (entity, selected, object, attached_to) in selection.iter() {
-                if selected.is_selected() {
-                    let mut objectives = objectives.get_mut(entity).unwrap();
-                    // Don't change objectives for workers that are in the middle of the parent.
-                    if *object == Object::Worker && attached_to.len() > 1 {
-                        if objectives.last() != &Objective::Idle {
-                            objectives.clear();
-                        }
-                        continue;
+            for (entity, object, attached_to) in selection.iter() {
+                let mut objectives = objectives.get_mut(entity).unwrap();
+                // Don't change objectives for workers that are in the middle of the parent.
+                if *object == Object::Worker && attached_to.len() > 1 {
+                    if objectives.last() != &Objective::Idle {
+                        objectives.clear();
                     }
-                    objectives.clear();
-                    let objective = match control.action {
-                        ControlAction::Move => Objective::FollowEntity(waypoint_entity),
-                        ControlAction::AttackMove => Objective::AttackFollowEntity(waypoint_entity),
-                        _ => unreachable!(),
-                    };
-                    objectives.push(objective);
+                    continue;
                 }
+                objectives.clear();
+                let objective = match control.action {
+                    ControlAction::Move => Objective::FollowEntity(waypoint_entity),
+                    ControlAction::AttackMove => Objective::AttackFollowEntity(waypoint_entity),
+                    _ => unreachable!(),
+                };
+                objectives.push(objective);
             }
         }
     }

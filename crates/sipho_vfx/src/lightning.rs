@@ -60,7 +60,7 @@ impl LightningCommands<'_, '_> {
                 .with_children(|parent| {
                     let point_light = PointLight {
                         color: Color::WHITE,
-                        intensity: 100_000_000.,
+                        intensity: 30_000_000.,
                         range: 1000.,
                         ..default()
                     };

@@ -21,8 +21,9 @@ fn fragment(mesh: VertexOutput) -> @location(0) vec4<f32> {
     let granularity = 10.0;
     let repeat_uv = (mesh.uv * granularity) % 1.0;
     var sand = textureSample(sand_texture, texture_sampler, repeat_uv);
-    sand.a = 0.2;
     var wave = color * 0.1;
-    let res = (wave * 0.07 + vec4<f32>(0., 0.05 + 0.01 * cos(time * 0.001), 0.2 + 0.05 * sin(time * 0.001), 0.1));
-    return vec4<f32>(0.09, 0.15, 0.25, 0.1) / 2.0 + (sand / 10.0) + res / 1.5;
+    let res = (wave * 0.07 + vec4<f32>(0., 0.05 + 0.01 * cos(time * 0.001), 0.2 + 0.05 * sin(time * 0.001), 1.0));
+    var output = vec4<f32>(0.0, 0.08, 0.15, 1.0) / 5.0 + (sand / 25.0) + res / 8.0;
+    output.a = 0.3;
+    return output;
 }

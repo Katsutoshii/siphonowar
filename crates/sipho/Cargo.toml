@@ -17,6 +17,7 @@ sipho_vfx = {path = "../sipho_vfx"}
 bevy_newtonian2d = {path = "../bevy_newtonian2d"}
 bevy_bundletree = "0.1"
 sipho_sfx = {path = "../sipho_sfx"}
+bevy_mod_outline = "0.7"
 
 [lints]
 workspace = true

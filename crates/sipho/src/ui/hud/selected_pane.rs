@@ -66,15 +66,13 @@ impl Default for HudSelectedPaneBundle {
 
 impl HudSelectedPane {
     pub fn update(
-        selection: Query<(&Object, &Selected)>,
+        selection: Query<&Object, With<Selected>>,
         ui: Query<(&Self, &Children)>,
         mut buttons: Query<&mut HudUnitButton>,
     ) {
         let mut objects: HashMap<Object, usize> = HashMap::new();
-        for (object, selected) in selection.iter() {
-            if selected.is_selected() {
-                *objects.entry(*object).or_insert(0) += 1;
-            }
+        for object in selection.iter() {
+            *objects.entry(*object).or_insert(0) += 1;
         }
         let mut sorted: Vec<(Object, usize)> = objects.iter().map(|(&k, &v)| (k, v)).collect();
         sorted.sort_by_key(|&(object, _)| object);

@@ -10,7 +10,7 @@ pub mod prelude {
     pub use crate::{
         objectives::{Objective, ObjectiveConfig, ObjectiveDebugger, Objectives},
         objects::*,
-        ui::{Selected, Waypoint},
+        ui::{Selectable, Selected, Waypoint},
         SiphonowarPlugin,
     };
     pub use bevy_newtonian2d::*;
@@ -18,6 +18,8 @@ pub mod prelude {
     pub use sipho_sfx::prelude::*;
     pub use sipho_vfx::prelude::*;
 }
+
+pub use bevy_mod_outline::*;
 
 use prelude::*;
 
@@ -32,6 +34,7 @@ impl Plugin for SiphonowarPlugin {
                 })
                 .set(window::custom_plugin())
                 .set(ImagePlugin::default_linear()),
+            // OutlinePlugin,
             CorePlugin,
             camera::CameraPlugin,
             objects::ObjectsPlugin,

@@ -68,9 +68,9 @@ impl RaycastCommands<'_, '_> {
 
             let mut local_transform = transform.compute_transform();
             if local_transform.scale.x <= 20. {
-                local_transform.scale *= 3.5;
+                local_transform.scale *= 4.0;
             } else {
-                local_transform.scale *= 1.5;
+                local_transform.scale *= 2.0;
             }
 
             let mesh_to_world = local_transform.compute_matrix();
