@@ -67,6 +67,15 @@ impl SpawnCommand {
                                 if ai {
                                     entity_command.insert(EnemyAI::default());
                                 }
+                                if object == Object::Head {
+                                    for _ in 0..20 {
+                                        commands.spawn(ObjectSpec {
+                                            object: Object::Food,
+                                            position,
+                                            ..default()
+                                        });
+                                    }
+                                }
                             }
                         }
                     }

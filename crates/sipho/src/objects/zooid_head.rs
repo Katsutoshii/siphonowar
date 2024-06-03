@@ -61,6 +61,13 @@ impl ZooidHead {
             team: config.player_team,
             ..default()
         });
+        for _ in 0..20 {
+            commands.spawn(ObjectSpec {
+                object: Object::Food,
+                position: Vec2::ZERO,
+                ..default()
+            });
+        }
     }
 
     pub fn spawn(
@@ -78,6 +85,13 @@ impl ZooidHead {
                     team: config.player_team,
                     ..default()
                 });
+                for _ in 0..20 {
+                    commands.spawn(ObjectSpec {
+                        object: Object::Food,
+                        position: control_event.position,
+                        ..default()
+                    });
+                }
             }
             if control_event.is_pressed(ControlAction::Fuse) {
                 info!("Fusing!");
@@ -175,7 +189,7 @@ impl ZooidHead {
     /// System to spawn zooids on Z key.
     #[allow(clippy::too_many_arguments)]
     pub fn spawn_linked_zooids(
-        mut query: Query<(&mut Self, Entity, &Velocity, &Team, &mut Consumer), With<Selected>>,
+        mut query: Query<(&mut Self, Entity, &Velocity, &Team), With<Selected>>,
         attachments: Query<&AttachedTo>,
         positions: Query<&Position>,
         mut commands: ObjectCommands,
@@ -193,7 +207,7 @@ impl ZooidHead {
             } else {
                 continue;
             };
-            for (mut head, head_id, velocity, team, mut consumer) in query.iter_mut() {
+            for (mut head, head_id, velocity, team) in query.iter_mut() {
                 // Find the shortest leg to spawn an entity onto.
                 // Spawn first entity.
                 let (entity, _) = head.get_next_limb(head_id, &attachments);
@@ -203,8 +217,7 @@ impl ZooidHead {
                     SpawnedType::Shocker => 3,
                     SpawnedType::Worker => 1,
                 };
-                if consumer.consumed > food_needed {
-                    consumer.consumed -= food_needed;
+                if commands.try_consume(head_id, food_needed).is_ok() {
                     let direction = if let Some(normalized) = velocity.try_normalize() {
                         normalized
                     } else {

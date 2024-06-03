@@ -52,11 +52,6 @@ impl Health {
         for (entity, object, health, position, team) in &mut objects {
             if health.health <= 0 {
                 object_commands.deferred_despawn(entity);
-                firework_events.send(FireworkSpec {
-                    size: VfxSize::Medium,
-                    position: position.extend(zindex::ZOOIDS_MAX),
-                    color: (*team).into(),
-                });
                 if object == &Object::Plankton {
                     object_commands.spawn(ObjectSpec {
                         object: Object::Food,
@@ -64,10 +59,17 @@ impl Health {
                         ..default()
                     });
                 }
-                audio.send(AudioEvent {
-                    sample: AudioSample::Punch,
-                    position: Some(position.0),
-                });
+                if object != &Object::Food {
+                    firework_events.send(FireworkSpec {
+                        size: VfxSize::Medium,
+                        position: position.extend(zindex::ZOOIDS_MAX),
+                        color: (*team).into(),
+                    });
+                    audio.send(AudioEvent {
+                        sample: AudioSample::Punch,
+                        position: Some(position.0),
+                    });
+                }
             }
         }
     }
@@ -88,6 +90,7 @@ impl DamageEvent {
             &mut Force,
             &mut Health,
             &Team,
+            &Object,
             &Position,
             &mut Objectives,
         )>,
@@ -98,18 +101,27 @@ impl DamageEvent {
         for event in events.read() {
             let knockback_amount = 3.;
             // Knock back the damager
-            if let Ok((_, mut force, _health, _team, _transform, _)) = query.get_mut(event.damager)
+            if let Ok((_, mut force, _health, _team, _object, _transform, _)) =
+                query.get_mut(event.damager)
             {
                 *force += Force(*event.velocity * -1. * knockback_amount);
             }
             // Knock forward the damaged
-            if let Ok((_, mut force, _health, _team, _transform, _)) = query.get_mut(event.damaged)
+            if let Ok((_, mut force, _health, _team, _object, _transform, _)) =
+                query.get_mut(event.damaged)
             {
                 *force += Force(*event.velocity * 0.5 * knockback_amount);
             }
             // Reduce health and set off firework for the damaged.
-            if let Ok((mut attacker, mut _force, mut health, &team, &position, mut objectives)) =
-                query.get_mut(event.damaged)
+            if let Ok((
+                mut attacker,
+                mut _force,
+                mut health,
+                &team,
+                object,
+                &position,
+                mut objectives,
+            )) = query.get_mut(event.damaged)
             {
                 if health.damageable {
                     if let Some(attacker) = attacker.as_deref_mut() {
@@ -118,17 +130,19 @@ impl DamageEvent {
                     }
                     health.damage(event.amount);
                 };
-                let size = VfxSize::Small;
 
-                firework_events.send(FireworkSpec {
-                    size,
-                    color: team.into(),
-                    position: position.extend(zindex::ZOOIDS_MAX),
-                });
-                audio_events.send(AudioEvent {
-                    sample: AudioSample::RandomPop,
-                    position: Some(*position),
-                });
+                if object != &Object::Food {
+                    let size = VfxSize::Small;
+                    firework_events.send(FireworkSpec {
+                        size,
+                        color: team.into(),
+                        position: position.extend(zindex::ZOOIDS_MAX),
+                    });
+                    audio_events.send(AudioEvent {
+                        sample: AudioSample::RandomPop,
+                        position: Some(*position),
+                    });
+                }
                 if event.stun {
                     if let Objective::Stunned(_) = objectives.last() {
                     } else {

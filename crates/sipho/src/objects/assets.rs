@@ -9,6 +9,7 @@ pub struct ObjectAssets {
     pub connector_mesh: Handle<Mesh>,
     pub team_materials: Vec<TeamMaterials>,
     pub builder_material: Handle<StandardMaterial>,
+    pub food_material: Handle<StandardMaterial>,
 }
 impl ObjectAssets {
     pub fn get_team_material(&self, team: Team) -> TeamMaterials {
@@ -50,6 +51,13 @@ impl FromWorld for ObjectAssets {
                 base_color: Color::rgba(1.0, 1.0, 0.8, 0.5),
                 emissive: Color::rgba(1.0, 1.0, 0.8, 1.0),
                 alpha_mode: AlphaMode::Blend,
+                ..default()
+            }),
+            food_material: world.add_asset(StandardMaterial {
+                base_color: Color::SEA_GREEN,
+                emissive: Color::SEA_GREEN,
+                perceptual_roughness: 1.0,
+                alpha_mode: AlphaMode::Opaque,
                 ..default()
             }),
         }

@@ -95,15 +95,26 @@ impl ObjectBundle {
 pub struct ObjectCommands<'w, 's> {
     assets: Res<'w, ObjectAssets>,
     selector_assets: Res<'w, SelectorAssets>,
-    commands: Commands<'w, 's>,
+    pub commands: Commands<'w, 's>,
     configs: Res<'w, ObjectConfigs>,
     parents: Query<'w, 's, &'static Children, Without<Parent>>,
     children: Query<'w, 's, &'static Object, With<Parent>>,
     despawn_events: EventWriter<'w, DespawnEvent>,
     time: Res<'w, Time>,
     obstacles: Res<'w, Grid2<Obstacle>>,
+    consumers: Query<'w, 's, &'static mut Consumer>,
 }
 impl ObjectCommands<'_, '_> {
+    pub fn try_consume(&mut self, entity: Entity, n: usize) -> Result<(), Error> {
+        if let Ok(mut consumer) = self.consumers.get_mut(entity) {
+            if consumer.consumed >= n {
+                consumer.spend(n, &mut self.commands);
+            } else {
+                return Err(Error::Default);
+            }
+        }
+        Ok(())
+    }
     pub fn spawn(&mut self, spec: ObjectSpec) -> Option<EntityCommands> {
         let config = &self.configs[&spec.object];
         let team_material = self.assets.get_team_material(spec.team);
@@ -168,7 +179,7 @@ impl ObjectCommands<'_, '_> {
                 let background = self.background_bundle(team_material.clone(), mesh.clone());
                 let mut commands = self.commands.spawn((
                     ZooidHead::default(),
-                    Consumer::new(20),
+                    Consumer::new(0),
                     ObjectBundle {
                         mesh: mesh.clone(),
                         material: team_material.primary,
@@ -249,7 +260,7 @@ impl ObjectCommands<'_, '_> {
             PbrBundle {
                 mesh,
                 transform: Transform {
-                    scale: Vec3::splat(1.5),
+                    scale: Vec3::splat(1.49),
                     translation: Vec3 {
                         x: 0.,
                         y: 0.,

@@ -12,7 +12,7 @@ impl Plugin for EnemyAIPlugin {
         app.register_type::<EnemyAI>().add_systems(
             FixedUpdate,
             EnemyAI::update
-                .in_set(FixedUpdateStage::AccumulateForces)
+                .in_set(FixedUpdateStage::AI)
                 .in_set(GameStateSet::Running),
         );
     }
@@ -56,7 +56,7 @@ pub fn get_all_leaves(head: Entity, attached_to: &Query<&AttachedTo>) -> Vec<Ent
 
 impl EnemyAI {
     pub fn update(
-        mut query: Query<(&mut ZooidHead, Entity, &Team, &mut Consumer, &mut EnemyAI)>,
+        mut query: Query<(&mut ZooidHead, Entity, &Team, &mut EnemyAI)>,
         mut objective_query: Query<&mut Objectives>,
         attached_to: Query<&AttachedTo>,
         positions: Query<&Position>,
@@ -64,7 +64,7 @@ impl EnemyAI {
         mut elastic_events: EventWriter<SpawnElasticEvent>,
         mut audio: EventWriter<AudioEvent>,
     ) {
-        for (mut head, head_entity, team, mut consumer, mut ai) in query.iter_mut() {
+        for (mut head, head_entity, team, mut ai) in query.iter_mut() {
             ai.free_workers.retain(|x| positions.contains(*x));
             // Apply free worker useful objectives
             let useful_objective = ai
@@ -104,7 +104,7 @@ impl EnemyAI {
             let (entity, arm_length) = head.get_next_limb(head_entity, &attached_to);
 
             let position = positions.get(entity).unwrap();
-            if consumer.consumed > 0 {
+            if commands.try_consume(head_entity, 1).is_ok() {
                 let direction = Vec2::Y;
                 let spawn_velocity: Vec2 = direction;
                 if arm_length < 7 {
@@ -118,8 +118,7 @@ impl EnemyAI {
                         &mut commands,
                         entity,
                     );
-                    consumer.consumed -= 1;
-                } else if consumer.consumed >= 3 {
+                } else if commands.try_consume(head_entity, 3).is_ok() {
                     let position = positions.get(head_entity).unwrap();
                     if let Some(new_entity) = commands.spawn(ObjectSpec {
                         position: position.0 + spawn_velocity,
@@ -133,7 +132,6 @@ impl EnemyAI {
                         // objectives: Objectives::new(Objective::FollowEntity(head_id)),
                         ..default()
                     }) {
-                        consumer.consumed -= 3;
                         ai.free_workers.insert(new_entity.id());
                     }
                 }

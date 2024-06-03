@@ -197,7 +197,6 @@ impl ObjectBuilder {
     pub fn update(
         mut builder: Query<ObjectBuilderQueryData, Without<ElasticBuilder>>,
         objects: Query<(&Position, &PathToHead), Without<ObjectBuilder>>,
-        mut consumers: Query<&mut Consumer>,
         mut elastic_builder: Query<ElasticBuilderQueryData, Without<ObjectBuilder>>,
         mut events: EventReader<ControlEvent>,
         assets: Res<ObjectAssets>,
@@ -229,15 +228,13 @@ impl ObjectBuilder {
                         if let Some(neighbor) = elastic_builder.builder.neighbor {
                             if let Ok((_position, path_to_head)) = objects.get(neighbor) {
                                 if let Some(head) = path_to_head.head {
-                                    let mut consumer = consumers.get_mut(head).unwrap();
-                                    if consumer.consumed > 0 {
+                                    if commands.try_consume(head, 1).is_ok() {
                                         if let Some(entity_commands) = commands.spawn(ObjectSpec {
                                             object,
                                             position: event.position,
                                             team: team_config.player_team,
                                             ..default()
                                         }) {
-                                            consumer.consumed -= 1;
                                             elastic_events.send(SpawnElasticEvent {
                                                 elastic: Elastic((neighbor, entity_commands.id())),
                                                 team: team_config.player_team,

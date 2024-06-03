@@ -19,11 +19,25 @@ impl Plugin for ConsumerPlugin {
 #[reflect(Component)]
 pub struct Consumer {
     pub consumed: usize,
+    pub indicators: Vec<Entity>,
 }
 impl Consumer {
     pub fn new(consumed: usize) -> Self {
-        Self { consumed }
+        Self {
+            consumed,
+            ..default()
+        }
     }
+
+    pub fn spend(&mut self, n: usize, commands: &mut Commands) {
+        for _ in 0..n {
+            if let Some(id) = self.indicators.pop() {
+                commands.entity(id).despawn();
+                self.consumed -= 1;
+            }
+        }
+    }
+
     pub fn update(
         mut query: Query<(
             Entity,
@@ -31,14 +45,35 @@ impl Consumer {
             &mut Mass,
             &Position,
             &EnemyCollisions,
+            &Transform,
         )>,
         mut damage_events: EventWriter<DamageEvent>,
         mut audio: EventWriter<AudioEvent>,
+        mut commands: Commands,
+        assets: Res<ObjectAssets>,
     ) {
-        for (entity, mut consumer, mut mass, position, colliders) in query.iter_mut() {
+        for (entity, mut consumer, mut mass, position, colliders, transform) in query.iter_mut() {
             for neighbor in colliders.iter() {
                 if neighbor.object == Object::Food {
                     consumer.consumed += 1;
+                    let consumed = consumer.consumed as f32;
+                    let radius = 3.0.lerp(20., (consumed / 30.).min(1.));
+                    let child_position =
+                        radius * Vec2::from_angle(consumer.consumed as f32 * 5.25).normalize();
+                    let indicator = commands
+                        .spawn(PbrBundle {
+                            mesh: assets.object_meshes[&Object::Food].clone(),
+                            material: assets.food_material.clone(),
+                            transform: Transform {
+                                translation: child_position.extend(15.0) / transform.scale,
+                                scale: transform.scale.recip() * 6.,
+                                ..default()
+                            },
+                            ..default()
+                        })
+                        .id();
+                    consumer.indicators.push(indicator);
+                    commands.entity(entity).add_child(indicator);
                     audio.send(AudioEvent {
                         sample: AudioSample::RandomBubble,
                         position: Some(position.0),
