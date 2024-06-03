@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use bevy::{prelude::*, utils::hashbrown::HashSet};
+use bevy::{input::ButtonState, prelude::*, utils::hashbrown::HashSet};
 
 /// Plugin to add a waypoint system where the player can click to create a waypoint.
 pub struct WaypointPlugin;
@@ -59,49 +59,67 @@ impl Waypoint {
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn update(
         mut control_events: EventReader<ControlEvent>,
         selection: Query<(Entity, &Object, &AttachedTo), With<Selected>>,
+        teams: Query<&Team>,
         mut commands: Commands,
         mut objectives: Query<&mut Objectives>,
         assets: Res<WaypointAssets>,
         obstacles: Res<Grid2<Obstacle>>,
-        // mut audio: EventWriter<AudioEvent>,
+        team_config: Res<TeamConfig>,
     ) {
         for control in control_events.read() {
-            if !(control.is_pressed(ControlAction::Move)
-                || control.is_pressed(ControlAction::AttackMove))
-            {
+            if control.state != ButtonState::Pressed {
                 continue;
             }
-
-            // Don't spawn waypoints in obstacles.
-            let rowcol = obstacles.to_rowcol(control.position).unwrap();
-            if !obstacles.is_clear(rowcol) {
-                continue;
-            }
-
-            // Spawn a new waypoint.
-            let waypoint_bundle =
-                Waypoint::default().bundle(&assets, control.position, control.action);
-            let waypoint_entity = commands.spawn(waypoint_bundle).id();
-
-            for (entity, object, attached_to) in selection.iter() {
-                let mut objectives = objectives.get_mut(entity).unwrap();
-                // Don't change objectives for workers that are in the middle of the parent.
-                if *object == Object::Worker && attached_to.len() > 1 {
-                    if objectives.last() != &Objective::Idle {
-                        objectives.clear();
+            let objective = match control.action {
+                ControlAction::Move | ControlAction::AttackMove => {
+                    // Don't spawn waypoints in obstacles.
+                    let rowcol = obstacles.to_rowcol(control.position).unwrap();
+                    if !obstacles.is_clear(rowcol) {
+                        continue;
                     }
-                    continue;
+
+                    // Spawn a new waypoint.
+                    let waypoint_bundle =
+                        Waypoint::default().bundle(&assets, control.position, control.action);
+                    let waypoint_entity = commands.spawn(waypoint_bundle).id();
+
+                    Some(match control.action {
+                        ControlAction::Move => Objective::FollowEntity(waypoint_entity),
+                        ControlAction::AttackMove => Objective::AttackFollowEntity(waypoint_entity),
+                        _ => unreachable!(),
+                    })
                 }
-                objectives.clear();
-                let objective = match control.action {
-                    ControlAction::Move => Objective::FollowEntity(waypoint_entity),
-                    ControlAction::AttackMove => Objective::AttackFollowEntity(waypoint_entity),
-                    _ => unreachable!(),
-                };
-                objectives.push(objective);
+                ControlAction::Interact => {
+                    if let Ok(team) = teams.get(control.entity) {
+                        Some(if *team == team_config.player_team {
+                            Objective::FollowEntity(control.entity)
+                        } else {
+                            Objective::AttackFollowEntity(control.entity)
+                        })
+                    } else {
+                        None
+                    }
+                }
+                _ => None,
+            };
+
+            if let Some(objective) = objective {
+                for (entity, object, attached_to) in selection.iter() {
+                    let mut objectives = objectives.get_mut(entity).unwrap();
+                    // Don't change objectives for workers that are in the middle of the parent.
+                    if *object == Object::Worker && attached_to.len() > 1 {
+                        if objectives.last() != &Objective::Idle {
+                            objectives.clear();
+                        }
+                        continue;
+                    }
+                    objectives.clear();
+                    objectives.push(objective.clone());
+                }
             }
         }
     }
