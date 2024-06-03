@@ -1,3 +1,5 @@
+use std::f32::consts::PI;
+
 use crate::prelude::*;
 
 use super::neighbors::EnemyCollisions;
@@ -61,14 +63,15 @@ impl Consumer {
                     let max_radius = 30.0;
                     let radius = min_radius.lerp(max_radius, (consumed / 30.).min(1.));
                     let child_position =
-                        radius * Vec2::from_angle(consumer.consumed as f32 * 5.25).normalize();
+                        radius * Vec2::from_angle(consumer.consumed as f32 * PI * 0.6).normalize();
                     let indicator = commands
                         .spawn(PbrBundle {
                             mesh: assets.object_meshes[&Object::Food].clone(),
                             material: assets.food_material.clone(),
                             transform: Transform {
-                                translation: child_position.extend(15.0) / transform.scale,
-                                scale: transform.scale.recip() * 6.,
+                                translation: child_position.extend(15.0 - radius / 4.)
+                                    / transform.scale,
+                                scale: transform.scale.recip() * 7.,
                                 ..default()
                             },
                             ..default()
