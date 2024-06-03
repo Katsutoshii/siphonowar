@@ -272,6 +272,7 @@
           Grid11: Worker,
           Grid12: Armor,
           Grid13: Shocker,
+          Grid21: Attack,
           Grid31: Grow
         })
       ),
