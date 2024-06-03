@@ -53,8 +53,14 @@ impl HighlightBundle {
 
 #[derive(Component)]
 pub struct Highlight;
+impl Highlight {
+    pub const SIZE: f32 = 1.1;
+}
 #[derive(Component)]
 pub struct HoverHighlight;
+impl HoverHighlight {
+    pub const SIZE: f32 = 1.15;
+}
 
 #[derive(Component, Default)]
 pub struct Selector {
@@ -119,7 +125,7 @@ impl Selector {
                                             .spawn(HighlightBundle::new(
                                                 mesh.clone(),
                                                 assets.white_material.clone(),
-                                                1.2,
+                                                Highlight::SIZE,
                                             ))
                                             .id();
                                         commands
@@ -146,7 +152,7 @@ impl Selector {
                                         .spawn(HighlightBundle::new(
                                             mesh.clone(),
                                             assets.white_material.clone(),
-                                            1.5,
+                                            Highlight::SIZE,
                                         ))
                                         .id();
                                     commands
@@ -171,7 +177,7 @@ impl Selector {
                                     HighlightBundle::new(
                                         mesh.clone(),
                                         assets.hover_material.clone(),
-                                        1.6,
+                                        HoverHighlight::SIZE,
                                     ),
                                 ))
                                 .id();

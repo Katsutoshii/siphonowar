@@ -1,6 +1,7 @@
 /// Core libraries used by Siphonowar.
 pub mod aabb;
 pub mod camera;
+pub mod controls;
 pub mod cursor;
 pub mod despawn;
 pub mod error;
@@ -22,6 +23,7 @@ pub mod prelude {
     pub use crate::{
         aabb::Aabb2,
         camera::{CameraController, CameraMoveEvent, MainCamera},
+        controls::{ControlAction, ControlEvent, ControlMode, ControlState},
         cursor::{Cursor, CursorAssets, CursorParam},
         despawn::{DespawnEvent, ScheduleDespawn},
         error::Error,
@@ -31,7 +33,7 @@ pub mod prelude {
             GridSpec, Obstacle, RowCol, RowColDistance, SparseGrid2, TeamEntitySets,
             VisibilityUpdate, VisibilityUpdateEvent,
         },
-        inputs::{ControlAction, ControlEvent, ControlMode, ControlState, InputAction, InputEvent},
+        inputs::{InputAction, InputEvent},
         nav::{NavigationCostEvent, NavigationGrid2, SparseFlowGrid2},
         pool::EntityPool,
         raycast::{GridRaycastTarget, RaycastCommands, RaycastEvent, RaycastTarget},
@@ -59,6 +61,7 @@ impl Plugin for CorePlugin {
             system_sets::SystemSetPlugin,
             team::TeamPlugin,
             inputs::InputActionPlugin,
+            controls::ControlActionPlugin,
             grid::GridPlugin,
             nav::NavigationPlugin,
             bevy_newtonian2d::PhysicsPlugin,

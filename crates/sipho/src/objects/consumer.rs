@@ -57,7 +57,9 @@ impl Consumer {
                 if neighbor.object == Object::Food {
                     consumer.consumed += 1;
                     let consumed = consumer.consumed as f32;
-                    let radius = 3.0.lerp(20., (consumed / 30.).min(1.));
+                    let min_radius = 3.0;
+                    let max_radius = 30.0;
+                    let radius = min_radius.lerp(max_radius, (consumed / 30.).min(1.));
                     let child_position =
                         radius * Vec2::from_angle(consumer.consumed as f32 * 5.25).normalize();
                     let indicator = commands

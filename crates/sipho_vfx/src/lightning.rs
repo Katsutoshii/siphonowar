@@ -60,12 +60,12 @@ impl LightningCommands<'_, '_> {
                 .with_children(|parent| {
                     let point_light = PointLight {
                         color: Color::WHITE,
-                        intensity: 30_000_000.,
+                        intensity: 25_000_000.,
                         range: 1000.,
                         ..default()
                     };
                     let depth = 3.;
-                    for offset in [-0.5, 0.0, 0.5] {
+                    for offset in [-0.5, 0.5] {
                         parent.spawn(PointLightBundle {
                             point_light,
                             transform: Transform {

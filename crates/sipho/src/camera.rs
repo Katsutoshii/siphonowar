@@ -51,12 +51,12 @@ pub fn startup(mut commands: Commands) {
             ..default()
         },
         BloomSettings {
-            intensity: 1.2,
+            intensity: 1.1,
             low_frequency_boost: 0.0,
             low_frequency_boost_curvature: 1.0,
             high_pass_frequency: 1.0,
             prefilter_settings: BloomPrefilterSettings {
-                threshold: 0.5,
+                threshold: 0.2,
                 threshold_softness: 0.6,
             },
             composite_mode: BloomCompositeMode::Additive,

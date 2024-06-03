@@ -43,11 +43,15 @@ impl Team {
     pub const COUNT: usize = 3;
 
     pub const BRIGHT_SEA_GREEN: Color = Color::rgb(0.18 + 0.2, 0.55 + 0.2, 0.34 + 0.2);
-    pub const BRIGHT_TEAL: Color = Color::rgb(0.1, 0.5 + 0.3, 0.5 + 0.3);
+    pub const BRIGHT_TEAL: Color = Color::rgb(0.1, 0.5 + 0.1, 0.5 + 0.1);
+    pub const DARKER_TOMATO: Color = Color::rgb(1.0 * 0.7, 0.39 * 0.7, 0.28 * 0.7);
 
     pub const ALL: [Self; Self::COUNT] = [Self::None, Self::Blue, Self::Red];
-    pub const COLORS: [Color; Self::COUNT] =
-        [Self::BRIGHT_SEA_GREEN, Self::BRIGHT_TEAL, Color::TOMATO];
+    pub const COLORS: [Color; Self::COUNT] = [
+        Self::BRIGHT_SEA_GREEN,
+        Self::BRIGHT_TEAL,
+        Self::DARKER_TOMATO,
+    ];
 }
 
 #[derive(Default, Clone)]

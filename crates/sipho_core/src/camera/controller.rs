@@ -99,6 +99,7 @@ impl CameraController {
         mut controls: EventReader<ControlEvent>,
         mut event_writer: EventWriter<CameraMoveEvent>,
         mut mouse_wheel: EventReader<MouseWheel>,
+        game_state: Res<State<GameState>>,
     ) {
         let (mut controller, mut camera_transform) = controller_query.single_mut();
         for control in controls.read() {
@@ -140,13 +141,15 @@ impl CameraController {
                 _ => {}
             }
         }
-        for event in mouse_wheel.read() {
-            let height = camera_transform.translation.z;
-            camera_transform.translation.z =
-                (height - event.y * 50.).clamp(zindex::MIN_CAMERA, zindex::CAMERA);
-            event_writer.send(CameraMoveEvent {
-                position: camera_transform.translation,
-            });
+        if game_state.get() == &GameState::Running {
+            for event in mouse_wheel.read() {
+                let height = camera_transform.translation.z;
+                camera_transform.translation.z =
+                    (height - event.y * 50.).clamp(zindex::MIN_CAMERA, zindex::CAMERA);
+                event_writer.send(CameraMoveEvent {
+                    position: camera_transform.translation,
+                });
+            }
         }
     }
 

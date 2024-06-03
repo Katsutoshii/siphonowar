@@ -6,7 +6,7 @@ pub mod selector;
 pub mod waypoint;
 
 pub use {
-    selector::{Selectable, Selected},
+    selector::{Highlight, HoverHighlight, Selectable, Selected},
     waypoint::Waypoint,
 };
 

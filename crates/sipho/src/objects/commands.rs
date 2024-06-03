@@ -1,6 +1,6 @@
 use crate::{
     prelude::*,
-    ui::selector::{HighlightBundle, SelectorAssets},
+    ui::selector::{Highlight, HighlightBundle, SelectorAssets},
 };
 use bevy::{
     ecs::system::{EntityCommands, SystemParam},
@@ -200,7 +200,7 @@ impl ObjectCommands<'_, '_> {
                         parent.spawn(HighlightBundle::new(
                             mesh.clone(),
                             self.selector_assets.white_material.clone(),
-                            1.5,
+                            Highlight::SIZE,
                         ));
                     }
                 });

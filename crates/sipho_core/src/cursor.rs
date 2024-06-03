@@ -1,4 +1,4 @@
-use crate::{inputs::ControlState, prelude::*};
+use crate::prelude::*;
 use bevy::{ecs::system::SystemParam, prelude::*, window::PrimaryWindow};
 
 /// Plugin to manage a virtual cursor.
