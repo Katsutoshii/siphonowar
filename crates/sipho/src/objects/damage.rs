@@ -68,6 +68,7 @@ impl Health {
                     audio.send(AudioEvent {
                         sample: AudioSample::Punch,
                         position: Some(position.0),
+                        ..default()
                     });
                 }
             }
@@ -141,6 +142,7 @@ impl DamageEvent {
                     audio_events.send(AudioEvent {
                         sample: AudioSample::RandomPop,
                         position: Some(*position),
+                        ..default()
                     });
                 }
                 if event.stun {

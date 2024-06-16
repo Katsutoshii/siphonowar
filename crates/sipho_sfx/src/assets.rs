@@ -1,5 +1,9 @@
 use crate::prelude::*;
-use bevy::{prelude::*, utils::HashMap};
+use bevy::{
+    audio::{PlaybackMode, Volume},
+    prelude::*,
+    utils::HashMap,
+};
 
 pub struct AudioAssetsPlugin;
 impl Plugin for AudioAssetsPlugin {
@@ -15,6 +19,8 @@ impl Plugin for AudioAssetsPlugin {
 pub enum AudioSample {
     #[default]
     None,
+    TranceIntro,
+    Trance,
     Underwater,
     Snap,
     Punch,
@@ -26,8 +32,31 @@ pub enum AudioSample {
     Zap(u8),
 }
 impl AudioSample {
+    pub const ALL: [Self; 18] = [
+        Self::TranceIntro,
+        Self::Trance,
+        Self::Underwater,
+        Self::Punch,
+        Self::Snap,
+        Self::Pop(1),
+        Self::Pop(2),
+        Self::Pop(3),
+        Self::Pop(4),
+        Self::Pop(5),
+        Self::Pop(6),
+        Self::Pop(7),
+        Self::Bubble(1),
+        Self::Bubble(2),
+        Self::Bubble(3),
+        Self::Zap(1),
+        Self::Zap(2),
+        Self::Zap(3),
+    ];
+    pub const SINGLES: [Self; 3] = [Self::TranceIntro, Self::Trance, Self::Underwater];
     pub fn get_path(self) -> &'static str {
         match self {
+            Self::TranceIntro => "sounds/bgm/trance-intro.ogg",
+            Self::Trance => "sounds/bgm/trance-loop.ogg",
             Self::Underwater => "sounds/ambience/underwater.ogg",
             Self::Punch => "sounds/punch.ogg",
             Self::Snap => "sounds/snap.ogg",
@@ -50,6 +79,58 @@ impl AudioSample {
             Self::None => unreachable!(),
         }
     }
+
+    const DEFAULT_SETTINGS: PlaybackSettings = PlaybackSettings {
+        spatial: true,
+        paused: true,
+        ..PlaybackSettings::ONCE
+    };
+
+    pub fn get_settings(self) -> PlaybackSettings {
+        match self {
+            Self::TranceIntro => PlaybackSettings {
+                volume: Volume::new(0.13),
+                mode: PlaybackMode::Once,
+                ..Self::DEFAULT_SETTINGS
+            },
+            Self::Trance => PlaybackSettings {
+                volume: Volume::new(0.13),
+                mode: PlaybackMode::Loop,
+                ..Self::DEFAULT_SETTINGS
+            },
+            Self::Underwater => PlaybackSettings {
+                volume: Volume::new(1.2),
+                mode: PlaybackMode::Loop,
+                ..Self::DEFAULT_SETTINGS
+            },
+            AudioSample::Punch => PlaybackSettings {
+                volume: Volume::new(0.85),
+                ..Self::DEFAULT_SETTINGS
+            },
+            AudioSample::Pop(_) => PlaybackSettings {
+                volume: Volume::new(0.6),
+                ..Self::DEFAULT_SETTINGS
+            },
+            AudioSample::Bubble(_) => PlaybackSettings {
+                volume: Volume::new(1.0),
+                ..Self::DEFAULT_SETTINGS
+            },
+            AudioSample::Zap(_) => PlaybackSettings {
+                volume: Volume::new(0.35),
+                ..Self::DEFAULT_SETTINGS
+            },
+            _ => default(),
+        }
+    }
+
+    pub fn get_canonical(self) -> Self {
+        match self {
+            Self::Pop(_) => Self::RandomPop,
+            Self::Bubble(_) => Self::RandomBubble,
+            Self::Zap(_) => Self::RandomZap,
+            x => x,
+        }
+    }
 }
 
 #[derive(Resource, Reflect)]
@@ -60,27 +141,10 @@ pub struct AudioAssets {
 impl FromWorld for AudioAssets {
     fn from_world(world: &mut World) -> Self {
         let result = Self {
-            samples: [
-                AudioSample::Underwater,
-                AudioSample::Punch,
-                AudioSample::Snap,
-                AudioSample::Pop(1),
-                AudioSample::Pop(2),
-                AudioSample::Pop(3),
-                AudioSample::Pop(4),
-                AudioSample::Pop(5),
-                AudioSample::Pop(6),
-                AudioSample::Pop(7),
-                AudioSample::Bubble(1),
-                AudioSample::Bubble(2),
-                AudioSample::Bubble(3),
-                AudioSample::Zap(1),
-                AudioSample::Zap(2),
-                AudioSample::Zap(3),
-            ]
-            .map(|s| (s, world.load_asset(s.get_path())))
-            .into_iter()
-            .collect(),
+            samples: AudioSample::ALL
+                .map(|s| (s, world.load_asset(s.get_path())))
+                .into_iter()
+                .collect(),
         };
         let mut load_state = world.resource_mut::<AssetLoadState>();
         for (_sample, handle) in &result.samples {

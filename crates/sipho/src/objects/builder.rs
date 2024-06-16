@@ -242,6 +242,7 @@ impl ObjectBuilder {
                                             audio.send(AudioEvent {
                                                 sample: AudioSample::RandomBubble,
                                                 position: Some(event.position),
+                                                ..default()
                                             });
                                         }
                                     }

@@ -9,7 +9,12 @@ impl Plugin for AmbiencePlugin {
 
 fn play_ambience(mut audio: EventWriter<AudioEvent>) {
     audio.send(AudioEvent {
-        position: None,
         sample: AudioSample::Underwater,
+        ..default()
+    });
+    audio.send(AudioEvent {
+        sample: AudioSample::TranceIntro,
+        queue: vec![AudioSample::Trance],
+        ..default()
     });
 }

@@ -1,9 +1,5 @@
 use crate::prelude::*;
-use bevy::{
-    audio::{PlaybackMode, Volume},
-    prelude::*,
-    utils::HashMap,
-};
+use bevy::{prelude::*, utils::HashMap};
 
 pub struct AudioManagerPlugin;
 impl Plugin for AudioManagerPlugin {
@@ -20,6 +16,7 @@ impl Plugin for AudioManagerPlugin {
 #[derive(Component, Default)]
 pub struct AudioEmitter {
     pub sample: AudioSample,
+    pub next: Option<AudioEvent>,
 }
 
 #[derive(Bundle, Default)]
@@ -29,81 +26,17 @@ pub struct AudioEmitterBundle {
     pub audio: AudioBundle,
 }
 impl AudioEmitterBundle {
-    const DEFAULT_SETTINGS: PlaybackSettings = PlaybackSettings {
-        spatial: true,
-        paused: true,
-        ..PlaybackSettings::ONCE
-    };
-
     pub fn new(sample: AudioSample, assets: &AudioAssets) -> Self {
-        match sample {
-            AudioSample::Underwater => Self {
-                emitter: AudioEmitter {
-                    sample: AudioSample::Underwater,
-                },
-                audio: AudioBundle {
-                    source: assets.samples[&AudioSample::Underwater].clone(),
-                    settings: PlaybackSettings {
-                        volume: Volume::new(1.1),
-                        mode: PlaybackMode::Loop,
-                        ..Self::DEFAULT_SETTINGS
-                    },
-                },
+        Self {
+            audio: AudioBundle {
+                source: assets.samples[&sample].clone(),
+                settings: sample.get_settings(),
+            },
+            emitter: AudioEmitter {
+                sample: sample.get_canonical(),
                 ..default()
             },
-            AudioSample::Punch => Self {
-                emitter: AudioEmitter {
-                    sample: AudioSample::Punch,
-                },
-                audio: AudioBundle {
-                    source: assets.samples[&AudioSample::Punch].clone(),
-                    settings: PlaybackSettings {
-                        volume: Volume::new(0.8),
-                        ..Self::DEFAULT_SETTINGS
-                    },
-                },
-                ..default()
-            },
-            AudioSample::Pop(i) => Self {
-                emitter: AudioEmitter {
-                    sample: AudioSample::RandomPop,
-                },
-                audio: AudioBundle {
-                    source: assets.samples[&AudioSample::Pop(i)].clone(),
-                    settings: PlaybackSettings {
-                        volume: Volume::new(0.5),
-                        ..Self::DEFAULT_SETTINGS
-                    },
-                },
-                ..default()
-            },
-            AudioSample::Bubble(i) => Self {
-                emitter: AudioEmitter {
-                    sample: AudioSample::RandomBubble,
-                },
-                audio: AudioBundle {
-                    source: assets.samples[&AudioSample::Bubble(i)].clone(),
-                    settings: PlaybackSettings {
-                        volume: Volume::new(0.8),
-                        ..Self::DEFAULT_SETTINGS
-                    },
-                },
-                ..default()
-            },
-            AudioSample::Zap(i) => Self {
-                emitter: AudioEmitter {
-                    sample: AudioSample::RandomZap,
-                },
-                audio: AudioBundle {
-                    source: assets.samples[&AudioSample::Zap(i)].clone(),
-                    settings: PlaybackSettings {
-                        volume: Volume::new(0.3),
-                        ..Self::DEFAULT_SETTINGS
-                    },
-                },
-                ..default()
-            },
-            _ => Self { ..default() },
+            ..default()
         }
     }
 }
@@ -115,81 +48,90 @@ pub struct SpatialAudioManager {
 }
 impl SpatialAudioManager {
     pub fn setup(mut commands: Commands, assets: Res<AudioAssets>) {
-        let underwater = commands
-            .spawn(AudioEmitterBundle::new(AudioSample::Underwater, &assets))
-            .id();
-        let punches: Vec<Entity> = (0..3)
-            .map(|_| {
-                commands
-                    .spawn(AudioEmitterBundle::new(AudioSample::Punch, &assets))
-                    .id()
-            })
-            .collect();
-        let pops: Vec<Entity> = (0..14)
-            .map(|i| {
-                commands
-                    .spawn(AudioEmitterBundle::new(
-                        AudioSample::Pop(i % 7 + 1),
-                        &assets,
-                    ))
-                    .id()
-            })
-            .collect();
-        let bubbles: Vec<Entity> = (0..6)
-            .map(|i| {
-                commands
-                    .spawn(AudioEmitterBundle::new(
-                        AudioSample::Bubble(i % 3 + 1),
-                        &assets,
-                    ))
-                    .id()
-            })
-            .collect();
-        let zaps: Vec<Entity> = (0..6)
-            .map(|i| {
-                commands
-                    .spawn(AudioEmitterBundle::new(
-                        AudioSample::Zap(i % 3 + 1),
-                        &assets,
-                    ))
-                    .id()
-            })
-            .collect();
-        commands
-            .spawn(SpatialAudioManagerBundle::default())
-            .push_children(&[underwater])
-            .push_children(&pops)
-            .insert(SpatialAudioManager {
-                samplers: [
-                    (AudioSample::Underwater, AudioSampler::Single(underwater)),
-                    (
-                        AudioSample::RandomPop,
-                        AudioSampler::Random(RandomSampler {
-                            available: pops.into_iter().collect(),
-                        }),
-                    ),
-                    (
-                        AudioSample::Punch,
-                        AudioSampler::Random(RandomSampler {
-                            available: punches.into_iter().collect(),
-                        }),
-                    ),
-                    (
-                        AudioSample::RandomBubble,
-                        AudioSampler::Random(RandomSampler {
-                            available: bubbles.into_iter().collect(),
-                        }),
-                    ),
-                    (
-                        AudioSample::RandomZap,
-                        AudioSampler::Random(RandomSampler {
-                            available: zaps.into_iter().collect(),
-                        }),
-                    ),
-                ]
-                .into_iter()
-                .collect(),
-            });
+        let emitters = {
+            let mut emitters = HashMap::new();
+            for sample in AudioSample::SINGLES {
+                emitters.insert(
+                    sample,
+                    commands
+                        .spawn(AudioEmitterBundle::new(sample, &assets))
+                        .id(),
+                );
+            }
+            emitters
+        };
+        let multi_emitters = {
+            let mut emitters: HashMap<AudioSample, Vec<Entity>> = HashMap::new();
+            emitters.insert(
+                AudioSample::RandomPop,
+                (0..14)
+                    .map(|i| {
+                        commands
+                            .spawn(AudioEmitterBundle::new(
+                                AudioSample::Pop(i % 7 + 1),
+                                &assets,
+                            ))
+                            .id()
+                    })
+                    .collect(),
+            );
+            emitters.insert(
+                AudioSample::RandomBubble,
+                (0..6)
+                    .map(|i| {
+                        commands
+                            .spawn(AudioEmitterBundle::new(
+                                AudioSample::Bubble(i % 3 + 1),
+                                &assets,
+                            ))
+                            .id()
+                    })
+                    .collect(),
+            );
+            emitters.insert(
+                AudioSample::Punch,
+                (0..3)
+                    .map(|_| {
+                        commands
+                            .spawn(AudioEmitterBundle::new(AudioSample::Punch, &assets))
+                            .id()
+                    })
+                    .collect(),
+            );
+            emitters.insert(
+                AudioSample::RandomZap,
+                (0..6)
+                    .map(|i| {
+                        commands
+                            .spawn(AudioEmitterBundle::new(
+                                AudioSample::Zap(i % 3 + 1),
+                                &assets,
+                            ))
+                            .id()
+                    })
+                    .collect(),
+            );
+            emitters
+        };
+
+        let mut samplers = HashMap::new();
+        let mut parent = commands.spawn(SpatialAudioManagerBundle::default());
+
+        for (sample, emitter) in emitters {
+            samplers.insert(sample, AudioSampler::Single(emitter));
+            parent.push_children(&[emitter]);
+        }
+        for (sample, emitters) in multi_emitters {
+            parent.push_children(&emitters);
+            samplers.insert(
+                sample,
+                AudioSampler::Random(RandomSampler {
+                    available: emitters.into_iter().collect(),
+                }),
+            );
+        }
+
+        parent.insert(SpatialAudioManager { samplers });
     }
 
     pub fn get_sample(&mut self, sample: AudioSample) -> Option<Entity> {
@@ -209,14 +151,18 @@ impl SpatialAudioManager {
     /// Clean up finished samples.
     pub fn update(
         mut manager: Query<&mut SpatialAudioManager>,
-        sinks: Query<(Entity, &SpatialAudioSink, &AudioEmitter)>,
+        mut sinks: Query<(Entity, &SpatialAudioSink, &mut AudioEmitter)>,
         mut commands: Commands,
+        mut audio: EventWriter<AudioEvent>,
     ) {
         let mut manager = manager.single_mut();
-        for (entity, sink, emitter) in sinks.iter() {
+        for (entity, sink, mut emitter) in sinks.iter_mut() {
             if sink.empty() {
                 manager.free(entity, emitter.sample);
                 commands.entity(entity).remove::<SpatialAudioSink>();
+                if let Some(event) = emitter.next.take() {
+                    audio.send(event.clone());
+                }
             }
         }
     }

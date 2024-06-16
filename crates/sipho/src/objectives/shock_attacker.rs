@@ -131,6 +131,7 @@ impl ShockAttacker {
                     audio.send(AudioEvent {
                         sample: AudioSample::RandomZap,
                         position: Some(position.0),
+                        ..default()
                     });
                 }
             }

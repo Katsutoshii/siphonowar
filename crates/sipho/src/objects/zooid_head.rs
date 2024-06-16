@@ -176,6 +176,7 @@ impl ZooidHead {
             audio.send(AudioEvent {
                 sample: AudioSample::RandomBubble,
                 position: Some(position.0),
+                ..default()
             });
             elastic_events.send(SpawnElasticEvent {
                 elastic: Elastic((entity, entity_commands.id())),

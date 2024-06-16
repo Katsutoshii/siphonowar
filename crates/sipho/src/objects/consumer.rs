@@ -82,6 +82,7 @@ impl Consumer {
                     audio.send(AudioEvent {
                         sample: AudioSample::RandomBubble,
                         position: Some(position.0),
+                        ..default()
                     });
                     damage_events.send(DamageEvent {
                         damager: entity,
