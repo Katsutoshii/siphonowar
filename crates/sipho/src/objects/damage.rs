@@ -59,7 +59,7 @@ impl Health {
                 if object != &Object::Food {
                     firework_events.send(FireworkSpec {
                         size: VfxSize::Medium,
-                        position: position.extend(zindex::ZOOIDS_MAX),
+                        position: position.extend(0.0),
                         color: (*team).into(),
                     });
                     audio.send(AudioEvent {
@@ -112,7 +112,7 @@ impl DamageEvent {
                     firework_events.send(FireworkSpec {
                         size,
                         color: team.into(),
-                        position: position.extend(zindex::ZOOIDS_MAX),
+                        position: position.extend(0.0),
                     });
                     audio_events.send(AudioEvent {
                         sample: AudioSample::RandomPop,

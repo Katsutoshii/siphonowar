@@ -162,7 +162,7 @@ impl FireworkSpec {
     }
 }
 
-pub const POOL_SIZE: usize = 128;
+pub const POOL_SIZE: usize = 256;
 #[derive(Resource, Default, Deref, DerefMut)]
 pub struct ParticleEffectPool<const T: u8>(EntityPool<POOL_SIZE>);
 
