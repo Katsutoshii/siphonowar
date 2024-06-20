@@ -61,14 +61,17 @@ impl Navigator {
     }
 
     pub fn update_force(
-        mut query: Query<(
-            &Object,
-            &Navigator,
-            &mut Transform,
-            &Position,
-            &Velocity,
-            &mut Force,
-        )>,
+        mut query: Query<
+            (
+                &Object,
+                &Navigator,
+                &mut Transform,
+                &Position,
+                &Velocity,
+                &mut Force,
+            ),
+            Without<Stunned>,
+        >,
         grid: ResMut<NavigationGrid2>,
         configs: Res<ObjectConfigs>,
         spec: Res<GridSpec>,

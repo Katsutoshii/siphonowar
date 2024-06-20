@@ -27,7 +27,6 @@ pub enum Objective {
     AttackFollowEntity(Entity),
     /// Attack Entity
     AttackEntity(Entity),
-    Stunned(Timer),
 }
 impl Objective {
     /// When this objective is added, remove existing components.
@@ -42,7 +41,6 @@ impl Objective {
         let mut commands = commands.entity(components.entity);
         commands.remove::<(DashAttacker, ShockAttacker, Navigator)>();
         match self {
-            Self::Stunned(_) => {}
             Self::Idle => {}
             Self::FollowEntity(entity) | Self::AttackFollowEntity(entity) => {
                 let (position, _carried_by, _path_follower) = targets.get(*entity)?;
@@ -99,7 +97,6 @@ impl Objective {
         targets: &Query<(&Position, &CarriedBy, Option<&PathToHeadFollower>)>,
     ) -> Result<(), Error> {
         match self {
-            Self::Stunned(_) => {}
             Self::Idle => {}
             Self::FollowEntity(entity) | Self::AttackFollowEntity(entity) => {
                 let (position, _carried_by, _path_follower) = targets.get(*entity)?;
@@ -131,7 +128,7 @@ impl Objective {
             Self::AttackEntity(entity)
             | Self::AttackFollowEntity(entity)
             | Self::FollowEntity(entity) => Some(*entity),
-            Self::Idle | Self::Stunned(_) => None,
+            Self::Idle => None,
         }
     }
 }
@@ -187,12 +184,6 @@ impl Objectives {
                                 .push(Objective::AttackEntity(neighbor.entity));
                         }
                         Objective::FollowEntity(_) => {}
-                        Objective::Stunned(timer) => {
-                            if timer.finished() {
-                                object.objectives.pop();
-                                object.objectives.push(Objective::Idle);
-                            }
-                        }
                     }
                 }
             }
@@ -204,7 +195,6 @@ impl Objectives {
         targets: Query<(&Position, &CarriedBy, Option<&PathToHeadFollower>)>,
         mut commands: Commands,
         configs: Res<ObjectConfigs>,
-        time: Res<Time>,
     ) {
         for (mut objectives, object, mut components) in query.iter_mut() {
             let config = configs.get(object).unwrap();
@@ -228,9 +218,6 @@ impl Objectives {
                 } else {
                     objectives.pop();
                 }
-            }
-            if let Objective::Stunned(timer) = objectives.bypass_change_detection().last_mut() {
-                timer.tick(time.delta());
             }
         }
     }

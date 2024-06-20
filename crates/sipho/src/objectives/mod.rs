@@ -4,18 +4,22 @@
 use crate::prelude::*;
 
 pub mod config;
+pub mod cooldown;
 pub mod dash_attacker;
 pub mod debug;
 pub mod navigator;
 pub mod objective;
 pub mod shock_attacker;
+pub mod stun;
 
 pub use {
     config::ObjectiveConfig,
+    cooldown::Cooldown,
     dash_attacker::DashAttacker,
     debug::ObjectiveDebugger,
     navigator::Navigator,
     objective::{Objective, Objectives},
+    stun::Stunned,
 };
 
 pub struct ObjectivePlugin;
@@ -40,6 +44,8 @@ impl Plugin for ObjectivePlugin {
                 navigator::NavigatorPlugin,
                 dash_attacker::DashAttackerPlugin,
                 shock_attacker::ShockAttackerPlugin,
+                cooldown::CooldownPlugin,
+                stun::StunPlugin,
             ));
     }
 }

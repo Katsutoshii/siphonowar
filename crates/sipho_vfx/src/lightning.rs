@@ -1,4 +1,4 @@
-use std::f32::consts::PI;
+use std::{f32::consts::PI, time::Duration};
 
 use bevy::ecs::system::SystemParam;
 use bevy_hanabi::ParticleEffect;
@@ -38,6 +38,8 @@ pub struct LightningCommands<'w, 's> {
 }
 
 impl LightningCommands<'_, '_> {
+    pub const DURATION: Duration = Duration::from_millis(100);
+
     fn setup(mut commands: LightningCommands) {
         let parent = commands
             .commands
@@ -48,7 +50,7 @@ impl LightningCommands<'_, '_> {
                 .commands
                 .spawn(LightningBundle {
                     lightning: Lightning {
-                        timer: Timer::from_seconds(0.1, TimerMode::Once),
+                        timer: Timer::new(Self::DURATION, TimerMode::Once),
                     },
                     pbr: PbrBundle {
                         mesh: commands.assets.lightning_mesh.clone(),

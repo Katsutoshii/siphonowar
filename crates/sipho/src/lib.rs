@@ -8,7 +8,9 @@ pub mod ui;
 
 pub mod prelude {
     pub use crate::{
-        objectives::{Objective, ObjectiveConfig, ObjectiveDebugger, Objectives},
+        objectives::{
+            Cooldown, Navigator, Objective, ObjectiveConfig, ObjectiveDebugger, Objectives, Stunned,
+        },
         objects::*,
         ui::{Selectable, Selected, Waypoint},
         SiphonowarPlugin,

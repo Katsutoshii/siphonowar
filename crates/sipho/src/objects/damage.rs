@@ -1,9 +1,6 @@
 use std::time::Duration;
 
-use crate::{
-    objectives::{dash_attacker::DashAttackerState, DashAttacker},
-    prelude::*,
-};
+use crate::{objectives::Stunned, prelude::*};
 
 pub struct DamagePlugin;
 impl Plugin for DamagePlugin {
@@ -86,49 +83,27 @@ pub struct DamageEvent {
 }
 impl DamageEvent {
     pub fn update(
-        mut query: Query<(
-            Option<&mut DashAttacker>,
-            &mut Force,
-            &mut Health,
-            &Team,
-            &Object,
-            &Position,
-            &mut Objectives,
-        )>,
+        mut query: Query<(Entity, &mut Health, &Team, &Object, &Position)>,
+        mut forces: Query<&mut Force>,
         mut events: EventReader<DamageEvent>,
         mut firework_events: EventWriter<FireworkSpec>,
         mut audio_events: EventWriter<AudioEvent>,
+        mut commands: Commands,
     ) {
         for event in events.read() {
             let knockback_amount = 3.;
             // Knock back the damager
-            if let Ok((_, mut force, _health, _team, _object, _transform, _)) =
-                query.get_mut(event.damager)
-            {
+            if let Ok(mut force) = forces.get_mut(event.damager) {
                 *force += Force(*event.velocity * -1. * knockback_amount);
             }
             // Knock forward the damaged
-            if let Ok((_, mut force, _health, _team, _object, _transform, _)) =
-                query.get_mut(event.damaged)
-            {
+            if let Ok(mut force) = forces.get_mut(event.damaged) {
                 *force += Force(*event.velocity * 0.5 * knockback_amount);
             }
             // Reduce health and set off firework for the damaged.
-            if let Ok((
-                mut attacker,
-                mut _force,
-                mut health,
-                &team,
-                object,
-                &position,
-                mut objectives,
-            )) = query.get_mut(event.damaged)
+            if let Ok((entity, mut health, &team, object, &position)) = query.get_mut(event.damaged)
             {
                 if health.damageable {
-                    if let Some(attacker) = attacker.as_deref_mut() {
-                        attacker.state = DashAttackerState::Stunned;
-                        attacker.timer.set_duration(Duration::from_secs(0));
-                    }
                     health.damage(event.amount);
                 };
 
@@ -146,13 +121,9 @@ impl DamageEvent {
                     });
                 }
                 if event.stun {
-                    if let Objective::Stunned(_) = objectives.last() {
-                    } else {
-                        objectives.push(Objective::Stunned(Timer::from_seconds(
-                            0.5,
-                            TimerMode::Once,
-                        )));
-                    }
+                    commands
+                        .entity(entity)
+                        .insert(Stunned::new(Duration::from_millis(500)));
                 }
             }
         }
