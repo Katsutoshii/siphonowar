@@ -41,12 +41,12 @@ impl Health {
 
     /// System for objects dying.
     pub fn death(
-        mut objects: Query<(Entity, &Object, &Health, &Position, &Team)>,
+        mut objects: Query<(Entity, &Object, &Health, &Position, &Team, &Visibility)>,
         mut object_commands: ObjectCommands,
         mut firework_events: EventWriter<FireworkSpec>,
         mut audio: EventWriter<AudioEvent>,
     ) {
-        for (entity, object, health, position, team) in &mut objects {
+        for (entity, object, health, position, team, vis) in &mut objects {
             if health.health <= 0 {
                 object_commands.deferred_despawn(entity);
                 if object == &Object::Plankton {
@@ -56,7 +56,7 @@ impl Health {
                         ..default()
                     });
                 }
-                if object != &Object::Food {
+                if object != &Object::Food && vis != Visibility::Hidden {
                     firework_events.send(FireworkSpec {
                         size: VfxSize::Medium,
                         position: position.extend(0.0),
@@ -83,7 +83,7 @@ pub struct DamageEvent {
 }
 impl DamageEvent {
     pub fn update(
-        mut query: Query<(Entity, &mut Health, &Team, &Object, &Position)>,
+        mut query: Query<(Entity, &mut Health, &Team, &Object, &Position, &Visibility)>,
         mut forces: Query<&mut Force>,
         mut events: EventReader<DamageEvent>,
         mut firework_events: EventWriter<FireworkSpec>,
@@ -101,13 +101,14 @@ impl DamageEvent {
                 *force += Force(*event.velocity * 0.5 * knockback_amount);
             }
             // Reduce health and set off firework for the damaged.
-            if let Ok((entity, mut health, &team, object, &position)) = query.get_mut(event.damaged)
+            if let Ok((entity, mut health, &team, object, &position, &vis)) =
+                query.get_mut(event.damaged)
             {
                 if health.damageable {
                     health.damage(event.amount);
                 };
 
-                if object != &Object::Food {
+                if object != &Object::Food && vis != Visibility::Hidden {
                     let size = VfxSize::Small;
                     firework_events.send(FireworkSpec {
                         size,
