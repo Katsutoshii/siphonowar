@@ -1,7 +1,6 @@
 use crate::prelude::*;
 use bevy::ecs::system::{QueryLens, SystemParam};
 use bevy::utils::smallvec::SmallVec;
-use bevy::utils::FloatOrd;
 use sipho_core::grid::fog::FogConfig;
 
 use super::ObjectAssets;
@@ -14,11 +13,7 @@ impl Plugin for ElasticPlugin {
             .add_systems(
                 FixedUpdate,
                 (
-                    (
-                        Elastic::tie_cursor,
-                        Elastic::tie_selection,
-                        SpawnElasticEvent::update,
-                    )
+                    (Elastic::tie_selection, SpawnElasticEvent::update)
                         .chain()
                         .in_set(FixedUpdateStage::PostSpawn),
                     (Elastic::update).in_set(FixedUpdateStage::AccumulateForces),
@@ -154,44 +149,6 @@ impl Elastic {
             translation: ((position1 + position2) / 2.).extend(depth),
             scale: Vec3::new(magnitude / 2., width, width),
             rotation: Quat::from_axis_angle(Vec3::Z, delta.to_angle()),
-        }
-    }
-    pub fn tie_cursor(
-        mut control_events: EventReader<ControlEvent>,
-        positions: Query<&Position>,
-        config: Res<FogConfig>,
-        grid: Res<Grid2<TeamEntitySets>>,
-        mut last_entity: Local<Option<Entity>>,
-        mut events: EventWriter<SpawnElasticEvent>,
-    ) {
-        for control_event in control_events.read() {
-            if control_event.is_pressed(ControlAction::Tie) {
-                let entities = grid.get_entities_in_radius(
-                    control_event.position,
-                    32.0,
-                    &[config.player_team],
-                );
-                let mut dudes: Vec<Entity> = entities.iter().copied().collect();
-
-                dudes.sort_by_key(|&entity| {
-                    let position = positions.get(entity).unwrap();
-                    FloatOrd(Vec2::distance_squared(control_event.position, position.0))
-                });
-                if let Some(&dude) = dudes.first() {
-                    if let Some(last_entity) = *last_entity {
-                        if last_entity != dude {
-                            events.send(SpawnElasticEvent {
-                                elastic: Elastic((last_entity, dude)),
-                                team: config.player_team,
-                            });
-                        }
-                    }
-                    *last_entity = Some(dude);
-                }
-            }
-            if control_event.is_released(ControlAction::Tie) {
-                *last_entity = None;
-            }
         }
     }
     pub fn tie_selection(

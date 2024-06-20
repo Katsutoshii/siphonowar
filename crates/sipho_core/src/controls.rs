@@ -21,6 +21,10 @@ impl Plugin for ControlActionPlugin {
             .add_systems(
                 FixedUpdate,
                 ControlEvent::update.in_set(FixedUpdateStage::Control),
+            )
+            .add_systems(
+                OnExit(GameState::Paused),
+                ControlEvent::release_all.in_set(FixedUpdateStage::Control),
             );
     }
 }
@@ -181,6 +185,29 @@ impl ControlEvent {
     pub fn is_released(&self, action: ControlAction) -> bool {
         self.action == action && self.state == ButtonState::Released
     }
+
+    pub fn release_all(
+        mut raycast_events: EventReader<RaycastEvent>,
+        mut control_events: EventWriter<ControlEvent>,
+        mut state: ResMut<ControlState>,
+        grid_spec: Option<Res<GridSpec>>,
+    ) {
+        let Some(grid_spec) = grid_spec else {
+            return;
+        };
+        for (&action, _) in state.held_actions.iter() {
+            if let Some(raycast_event) = raycast_events.read().next() {
+                control_events.send(ControlEvent {
+                    action,
+                    state: ButtonState::Released,
+                    entity: raycast_event.entity,
+                    position: ControlEvent::compute_position(&grid_spec, raycast_event),
+                    duration: Duration::default(),
+                });
+            }
+        }
+        state.release_all();
+    }
     #[allow(clippy::too_many_arguments)]
     pub fn update(
         mut raycast_events: EventReader<RaycastEvent>,
@@ -190,9 +217,7 @@ impl ControlEvent {
         time: Res<Time>,
         mut state: ResMut<ControlState>,
     ) {
-        let grid_spec = if let Some(grid_spec) = grid_spec {
-            grid_spec
-        } else {
+        let Some(grid_spec) = grid_spec else {
             return;
         };
 
@@ -320,7 +345,7 @@ impl ControlAction {
             Self::Select => Duration::from_millis(5),
             Self::DragCamera => Duration::from_millis(5),
             Self::PanCamera => Duration::from_millis(5),
-            Self::Worker | Self::Armor | Self::Shocker => Duration::from_millis(1),
+            Self::Worker | Self::Armor | Self::Shocker | Self::Tie => Duration::from_millis(1),
             _ => Duration::from_millis(0),
         }
     }

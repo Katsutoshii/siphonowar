@@ -21,8 +21,6 @@ pub mod prelude {
     pub use sipho_vfx::prelude::*;
 }
 
-pub use bevy_mod_outline::*;
-
 use prelude::*;
 
 pub struct SiphonowarPlugin;
