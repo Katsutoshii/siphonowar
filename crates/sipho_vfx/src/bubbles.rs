@@ -47,9 +47,9 @@ impl BubbleSpawner {
         // per-particle rotation)
         let rotation_attr = writer.attr(Attribute::F32_0).expr();
 
-        let effect = effects.add(
+        let effect: Handle<EffectAsset> = effects.add(
             EffectAsset::new(
-                2048,
+                vec![2048],
                 Spawner::rate(CpuValue::Uniform((10., 15.))),
                 writer.finish(),
             )
@@ -58,33 +58,45 @@ impl BubbleSpawner {
             .init(init_age)
             .init(init_lifetime)
             .init(init_rotation)
-            .update(update_accel)
-            .render(ParticleTextureModifier {
-                texture: texture_handle.clone(),
-                sample_mapping: ImageSampleMapping::ModulateOpacityFromR,
-            })
-            .render(OrientModifier {
-                mode: OrientMode::FaceCameraPosition,
-                rotation: Some(rotation_attr),
-            })
-            .render(ColorOverLifetimeModifier {
-                gradient: {
-                    let mut gradient = Gradient::new();
-                    gradient.add_key(0.0, Vec4::new(0.9, 1.0, 1.0, 0.0));
-                    gradient.add_key(0.5, Vec4::new(0.9, 1.0, 1.0, 0.07));
-                    gradient.add_key(1.0, Vec4::new(0.9, 1.0, 1.0, 0.0));
-                    gradient
+            .update_groups(update_accel, ParticleGroupSet(1))
+            .render_groups(
+                ParticleTextureModifier {
+                    texture: texture_handle.clone(),
+                    sample_mapping: ImageSampleMapping::ModulateOpacityFromR,
                 },
-            })
-            .render(SizeOverLifetimeModifier {
-                gradient: {
-                    let mut gradient = Gradient::new();
-                    gradient.add_key(0.0, Vec2::splat(5.0));
-                    gradient.add_key(1.0, Vec2::splat(9.0));
-                    gradient
+                ParticleGroupSet(1),
+            )
+            .render_groups(
+                OrientModifier {
+                    mode: OrientMode::FaceCameraPosition,
+                    rotation: Some(rotation_attr),
                 },
-                screen_space_size: false,
-            }),
+                ParticleGroupSet(1),
+            )
+            .render_groups(
+                ColorOverLifetimeModifier {
+                    gradient: {
+                        let mut gradient = Gradient::new();
+                        gradient.add_key(0.0, Vec4::new(0.9, 1.0, 1.0, 0.0));
+                        gradient.add_key(0.5, Vec4::new(0.9, 1.0, 1.0, 0.07));
+                        gradient.add_key(1.0, Vec4::new(0.9, 1.0, 1.0, 0.0));
+                        gradient
+                    },
+                },
+                ParticleGroupSet(1),
+            )
+            .render_groups(
+                SizeOverLifetimeModifier {
+                    gradient: {
+                        let mut gradient = Gradient::new();
+                        gradient.add_key(0.0, Vec2::splat(5.0));
+                        gradient.add_key(1.0, Vec2::splat(9.0));
+                        gradient
+                    },
+                    screen_space_size: false,
+                },
+                ParticleGroupSet(1),
+            ),
         );
 
         let camera_transform = camera.single();

@@ -67,7 +67,7 @@ pub fn firework_effect(color_gradient: Gradient<Vec4>, n: f32) -> EffectAsset {
     };
 
     EffectAsset::new(
-        n as u32,
+        vec![n as u32],
         Spawner::once(n.into(), true).with_starts_active(false),
         writer.finish(),
     )
@@ -76,14 +76,20 @@ pub fn firework_effect(color_gradient: Gradient<Vec4>, n: f32) -> EffectAsset {
     .init(init_vel)
     .init(init_age)
     .init(init_lifetime)
-    .update(update_drag)
-    .render(ColorOverLifetimeModifier {
-        gradient: color_gradient,
-    })
-    .render(SizeOverLifetimeModifier {
-        gradient: size_gradient1,
-        screen_space_size: false,
-    })
+    .update_groups(update_drag, ParticleGroupSet(1))
+    .render_groups(
+        ColorOverLifetimeModifier {
+            gradient: color_gradient,
+        },
+        ParticleGroupSet(1),
+    )
+    .render_groups(
+        SizeOverLifetimeModifier {
+            gradient: size_gradient1,
+            screen_space_size: false,
+        },
+        ParticleGroupSet(1),
+    )
 }
 
 #[derive(Resource)]
