@@ -1,6 +1,6 @@
-use bevy::{ecs::system::SystemParam, prelude::*, ui::RelativeCursorPosition, utils::FloatOrd};
-
 use crate::{Grid2, Team, TeamEntitySets};
+use bevy::{ecs::system::SystemParam, prelude::*, ui::RelativeCursorPosition, utils::FloatOrd};
+use enum_iterator::all;
 
 #[derive(Component, Default, PartialEq, Debug, Clone, Copy, Reflect)]
 #[reflect(Component)]
@@ -57,9 +57,12 @@ impl RaycastCommands<'_, '_> {
 
         let radius = 32.;
         let n = 1;
-        let entities =
-            self.grid
-                .get_n_entities_in_radius(event.world_position, radius, &Team::ALL, n);
+        let entities = self.grid.get_n_entities_in_radius(
+            event.world_position,
+            radius,
+            &all::<Team>().collect::<Vec<Team>>(),
+            n,
+        );
         for (entity, _target, mesh_handle, transform) in entities
             .iter()
             .filter_map(|&entity| self.grid_meshes.get(entity).ok())

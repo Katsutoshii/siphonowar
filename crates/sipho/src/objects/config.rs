@@ -1,5 +1,6 @@
 use crate::prelude::*;
 use bevy::utils::HashMap;
+use enum_iterator::all;
 use sipho_core::inputs::InputAction;
 
 pub struct ObjectConfigPlugin;
@@ -84,7 +85,7 @@ impl Default for ObjectConfig {
             spawn_cost: 4,
             interactions: InteractionConfigs({
                 let mut interactions = HashMap::new();
-                for object in Object::ALL {
+                for object in all::<Object>() {
                     interactions.insert(object, InteractionConfig::default());
                 }
                 interactions
@@ -106,9 +107,9 @@ impl ObjectConfigs {
     /// Setup object config.
     pub fn setup(mut configs: ResMut<ObjectConfigs>) {
         // Initialize defaults
-        for object in Object::ALL {
+        for object in all::<Object>() {
             let config = configs.entry(object).or_insert(default());
-            for other in Object::ALL {
+            for other in all::<Object>() {
                 config.interactions.entry(other).or_insert(default());
             }
         }

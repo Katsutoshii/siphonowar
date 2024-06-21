@@ -14,7 +14,7 @@ derive_more = "0.99.17"
 image = "0.24.9"
 rand = "0.8.5"
 serde = "1.0.192"
-
+enum-iterator = "1.4.1"
 bevy_newtonian2d = {path = "../bevy_newtonian2d"}
 
 [lints]

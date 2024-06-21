@@ -9,6 +9,7 @@ use super::{
 };
 use crate::prelude::*;
 use bevy::{ecs::query::QueryData, prelude::*};
+use enum_iterator::Sequence;
 use rand::Rng;
 
 /// Plugin for running zooids simulation.
@@ -43,6 +44,7 @@ impl Plugin for ObjectPlugin {
     Debug,
     clap::ValueEnum,
     IntoStaticStr,
+    Sequence,
 )]
 #[reflect(Component)]
 pub enum Object {
@@ -56,16 +58,6 @@ pub enum Object {
     BuilderPreview,
 }
 impl Object {
-    pub const ALL: [Object; 7] = [
-        Self::Worker,
-        Self::Head,
-        Self::Plankton,
-        Self::Food,
-        Self::Shocker,
-        Self::Armor,
-        Self::BuilderPreview,
-    ];
-
     /// Returns true if an object can attack.
     pub fn can_attack(self) -> bool {
         matches!(self, Self::Worker | Self::Shocker)

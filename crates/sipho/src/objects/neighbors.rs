@@ -1,6 +1,6 @@
-use bevy::utils::{smallvec::SmallVec, FloatOrd, HashSet};
-
 use crate::prelude::*;
+use bevy::utils::{smallvec::SmallVec, FloatOrd, HashSet};
+use enum_iterator::all;
 
 pub struct NeighborsPlugin;
 impl Plugin for NeighborsPlugin {
@@ -135,9 +135,7 @@ pub fn update(
                 // }
             }
 
-            let enemy_teams: Vec<Team> = Team::ALL
-                .iter()
-                .copied()
+            let enemy_teams: Vec<Team> = all::<Team>()
                 .filter(|other_team| team != other_team)
                 .collect();
             let enemy_entities = grid.get_n_entities_in_radius(
