@@ -1,4 +1,5 @@
 use std::collections::VecDeque;
+use std::f32::consts::PI;
 
 use bevy::utils::HashSet;
 use rand::Rng;
@@ -25,7 +26,7 @@ pub struct EnemyAI {
     clear_objectives_timer: Timer,
     yeet_timer: Timer,
     yeet_dash_timer: Timer,
-    dash_direction: Vec2,
+    rotation: Vec2,
 }
 
 impl Default for EnemyAI {
@@ -33,13 +34,9 @@ impl Default for EnemyAI {
         EnemyAI {
             free_workers: HashSet::new(),
             clear_objectives_timer: Timer::from_seconds(0.3, TimerMode::Repeating),
-            yeet_timer: Timer::from_seconds(4.0, TimerMode::Repeating),
-            yeet_dash_timer: Timer::from_seconds(2.0, TimerMode::Repeating),
-            dash_direction: Vec2::new(
-                rand::thread_rng().gen_range(-1.0..1.0),
-                rand::thread_rng().gen_range(-1.0..1.0),
-            )
-            .normalize_or_zero(),
+            yeet_timer: Timer::from_seconds(0.1, TimerMode::Repeating),
+            yeet_dash_timer: Timer::from_seconds(0.4, TimerMode::Repeating),
+            rotation: Vec2::from_angle(1.0),
         }
     }
 }
@@ -78,28 +75,35 @@ pub fn get_all_leaves(head: Entity, attached_to: &Query<&AttachedTo>) -> Vec<Ent
 impl EnemyAI {
     #[allow(clippy::too_many_arguments)]
     pub fn update(
-        mut query: Query<(&mut ZooidHead, Entity, &Team, &mut EnemyAI, &mut Force)>,
+        mut query: Query<(&mut ZooidHead, Entity, &Team, &mut EnemyAI, &Velocity)>,
         mut objective_query: Query<&mut Objectives>,
         attached_to: Query<&AttachedTo>,
         positions: Query<&Position>,
+        mut forces: Query<&mut Force>,
         mut commands: ObjectCommands,
         mut elastic_events: EventWriter<SpawnElasticEvent>,
         mut audio: EventWriter<AudioEvent>,
         time: Res<Time>,
     ) {
-        for (mut head, head_entity, team, mut ai, mut force) in query.iter_mut() {
+        for (mut head, head_entity, team, mut ai, velocity) in query.iter_mut() {
             let leaves = get_all_leaves(head_entity, &attached_to);
             ai.clear_objectives_timer.tick(time.delta());
             if ai.yeet_timer.finished() {
                 // kick the head
                 if !ai.yeet_dash_timer.finished() {
-                    *force += Force(ai.dash_direction * 5.0);
                     ai.yeet_dash_timer.tick(time.delta());
+                    let apply_force = Force(ai.rotation.rotate(velocity.0).normalize_or_zero());
+                    *forces.get_mut(head_entity).unwrap() += apply_force * 0.5;
+                    for &entity in ai.free_workers.iter() {
+                        if let Ok(mut force) = forces.get_mut(entity) {
+                            *force += apply_force * 0.5;
+                        }
+                    }
                 } else {
                     ai.yeet_dash_timer.reset();
                     ai.yeet_timer.reset();
-                    ai.dash_direction = Vec2::from_angle(rand::thread_rng().gen_range(-1.0..1.0))
-                        .rotate(ai.dash_direction);
+                    ai.rotation =
+                        Vec2::from_angle(rand::thread_rng().gen_range(-PI / 4.0..PI / 4.0));
                 }
             } else {
                 ai.yeet_timer.tick(time.delta());
@@ -139,7 +143,7 @@ impl EnemyAI {
             let position = positions.get(entity).unwrap();
             let direction = Vec2::Y;
             let spawn_velocity: Vec2 = direction;
-            if arm_length < 7 {
+            if arm_length < 5 {
                 if commands.try_consume(head_entity, 1).is_ok() {
                     if let Some(new_entity) = head.make_linked(
                         &Velocity(spawn_velocity),
