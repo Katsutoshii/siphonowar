@@ -65,6 +65,7 @@ pub fn get_all_leaves(head: Entity, attached_to: &Query<&AttachedTo>) -> Vec<Ent
 }
 
 impl EnemyAI {
+    #[allow(clippy::too_many_arguments)]
     pub fn update(
         mut query: Query<(&mut ZooidHead, Entity, &Team, &mut EnemyAI)>,
         mut objective_query: Query<&mut Objectives>,
