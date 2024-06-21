@@ -164,7 +164,7 @@ impl ZooidHead {
         object: Object,
         commands: &mut ObjectCommands,
         entity: Entity,
-    ) {
+    ) -> Option<Entity> {
         if let Some(entity_commands) = commands.spawn(ObjectSpec {
             position: position.0 + velocity.0,
             velocity: Some(*velocity),
@@ -182,7 +182,9 @@ impl ZooidHead {
                 elastic: Elastic((entity, entity_commands.id())),
                 team: *team,
             });
+            return Some(entity_commands.id());
         }
+        None
     }
 
     pub fn get_shortest_leg_length() {}

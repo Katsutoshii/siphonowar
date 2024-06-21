@@ -27,7 +27,7 @@ impl Plankton {
         obstacles: Res<Grid2<Obstacle>>,
     ) {
         let bounds = grid_spec.world2d_bounds_eps();
-        for _ in 0..1000 {
+        for _ in 0..5000 {
             let position = Vec2 {
                 x: rand::thread_rng().gen_range(bounds.min.x..bounds.max.x),
                 y: rand::thread_rng().gen_range(bounds.min.y..bounds.max.y),

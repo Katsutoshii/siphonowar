@@ -1,6 +1,7 @@
 use std::collections::VecDeque;
 
 use bevy::utils::HashSet;
+use rand::Rng;
 
 use crate::prelude::*;
 
@@ -22,13 +23,23 @@ impl Plugin for EnemyAIPlugin {
 pub struct EnemyAI {
     free_workers: HashSet<Entity>,
     clear_objectives_timer: Timer,
+    yeet_timer: Timer,
+    yeet_dash_timer: Timer,
+    dash_direction: Vec2,
 }
 
 impl Default for EnemyAI {
     fn default() -> EnemyAI {
         EnemyAI {
             free_workers: HashSet::new(),
-            clear_objectives_timer: Timer::from_seconds(0.1, TimerMode::Repeating),
+            clear_objectives_timer: Timer::from_seconds(0.3, TimerMode::Repeating),
+            yeet_timer: Timer::from_seconds(4.0, TimerMode::Repeating),
+            yeet_dash_timer: Timer::from_seconds(2.0, TimerMode::Repeating),
+            dash_direction: Vec2::new(
+                rand::thread_rng().gen_range(-1.0..1.0),
+                rand::thread_rng().gen_range(-1.0..1.0),
+            )
+            .normalize_or_zero(),
         }
     }
 }
@@ -67,7 +78,7 @@ pub fn get_all_leaves(head: Entity, attached_to: &Query<&AttachedTo>) -> Vec<Ent
 impl EnemyAI {
     #[allow(clippy::too_many_arguments)]
     pub fn update(
-        mut query: Query<(&mut ZooidHead, Entity, &Team, &mut EnemyAI)>,
+        mut query: Query<(&mut ZooidHead, Entity, &Team, &mut EnemyAI, &mut Force)>,
         mut objective_query: Query<&mut Objectives>,
         attached_to: Query<&AttachedTo>,
         positions: Query<&Position>,
@@ -76,29 +87,46 @@ impl EnemyAI {
         mut audio: EventWriter<AudioEvent>,
         time: Res<Time>,
     ) {
-        for (mut head, head_entity, team, mut ai) in query.iter_mut() {
+        for (mut head, head_entity, team, mut ai, mut force) in query.iter_mut() {
             let leaves = get_all_leaves(head_entity, &attached_to);
             ai.clear_objectives_timer.tick(time.delta());
+            if ai.yeet_timer.finished() {
+                // kick the head
+                if !ai.yeet_dash_timer.finished() {
+                    *force += Force(ai.dash_direction * 5.0);
+                    ai.yeet_dash_timer.tick(time.delta());
+                } else {
+                    ai.yeet_dash_timer.reset();
+                    ai.yeet_timer.reset();
+                    ai.dash_direction = Vec2::from_angle(rand::thread_rng().gen_range(-1.0..1.0))
+                        .rotate(ai.dash_direction);
+                }
+            } else {
+                ai.yeet_timer.tick(time.delta());
+            }
             if ai.clear_objectives_timer.finished() {
                 for leaf in ai.free_workers.iter().chain(leaves.iter()) {
-                    let mut objective = objective_query.get_mut(*leaf).unwrap();
-                    objective.clear();
-                    objective.push(Objective::Idle);
+                    if let Ok(mut objective) = objective_query.get_mut(*leaf) {
+                        objective.clear();
+                        objective.push(Objective::Idle);
+                    }
                 }
-                ai.clear_objectives_timer.reset();
             }
             ai.free_workers.retain(|x| positions.contains(*x));
-            // Apply free worker useful objectives
-            let useful_objective = ai
+            let active_workers = ai
                 .free_workers
                 .iter()
+                .filter(|&x| attached_to.get(*x).unwrap().len() <= 1);
+            // Apply free worker useful objectives
+            let useful_objective = active_workers
+                .clone()
                 .chain(leaves.iter())
                 .map(|x| objective_query.get(*x).unwrap())
                 .find(|x| !matches!(x.last(), Objective::Idle));
             // Force all of the arms to have useful objects if it can.
             if let Some(useful_objective) = useful_objective {
                 let useful_objective = useful_objective.clone();
-                for leaf in ai.free_workers.iter().chain(leaves.iter()) {
+                for leaf in active_workers {
                     let mut objective = objective_query.get_mut(*leaf).unwrap();
                     if objective.last() == &Objective::Idle {
                         objective.pop();
@@ -109,11 +137,11 @@ impl EnemyAI {
 
             let (entity, arm_length) = head.get_next_limb(head_entity, &attached_to);
             let position = positions.get(entity).unwrap();
-            if commands.try_consume(head_entity, 1).is_ok() {
-                let direction = Vec2::Y;
-                let spawn_velocity: Vec2 = direction;
-                if arm_length < 7 {
-                    head.make_linked(
+            let direction = Vec2::Y;
+            let spawn_velocity: Vec2 = direction;
+            if arm_length < 7 {
+                if commands.try_consume(head_entity, 1).is_ok() {
+                    if let Some(new_entity) = head.make_linked(
                         &Velocity(spawn_velocity),
                         &mut elastic_events,
                         &mut audio,
@@ -122,27 +150,29 @@ impl EnemyAI {
                         Object::Worker,
                         &mut commands,
                         entity,
-                    );
+                    ) {
+                        ai.free_workers.insert(new_entity);
+                    }
                     if let Ok(mut objective) = objective_query.get_mut(entity) {
                         objective.clear();
                         objective.push(Objective::Idle);
                     }
-                } else if commands.try_consume(head_entity, 3).is_ok() {
-                    let position = positions.get(head_entity).unwrap();
-                    if let Some(new_entity) = commands.spawn(ObjectSpec {
-                        position: position.0 + spawn_velocity,
-                        velocity: Some(Velocity(spawn_velocity)),
-                        team: *team,
-                        object: if ai.free_workers.len() % 6 == 0 {
-                            Object::Shocker
-                        } else {
-                            Object::Worker
-                        },
-                        // objectives: Objectives::new(Objective::FollowEntity(head_id)),
-                        ..default()
-                    }) {
-                        ai.free_workers.insert(new_entity.id());
-                    }
+                }
+            } else if commands.try_consume(head_entity, 3).is_ok() {
+                let position = positions.get(head_entity).unwrap();
+                if let Some(new_entity) = commands.spawn(ObjectSpec {
+                    position: position.0 + spawn_velocity,
+                    velocity: Some(Velocity(spawn_velocity)),
+                    team: *team,
+                    object: if ai.free_workers.len() % 20 == 0 {
+                        Object::Shocker
+                    } else {
+                        Object::Worker
+                    },
+                    // objectives: Objectives::new(Objective::FollowEntity(head_id)),
+                    ..default()
+                }) {
+                    ai.free_workers.insert(new_entity.id());
                 }
             }
         }
