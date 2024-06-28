@@ -143,8 +143,8 @@ impl EnemyAI {
             let position = positions.get(entity).unwrap();
             let direction = Vec2::Y;
             let spawn_velocity: Vec2 = direction;
-            if arm_length < 5 {
-                if commands.try_consume(head_entity, 1).is_ok() {
+            if commands.try_consume(head_entity, 1).is_ok() {
+                if arm_length < 7 {
                     if let Some(new_entity) = head.make_linked(
                         &Velocity(spawn_velocity),
                         &mut elastic_events,
@@ -161,22 +161,22 @@ impl EnemyAI {
                         objective.clear();
                         objective.push(Objective::Idle);
                     }
-                }
-            } else if commands.try_consume(head_entity, 3).is_ok() {
-                let position = positions.get(head_entity).unwrap();
-                if let Some(new_entity) = commands.spawn(ObjectSpec {
-                    position: position.0 + spawn_velocity,
-                    velocity: Some(Velocity(spawn_velocity)),
-                    team: *team,
-                    object: if ai.free_workers.len() % 20 == 0 {
-                        Object::Shocker
-                    } else {
-                        Object::Worker
-                    },
-                    // objectives: Objectives::new(Objective::FollowEntity(head_id)),
-                    ..default()
-                }) {
-                    ai.free_workers.insert(new_entity.id());
+                } else {
+                    let position = positions.get(head_entity).unwrap();
+                    if let Some(new_entity) = commands.spawn(ObjectSpec {
+                        position: position.0 + spawn_velocity,
+                        velocity: Some(Velocity(spawn_velocity)),
+                        team: *team,
+                        object: if ai.free_workers.len() % 20 == 0 {
+                            Object::Shocker
+                        } else {
+                            Object::Worker
+                        },
+                        // objectives: Objectives::new(Objective::FollowEntity(head_id)),
+                        ..default()
+                    }) {
+                        ai.free_workers.insert(new_entity.id());
+                    }
                 }
             }
         }
