@@ -1,5 +1,6 @@
 use crate::prelude::*;
-use bevy::pbr::NotShadowCaster;
+use bevy::{pbr::NotShadowCaster, utils::petgraph::adj::Neighbors};
+use sipho_core::grid::obstacles;
 
 use std::f32::consts::PI;
 pub struct TerrainPlugin;
@@ -62,6 +63,15 @@ impl Terrain {
             if position.z > 0. {
                 if let Some(rowcol) = obstacles.to_rowcol(position.xy()) {
                     obstacles[rowcol] = Obstacle::Full;
+                    if obstacles.in_bounds(rowcol.above()) {
+                        obstacles[rowcol.above()] = Obstacle::Full;
+                    }
+                    if obstacles.in_bounds(rowcol.above_right()) {
+                        obstacles[rowcol.above_right()] = Obstacle::Full;
+                    }
+                    if obstacles.in_bounds(rowcol.right()) {
+                        obstacles[rowcol.right()] = Obstacle::Full;
+                    }
                 }
             }
         }

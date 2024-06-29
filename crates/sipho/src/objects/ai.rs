@@ -33,9 +33,9 @@ impl Default for EnemyAI {
     fn default() -> EnemyAI {
         EnemyAI {
             free_workers: HashSet::new(),
-            clear_objectives_timer: Timer::from_seconds(0.3, TimerMode::Repeating),
-            yeet_timer: Timer::from_seconds(0.1, TimerMode::Repeating),
-            yeet_dash_timer: Timer::from_seconds(0.4, TimerMode::Repeating),
+            clear_objectives_timer: Timer::from_seconds(1.0, TimerMode::Repeating),
+            yeet_timer: Timer::from_seconds(0.2, TimerMode::Repeating),
+            yeet_dash_timer: Timer::from_seconds(1.5, TimerMode::Repeating),
             rotation: Vec2::from_angle(1.0),
         }
     }
