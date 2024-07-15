@@ -1,7 +1,6 @@
-use bevy::utils::HashMap;
-use bevy_bundletree::*;
-
 use super::*;
+use bevy::color::palettes::css::DARK_GRAY;
+use bevy::utils::HashMap;
 
 #[derive(Component, Reflect)]
 #[reflect(Component)]
@@ -57,7 +56,7 @@ impl Default for HudSelectedPaneBundle {
                     grid_template_rows: RepeatedGridTrack::flex(2, 1.0),
                     ..default()
                 },
-                background_color: Color::DARK_GRAY.with_a(0.2).into(),
+                background_color: DARK_GRAY.with_alpha(0.2).into(),
                 ..default()
             },
         }
@@ -113,7 +112,7 @@ impl Default for HudUnitButtonBundle {
                     align_self: AlignSelf::Center,
                     ..default()
                 },
-                background_color: Color::DARK_GRAY.with_a(0.4).into(),
+                background_color: DARK_GRAY.with_alpha(0.4).into(),
                 ..default()
             },
         }

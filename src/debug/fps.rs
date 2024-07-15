@@ -1,7 +1,7 @@
+use bevy::color::palettes::css::BLACK;
 use bevy::diagnostic::DiagnosticsStore;
 use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
 use bevy::prelude::*;
-
 pub struct FpsPlugin;
 impl Plugin for FpsPlugin {
     fn build(&self, app: &mut App) {
@@ -27,7 +27,7 @@ fn setup_fps_counter(mut commands: Commands) {
             FpsRoot,
             NodeBundle {
                 // give it a dark background for readability
-                background_color: BackgroundColor(Color::BLACK.with_a(0.5)),
+                background_color: BackgroundColor(BLACK.with_alpha(0.5).into()),
                 // make it "always on top" by setting the Z index to maximum
                 // we want it to be displayed over all other UI
                 z_index: ZIndex::Global(i32::MAX),
@@ -105,16 +105,16 @@ fn fps_text_update_system(
             // text according to the FPS value:
             text.sections[1].style.color = if value >= 60.0 {
                 // Above 60 FPS, use green color
-                Color::rgb(0.0, 1.0, 0.0)
+                Color::srgb(0.0, 1.0, 0.0)
             } else if value >= 40.0 {
                 // Between 40-60 FPS, gradually transition from yellow to green
-                Color::rgb((1.0 - (value - 40.0) / (60.0 - 40.0)) as f32, 1.0, 0.0)
+                Color::srgb((1.0 - (value - 40.0) / (60.0 - 40.0)) as f32, 1.0, 0.0)
             } else if value >= 30.0 {
                 // Between 30-40 FPS, gradually transition from red to yellow
-                Color::rgb(1.0, ((value - 30.0) / (40.0 - 30.0)) as f32, 0.0)
+                Color::srgb(1.0, ((value - 30.0) / (40.0 - 30.0)) as f32, 0.0)
             } else {
                 // Below 30 FPS, use red color
-                Color::rgb(1.0, 0.0, 0.0)
+                Color::srgb(1.0, 0.0, 0.0)
             }
         } else {
             // display "N/A" if we can't get a FPS measurement

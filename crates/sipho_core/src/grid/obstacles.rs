@@ -1,9 +1,9 @@
 use crate::prelude::*;
+use bevy::color::palettes::css::MIDNIGHT_BLUE;
 use bevy::{
     prelude::*,
     render::render_resource::{AsBindGroup, ShaderRef},
 };
-
 /// Plugin for obstacles.
 /// Obstacles are implemented as a hacky force field in the center of each cell they are present in.
 pub struct ObstaclesPlugin;
@@ -126,7 +126,7 @@ impl Grid2<Obstacle> {
 #[derive(Asset, TypePath, AsBindGroup, Clone)]
 pub struct ObstaclesShaderMaterial {
     #[uniform(0)]
-    color: Color,
+    color: LinearRgba,
     #[uniform(1)]
     size: GridSize,
     #[storage(2, read_only)]
@@ -135,7 +135,7 @@ pub struct ObstaclesShaderMaterial {
 impl Default for ObstaclesShaderMaterial {
     fn default() -> Self {
         Self {
-            color: Color::MIDNIGHT_BLUE,
+            color: MIDNIGHT_BLUE.into(),
             size: GridSize::default(),
             grid: Vec::default(),
         }

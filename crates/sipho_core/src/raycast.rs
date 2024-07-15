@@ -1,5 +1,6 @@
 use crate::{Grid2, Team, TeamEntitySets};
-use bevy::{ecs::system::SystemParam, prelude::*, ui::RelativeCursorPosition, utils::FloatOrd};
+use bevy::math::FloatOrd;
+use bevy::{ecs::system::SystemParam, prelude::*, ui::RelativeCursorPosition};
 use enum_iterator::all;
 
 #[derive(Component, Default, PartialEq, Debug, Clone, Copy, Reflect)]

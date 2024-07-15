@@ -6,7 +6,7 @@ version = "0.1.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = {version = "0.13.2", features = ["dynamic_linking", "file_watcher"]}
+bevy = {version = "0.14.0", features = ["file_watcher"]}
 bevy_console = "0.11.1"
 bevy_hanabi = { git = "https://github.com/djeedai/bevy_hanabi.git", branch = "main" }
 derive_more = "0.99.17"
@@ -14,6 +14,7 @@ profiling-procmacros = "1.0.15"
 rand = "0.8.5"
 serde = "1.0.192"
 sipho_core = {path = "../sipho_core"}
+thiserror = "1.0.62"
 
 [lints]
 workspace = true

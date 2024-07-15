@@ -1,8 +1,8 @@
 use std::time::Duration;
 
-use bevy::input::ButtonState;
-
 use crate::prelude::*;
+use bevy::color::palettes::css::{ANTIQUE_WHITE, WHITE, YELLOW};
+use bevy::input::ButtonState;
 
 /// Plugin for an spacial entity paritioning grid with optional debug functionality.
 pub struct SelectorPlugin;
@@ -217,21 +217,21 @@ pub struct SelectorAssets {
 impl FromWorld for SelectorAssets {
     fn from_world(world: &mut World) -> Self {
         Self {
-            mesh: world.add_asset(Mesh::from(Cuboid::from_size(Vec2::splat(1.).extend(0.0)))),
-            selector_material: world.add_asset(StandardMaterial {
-                base_color: Color::YELLOW.with_b(0.5).with_a(0.05),
+            mesh: world.append_asset(Mesh::from(Cuboid::from_size(Vec2::splat(1.).extend(0.0)))),
+            selector_material: world.append_asset(StandardMaterial {
+                base_color: YELLOW.with_blue(0.5).with_alpha(0.05).into(),
                 alpha_mode: AlphaMode::Blend,
-                emissive: Color::YELLOW.with_b(0.5),
+                emissive: YELLOW.with_blue(0.5).into(),
                 unlit: true,
                 ..default()
             }),
-            white_material: world.add_asset(StandardMaterial {
-                base_color: Color::ANTIQUE_WHITE.with_a(0.3),
+            white_material: world.append_asset(StandardMaterial {
+                base_color: ANTIQUE_WHITE.with_alpha(0.3).into(),
                 alpha_mode: AlphaMode::Blend,
                 ..default()
             }),
-            hover_material: world.add_asset(StandardMaterial {
-                base_color: Color::WHITE.with_a(0.15),
+            hover_material: world.append_asset(StandardMaterial {
+                base_color: WHITE.with_alpha(0.15).into(),
                 alpha_mode: AlphaMode::Blend,
                 ..default()
             }),

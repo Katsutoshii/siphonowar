@@ -43,7 +43,7 @@ pub const DEFAULT_VIEWPORT_SIZE: Vec2 = Vec2 {
 #[derive(ShaderType, AsBindGroup, TypePath, Debug, Clone)]
 struct MinimapUiMaterialInput {
     #[uniform(0)]
-    colors: [Color; Team::COUNT],
+    colors: [LinearRgba; Team::COUNT],
     #[uniform(1)]
     size: GridSize,
     #[uniform(2)]
@@ -54,7 +54,12 @@ struct MinimapUiMaterialInput {
 impl Default for MinimapUiMaterialInput {
     fn default() -> Self {
         Self {
-            colors: Team::COLORS,
+            colors: Team::COLORS
+                .iter()
+                .map(|&x| x.into())
+                .collect::<Vec<LinearRgba>>()
+                .try_into()
+                .unwrap(),
             size: GridSize::default(),
             camera_position: Vec2::ZERO,
             viewport_size: DEFAULT_VIEWPORT_SIZE,

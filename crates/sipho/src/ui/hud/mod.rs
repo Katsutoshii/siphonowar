@@ -36,7 +36,7 @@ impl Plugin for HudPlugin {
     }
 }
 
-#[derive(Bundle, Clone)]
+#[derive(Clone, Bundle)]
 pub struct HudRootBundle {
     name: Name,
     node: NodeBundle,
@@ -69,11 +69,11 @@ pub enum HudUiNode {
     Minimap(MinimapUiBundle),
 }
 
-pub const TEXT_COLOR: Color = Color::rgb(0.9, 0.9, 0.9);
-pub const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
-pub const HOVERED_BUTTON: Color = Color::rgb(0.25, 0.25, 0.25);
-pub const PRESSED_BUTTON: Color = Color::rgb(0.35, 0.35, 0.35);
-pub const HOVERED_PRESSED_BUTTON: Color = Color::rgb(0.45, 0.45, 0.45);
+pub const TEXT_COLOR: Color = Color::srgb(0.9, 0.9, 0.9);
+pub const NORMAL_BUTTON: Color = Color::srgb(0.15, 0.15, 0.15);
+pub const HOVERED_BUTTON: Color = Color::srgb(0.25, 0.25, 0.25);
+pub const PRESSED_BUTTON: Color = Color::srgb(0.35, 0.35, 0.35);
+pub const HOVERED_PRESSED_BUTTON: Color = Color::srgb(0.45, 0.45, 0.45);
 
 fn setup(mut commands: Commands, assets: Res<HudAssets>) {
     commands.spawn_tree(

@@ -1,5 +1,4 @@
-use std::f32::consts::PI;
-
+use bevy::color::palettes::css::ANTIQUE_WHITE;
 use bevy::{
     core_pipeline::{
         bloom::{BloomCompositeMode, BloomPrefilterSettings, BloomSettings},
@@ -8,6 +7,7 @@ use bevy::{
     },
     render::view::RenderLayers,
 };
+use std::f32::consts::PI;
 
 use crate::prelude::*;
 
@@ -77,7 +77,7 @@ pub fn startup(mut commands: Commands) {
         transform: Transform::from_xyz(0.0, 0.0, zindex::CAMERA)
             .with_rotation(Quat::from_axis_angle(Vec3::ONE, -PI / 6.)),
         directional_light: DirectionalLight {
-            color: Color::ANTIQUE_WHITE,
+            color: ANTIQUE_WHITE.into(),
             illuminance: 4500.,
             shadows_enabled: true,
             ..default()

@@ -1,6 +1,5 @@
 use crate::prelude::*;
-use bevy::{pbr::NotShadowCaster, utils::petgraph::adj::Neighbors};
-use sipho_core::grid::obstacles;
+use bevy::pbr::NotShadowCaster;
 
 use std::f32::consts::PI;
 pub struct TerrainPlugin;
@@ -31,7 +30,7 @@ impl Terrain {
             PbrBundle {
                 mesh,
                 material: materials.add(StandardMaterial {
-                    base_color: Color::rgb_u8(69 / 4, 84 / 4, 180 / 4),
+                    base_color: Color::srgb_u8(69 / 4, 84 / 4, 180 / 4),
                     alpha_mode: AlphaMode::Opaque,
                     perceptual_roughness: 1.0,
                     ..default()

@@ -1,13 +1,16 @@
+use bevy::prelude::*;
 use bevy_console::{reply, AddConsoleCommand, ConsoleCommand, ConsolePlugin};
 use clap::Parser;
 use sipho::objects::ai::EnemyAI;
-use sipho::{prelude::*, scene::SaveEvent};
+use sipho::prelude::*;
+use sipho::scene::SaveEvent;
 
 /// Plugin for input action events.
 pub struct CustomConsolePlugin;
+
 impl Plugin for CustomConsolePlugin {
-    fn build(&self, app: &mut App) {
-        app.add_plugins(ConsolePlugin)
+    fn build(&self, app: &mut bevy::prelude::App) {
+        app.add_plugins(ConsolePlugin.into())
             .add_console_command::<SpawnCommand, _>(
                 SpawnCommand::update.in_set(FixedUpdateStage::Spawn),
             )

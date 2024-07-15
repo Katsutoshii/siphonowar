@@ -1,0 +1,8 @@
+
+UI elements
+Factory complexity
+    - stomach 
+    - reverse pathing for charges
+    - shocker and stomach request queue
+    - food generators
+    - mineral elements 

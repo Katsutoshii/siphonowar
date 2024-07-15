@@ -2,11 +2,10 @@
 // `smallvec`.
 //
 // Copyright (c) 2016 Chris Fallin <cfallin@c1f.net>. Released under the MIT license.
+use bevy::prelude::*;
+use smallvec::{Array, SmallVec};
 use std::fmt;
 use std::iter::{FromIterator, IntoIterator};
-
-use bevy::prelude::*;
-use bevy::utils::smallvec::{Array, SmallVec};
 
 /// A `SmallSet` is an unordered set of elements. It is designed to work best
 /// for very small sets (no more than ten or so elements). In order to support

@@ -1,9 +1,9 @@
-use std::time::Duration;
-
+use bevy::color::palettes::css::DARK_GRAY;
 use bevy::{
     input::ButtonState,
     utils::{HashMap, HashSet},
 };
+use std::time::Duration;
 
 use super::*;
 
@@ -23,7 +23,7 @@ impl MakeBundleTree<HudUiNode, &HudAssets> for HudControlsPane {
                 grid_template_rows: RepeatedGridTrack::flex(4, 1.0),
                 ..default()
             },
-            background_color: Color::DARK_GRAY.with_a(0.2).into(),
+            background_color: DARK_GRAY.with_alpha(0.2).into(),
             ..default()
         }
         .with_children(
@@ -107,7 +107,7 @@ impl Default for HudControlsButtonBundle {
                     margin: UiRect::all(Val::Px(10.0)),
                     ..default()
                 },
-                background_color: Color::DARK_GRAY.with_a(0.4).into(),
+                background_color: DARK_GRAY.with_alpha(0.4).into(),
                 ..default()
             },
         }

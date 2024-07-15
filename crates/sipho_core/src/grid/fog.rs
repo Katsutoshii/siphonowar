@@ -201,7 +201,7 @@ impl Grid2<TeamVisibility> {
 #[derive(Asset, TypePath, AsBindGroup, Clone)]
 pub struct FogShaderMaterial {
     #[uniform(0)]
-    pub color: Color,
+    pub color: LinearRgba,
     #[uniform(1)]
     pub size: GridSize,
     #[texture(2)]
@@ -211,7 +211,7 @@ pub struct FogShaderMaterial {
 impl FromWorld for FogShaderMaterial {
     fn from_world(world: &mut World) -> Self {
         Self {
-            color: Color::BLACK,
+            color: Color::BLACK.into(),
             size: GridSize::default(),
             visibility_texture: world.get_resource::<FogAssets>().unwrap().texture.clone(),
         }
@@ -261,7 +261,7 @@ impl FogShaderMaterial {
         shader_assets.get_mut(&assets.shader_material);
 
         let image = images.get_mut(&fog_assets.texture).unwrap();
-        if let Ok(DynamicImage::ImageRgba8(mut rgba)) = image.clone().try_into_dynamic() {
+        if let Ok(DynamicImage::ImageRgba8(mut rgba)) = image.clone().try_into_dynamic().into() {
             for event in updates.read() {
                 for &VisibilityUpdate { rowcol, amount, .. } in &event.removals {
                     let amount_u8 = ((amount * 0.99) * (u8::MAX as f32)) as u8;
@@ -314,7 +314,7 @@ impl FromWorld for FogAssets {
                     ..default()
                 };
                 image.resize(size);
-                world.add_asset(image)
+                world.append_asset(image)
             },
         }
     }

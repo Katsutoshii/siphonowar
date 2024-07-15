@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use bevy::ecs::system::{QueryLens, SystemParam};
-use bevy::utils::smallvec::SmallVec;
 use sipho_core::grid::fog::FogConfig;
+use smallvec::SmallVec;
 
 use super::ObjectAssets;
 

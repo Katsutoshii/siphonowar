@@ -1,6 +1,8 @@
 use crate::prelude::*;
-use bevy::utils::{smallvec::SmallVec, FloatOrd, HashSet};
+use bevy::math::FloatOrd;
+use bevy::utils::HashSet;
 use enum_iterator::all;
+use smallvec::SmallVec;
 
 pub struct NeighborsPlugin;
 impl Plugin for NeighborsPlugin {

@@ -37,7 +37,7 @@ impl AssetLoadState {
             let load_state = server.get_load_state(asset_id);
             match load_state {
                 Some(LoadState::NotLoaded | LoadState::Loading) => {}
-                Some(LoadState::Failed | LoadState::Loaded) | None => {
+                Some(LoadState::Failed(_) | LoadState::Loaded) | None => {
                     num_loaded += 1;
                 }
             }

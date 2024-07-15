@@ -1,6 +1,7 @@
 use bevy::render::render_resource::{AsBindGroup, ShaderRef};
 
 use crate::prelude::*;
+use bevy::color::palettes::css::{ALICE_BLUE, MIDNIGHT_BLUE};
 
 /// Plugin for visualizing the grid.
 /// This plugin reads events from the entity grid and updates the shader's input buffer
@@ -24,16 +25,16 @@ fn should_visualize_grid(spec: Res<GridSpec>) -> bool {
 }
 
 /// Parameters passed to grid background shader.
-#[derive(Asset, TypePath, AsBindGroup, Clone)]
+#[derive(Asset, TypePath, Clone, AsBindGroup)]
 pub struct GridVisualizerShaderMaterial {
     #[uniform(0)]
-    color: Color,
+    color: LinearRgba,
     #[uniform(1)]
     size: GridSize,
     #[storage(2, read_only)]
     grid: Vec<u32>,
     #[uniform(3)]
-    wave_color: Color,
+    wave_color: LinearRgba,
     #[texture(4)]
     #[sampler(5)]
     sand_texture: Handle<Image>,
@@ -41,10 +42,10 @@ pub struct GridVisualizerShaderMaterial {
 impl FromWorld for GridVisualizerShaderMaterial {
     fn from_world(world: &mut World) -> Self {
         Self {
-            color: Color::MIDNIGHT_BLUE,
+            color: MIDNIGHT_BLUE.into(),
             size: GridSize::default(),
             grid: Vec::default(),
-            wave_color: Color::ALICE_BLUE,
+            wave_color: ALICE_BLUE.into(),
             sand_texture: world
                 .get_resource::<AssetServer>()
                 .unwrap()

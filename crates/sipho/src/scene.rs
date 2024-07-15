@@ -65,7 +65,9 @@ impl SaveEvent {
 
             // Scenes can be serialized like this:
             let type_registry = world.resource::<AppTypeRegistry>();
-            let serialized_scene = scene.serialize_ron(type_registry).unwrap();
+            let serialized_scene = scene
+                .serialize(&type_registry.internal.try_read().unwrap())
+                .unwrap();
             // Showing the scene in the console
             info!("Saving scene: {}", serialized_scene);
 

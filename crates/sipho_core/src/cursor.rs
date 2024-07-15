@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use bevy::color::palettes::css::ALICE_BLUE;
 use bevy::{ecs::system::SystemParam, prelude::*, window::PrimaryWindow};
 
 /// Plugin to manage a virtual cursor.
@@ -87,7 +88,7 @@ pub struct CursorAssets {
 impl FromWorld for CursorAssets {
     fn from_world(world: &mut World) -> Self {
         let assets = Self {
-            mesh: world.add_asset(Mesh::from(RegularPolygon {
+            mesh: world.append_asset(Mesh::from(RegularPolygon {
                 circumcircle: Circle {
                     radius: 2f32.sqrt() / 2.,
                 },
@@ -95,7 +96,9 @@ impl FromWorld for CursorAssets {
             })),
             cursor: world.load_asset("textures/cursor/paper-arrow-s.png"),
             attack: world.load_asset("textures/cursor/plain-dagger-s.png"),
-            blue_material: world.add_asset(StandardMaterial::from(Color::ALICE_BLUE.with_a(0.5))),
+            blue_material: world.append_asset(StandardMaterial::from(Color::from(
+                ALICE_BLUE.with_alpha(0.5),
+            ))),
         };
         let mut load_state = world.get_resource_mut::<AssetLoadState>().unwrap();
         load_state.track(&assets.cursor);

@@ -24,11 +24,11 @@ impl Plugin for PauseMenuPlugin {
     }
 }
 
-const TEXT_COLOR: Color = Color::rgb(0.9, 0.9, 0.9);
-const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
-const HOVERED_BUTTON: Color = Color::rgb(0.25, 0.25, 0.25);
-const PRESSED_BUTTON: Color = Color::rgb(0.35, 0.35, 0.35);
-const HOVERED_PRESSED_BUTTON: Color = Color::rgb(0.45, 0.45, 0.45);
+const TEXT_COLOR: Color = Color::srgb(0.9, 0.9, 0.9);
+const NORMAL_BUTTON: Color = Color::srgb(0.15, 0.15, 0.15);
+const HOVERED_BUTTON: Color = Color::srgb(0.25, 0.25, 0.25);
+const PRESSED_BUTTON: Color = Color::srgb(0.35, 0.35, 0.35);
+const HOVERED_PRESSED_BUTTON: Color = Color::srgb(0.45, 0.45, 0.45);
 
 // All actions that can be triggered from a button click
 #[derive(Component)]
@@ -273,7 +273,7 @@ impl PauseMenu {
             if *interaction == Interaction::Pressed {
                 match menu_button_action {
                     PauseMenuButtonAction::Quit => {
-                        app_exit_events.send(AppExit);
+                        app_exit_events.send(AppExit::Success);
                     }
                     PauseMenuButtonAction::Play => {
                         game_state.set(GameState::Running);

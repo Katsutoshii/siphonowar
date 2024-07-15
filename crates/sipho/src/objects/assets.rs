@@ -1,6 +1,6 @@
-use bevy::utils::HashMap;
-
 use crate::prelude::*;
+use bevy::color::palettes::css::SEA_GREEN;
+use bevy::utils::HashMap;
 
 /// Handles to common zooid assets.
 #[derive(Resource)]
@@ -47,15 +47,15 @@ impl FromWorld for ObjectAssets {
                     .map(|color| TeamMaterials::new(*color, &mut materials))
                     .collect()
             },
-            builder_material: world.add_asset(StandardMaterial {
-                base_color: Color::rgba(1.0, 1.0, 0.8, 0.35),
-                emissive: Color::rgba(1.0, 1.0, 0.8, 0.35),
+            builder_material: world.append_asset(StandardMaterial {
+                base_color: Color::srgba(1.0, 1.0, 0.8, 0.35).into(),
+                emissive: Color::srgba(1.0, 1.0, 0.8, 0.35).into(),
                 alpha_mode: AlphaMode::Blend,
                 ..default()
             }),
-            food_material: world.add_asset(StandardMaterial {
-                base_color: Color::SEA_GREEN,
-                emissive: Color::SEA_GREEN,
+            food_material: world.append_asset(StandardMaterial {
+                base_color: SEA_GREEN.into(),
+                emissive: SEA_GREEN.into(),
                 perceptual_roughness: 1.0,
                 alpha_mode: AlphaMode::Opaque,
                 ..default()

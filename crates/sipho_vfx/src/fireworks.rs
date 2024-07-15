@@ -23,7 +23,7 @@ impl Plugin for FireworkPlugin {
 
 fn get_standard_color_gradient(color: Color) -> Gradient<Vec4> {
     let mut color_gradient = Gradient::new();
-    let color = color.rgba_to_vec4();
+    let color = Into::<LinearRgba>::into(color).to_vec4();
     color_gradient.add_key(0.0, color + Vec4::new(0.0, 0.0, 0.0, 0.5));
     color_gradient.add_key(0.1, color);
     color_gradient.add_key(0.7, color * 0.5);

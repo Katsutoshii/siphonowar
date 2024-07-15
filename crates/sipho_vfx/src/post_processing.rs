@@ -52,7 +52,7 @@ impl Plugin for PostProcessPlugin {
         .add_systems(PostUpdate, PostProcessSettings::update);
 
         // We need to get the render app from the main app
-        let Ok(render_app) = app.get_sub_app_mut(RenderApp) else {
+        let Some(render_app) = app.get_sub_app_mut(RenderApp) else {
             return;
         };
 
@@ -90,7 +90,7 @@ impl Plugin for PostProcessPlugin {
 
     fn finish(&self, app: &mut App) {
         // We need to get the render app from the main app
-        let Ok(render_app) = app.get_sub_app_mut(RenderApp) else {
+        let Some(render_app) = app.get_sub_app_mut(RenderApp) else {
             return;
         };
 
@@ -317,7 +317,7 @@ impl PostProcessSettings {
             for (camera_transform, camera) in &camera_query {
                 // pass render camera in because `view` during postprocessing is of a default camera
                 setting.camera_position = camera_transform.translation;
-                setting.view_proj = camera.projection_matrix();
+                setting.view_proj = camera.clip_from_view();
                 setting.inverse_proj = setting.view_proj.inverse();
                 setting.view = camera_transform.compute_matrix();
                 setting.inverse_view = setting.view.inverse();

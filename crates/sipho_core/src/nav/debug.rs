@@ -1,6 +1,6 @@
 use crate::prelude::*;
+use bevy::color::palettes::css::ORANGE_RED;
 use bevy::render::render_resource::{AsBindGroup, ShaderRef};
-
 pub struct NavigationVisualizerPlugin;
 impl Plugin for NavigationVisualizerPlugin {
     fn build(&self, app: &mut App) {
@@ -21,7 +21,7 @@ fn should_visualize_grid(spec: Res<GridSpec>) -> bool {
 #[derive(Asset, TypePath, AsBindGroup, Clone)]
 pub struct NavigationShaderMaterial {
     #[uniform(0)]
-    color: Color,
+    color: LinearRgba,
     #[uniform(1)]
     size: GridSize,
     #[storage(2, read_only)]
@@ -30,7 +30,7 @@ pub struct NavigationShaderMaterial {
 impl Default for NavigationShaderMaterial {
     fn default() -> Self {
         Self {
-            color: Color::ORANGE_RED,
+            color: ORANGE_RED.into(),
             size: GridSize::default(),
             grid: Vec::default(),
         }

@@ -1,6 +1,6 @@
 use crate::prelude::*;
+use bevy::color::palettes::css::{TOMATO, TURQUOISE};
 use bevy::{input::ButtonState, prelude::*, utils::hashbrown::HashSet};
-
 /// Plugin to add a waypoint system where the player can click to create a waypoint.
 pub struct WaypointPlugin;
 impl Plugin for WaypointPlugin {
@@ -166,14 +166,17 @@ pub struct WaypointAssets {
 impl FromWorld for WaypointAssets {
     fn from_world(world: &mut World) -> Self {
         Self {
-            mesh: world.add_asset(Mesh::from(RegularPolygon {
+            mesh: world.append_asset(Mesh::from(RegularPolygon {
                 circumcircle: Circle {
                     radius: 2f32.sqrt() / 2.,
                 },
                 sides: 3,
             })),
-            blue_material: world.add_asset(StandardMaterial::from(Color::TURQUOISE.with_a(0.5))),
-            red_material: world.add_asset(StandardMaterial::from(Color::TOMATO.with_a(0.5))),
+            blue_material: world.append_asset(StandardMaterial::from(Color::from(
+                TURQUOISE.with_alpha(0.5),
+            ))),
+            red_material: world
+                .append_asset(StandardMaterial::from(Color::from(TOMATO.with_alpha(0.5)))),
         }
     }
 }
