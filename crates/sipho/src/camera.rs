@@ -77,7 +77,7 @@ pub fn startup(mut commands: Commands) {
                 .with_rotation(Quat::from_axis_angle(Vec3::ONE, -PI / 6.)),
             directional_light: DirectionalLight {
                 color: ANTIQUE_WHITE.into(),
-                illuminance: 7000.,
+                illuminance: 6000.,
                 shadows_enabled: true,
                 ..default()
             },
