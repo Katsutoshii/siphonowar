@@ -24,9 +24,8 @@ impl Plugin for CameraPlugin {
     }
 }
 
-/// Used to help identify our main camera
 pub fn startup(mut commands: Commands) {
-    let default_height = 0.75 * zindex::CAMERA;
+    let default_height = 0.6 * zindex::CAMERA;
     commands.spawn((
         Camera3dBundle {
             camera: Camera {
@@ -50,8 +49,8 @@ pub fn startup(mut commands: Commands) {
             ..default()
         },
         BloomSettings {
-            intensity: 0.95,
-            low_frequency_boost: 0.4,
+            intensity: 0.9,
+            low_frequency_boost: 0.5,
             low_frequency_boost_curvature: 0.5,
             high_pass_frequency: 1.0,
             prefilter_settings: BloomPrefilterSettings {
@@ -71,15 +70,18 @@ pub fn startup(mut commands: Commands) {
         },
         MainCamera,
     ));
-    commands.spawn(DirectionalLightBundle {
-        transform: Transform::from_xyz(0.0, 0.0, zindex::CAMERA)
-            .with_rotation(Quat::from_axis_angle(Vec3::ONE, -PI / 6.)),
-        directional_light: DirectionalLight {
-            color: ANTIQUE_WHITE.into(),
-            illuminance: 5000.,
-            shadows_enabled: true,
+    commands.spawn((
+        Name::new("DirectionalLight"),
+        DirectionalLightBundle {
+            transform: Transform::from_xyz(0.0, 0.0, zindex::CAMERA)
+                .with_rotation(Quat::from_axis_angle(Vec3::ONE, -PI / 6.)),
+            directional_light: DirectionalLight {
+                color: ANTIQUE_WHITE.into(),
+                illuminance: 7000.,
+                shadows_enabled: true,
+                ..default()
+            },
             ..default()
         },
-        ..default()
-    });
+    ));
 }
