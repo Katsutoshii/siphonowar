@@ -48,7 +48,7 @@ impl FromWorld for ObjectAssets {
                     .collect()
             },
             builder_material: world.append_asset(StandardMaterial {
-                base_color: Color::srgba(1.0, 1.0, 0.8, 0.35).into(),
+                base_color: Color::srgba(1.0, 1.0, 0.8, 0.35),
                 emissive: Color::srgba(1.0, 1.0, 0.8, 0.35).into(),
                 alpha_mode: AlphaMode::Blend,
                 ..default()

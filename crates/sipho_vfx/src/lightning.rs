@@ -144,7 +144,7 @@ impl FromWorld for LightningAssets {
         Self {
             lightning_material: {
                 world.append_asset(StandardMaterial {
-                    base_color: Color::WHITE.into(),
+                    base_color: Color::WHITE,
                     emissive: Color::WHITE.into(),
                     diffuse_transmission: 1.0,
                     ..default()

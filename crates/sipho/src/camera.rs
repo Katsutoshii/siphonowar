@@ -2,7 +2,6 @@ use bevy::color::palettes::css::ANTIQUE_WHITE;
 use bevy::{
     core_pipeline::{
         bloom::{BloomCompositeMode, BloomPrefilterSettings, BloomSettings},
-        experimental::taa::TemporalAntiAliasBundle,
         tonemapping::Tonemapping,
     },
     render::view::RenderLayers,
@@ -20,7 +19,7 @@ impl Plugin for CameraPlugin {
             .add_systems(Startup, startup)
             .insert_resource(AmbientLight {
                 color: Color::WHITE,
-                brightness: 1000.,
+                brightness: 500.,
             });
     }
 }
@@ -51,9 +50,9 @@ pub fn startup(mut commands: Commands) {
             ..default()
         },
         BloomSettings {
-            intensity: 1.1,
-            low_frequency_boost: 0.0,
-            low_frequency_boost_curvature: 1.0,
+            intensity: 0.95,
+            low_frequency_boost: 0.4,
+            low_frequency_boost_curvature: 0.5,
             high_pass_frequency: 1.0,
             prefilter_settings: BloomPrefilterSettings {
                 threshold: 0.2,
@@ -70,7 +69,6 @@ pub fn startup(mut commands: Commands) {
             intensity: 0.02,
             ..default()
         },
-        TemporalAntiAliasBundle::default(),
         MainCamera,
     ));
     commands.spawn(DirectionalLightBundle {
@@ -78,7 +76,7 @@ pub fn startup(mut commands: Commands) {
             .with_rotation(Quat::from_axis_angle(Vec3::ONE, -PI / 6.)),
         directional_light: DirectionalLight {
             color: ANTIQUE_WHITE.into(),
-            illuminance: 4500.,
+            illuminance: 5000.,
             shadows_enabled: true,
             ..default()
         },

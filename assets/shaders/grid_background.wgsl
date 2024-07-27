@@ -23,7 +23,8 @@ fn fragment(mesh: VertexOutput) -> @location(0) vec4<f32> {
     var sand = textureSample(sand_texture, texture_sampler, repeat_uv);
     var wave = color * 0.1;
     let res = (wave * 0.07 + vec4<f32>(0., 0.05 + 0.01 * cos(time * 0.001), 0.2 + 0.05 * sin(time * 0.001), 1.0));
-    var output = vec4<f32>(0.0, 0.08, 0.15, 1.0) / 5.0 + (sand / 25.0) + res / 8.0;
-    output.a = 0.3;
+    let tint_color = vec4<f32>(0.0, 0.08, 0.15, 1.0) / 2.0;
+    var output = tint_color + (sand / 25.0) + res / 6.0;
+    output.a = 0.35;
     return output;
 }

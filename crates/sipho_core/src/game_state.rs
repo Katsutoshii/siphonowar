@@ -1,7 +1,4 @@
-use bevy::{
-    asset::{LoadState, UntypedAssetId},
-    core::FrameCount,
-};
+use bevy::asset::{LoadState, UntypedAssetId};
 
 use crate::prelude::*;
 
@@ -87,15 +84,11 @@ fn toggle_pause_game(
     }
 }
 
-fn prepare_window(
-    mut next_state: ResMut<NextState<GameState>>,
-    mut window: Query<&mut Window>,
-    frames: Res<FrameCount>,
-) {
-    if frames.0 == 3 {
-        window.single_mut().visible = true;
-        next_state.set(GameState::Loading)
-    }
+fn prepare_window(mut next_state: ResMut<NextState<GameState>>, mut window: Query<&mut Window>) {
+    // TODO: Make this wait for more frames.
+    // https://github.com/bevyengine/bevy/issues/14398
+    window.single_mut().visible = true;
+    next_state.set(GameState::Loading);
 }
 
 fn loading_state(

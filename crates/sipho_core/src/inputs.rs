@@ -27,7 +27,8 @@ impl Plugin for InputActionPlugin {
                 PreUpdate,
                 (InputEvent::update)
                     .after(InputSystem)
-                    .run_if(in_state(DebugState::NoDebug)),
+                    .run_if(in_state(DebugState::NoDebug))
+                    .run_if(not(in_state(GameState::PrepareWindow))),
             );
     }
 }

@@ -261,7 +261,7 @@ impl FogShaderMaterial {
         shader_assets.get_mut(&assets.shader_material);
 
         let image = images.get_mut(&fog_assets.texture).unwrap();
-        if let Ok(DynamicImage::ImageRgba8(mut rgba)) = image.clone().try_into_dynamic().into() {
+        if let Ok(DynamicImage::ImageRgba8(mut rgba)) = image.clone().try_into_dynamic() {
             for event in updates.read() {
                 for &VisibilityUpdate { rowcol, amount, .. } in &event.removals {
                     let amount_u8 = ((amount * 0.99) * (u8::MAX as f32)) as u8;

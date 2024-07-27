@@ -10,7 +10,7 @@ pub struct CustomConsolePlugin;
 
 impl Plugin for CustomConsolePlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_plugins(ConsolePlugin.into())
+        app.add_plugins(ConsolePlugin)
             .add_console_command::<SpawnCommand, _>(
                 SpawnCommand::update.in_set(FixedUpdateStage::Spawn),
             )

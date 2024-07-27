@@ -140,9 +140,6 @@ impl Selector {
                             *visibility = Visibility::Hidden;
                             // On release, select the hovered entity.
                             if control.duration < Duration::from_millis(100) {
-                                for entity in highlights.iter() {
-                                    commands.entity(entity).remove_parent().despawn();
-                                }
                                 if let Ok((_, _, mesh)) = unselected.get(control.entity) {
                                     // This entity reference is from PreUpdate, so it may have been deleted.
                                     if commands.get_entity(control.entity).is_none() {
@@ -226,12 +223,12 @@ impl FromWorld for SelectorAssets {
                 ..default()
             }),
             white_material: world.append_asset(StandardMaterial {
-                base_color: ANTIQUE_WHITE.with_alpha(0.3).into(),
+                base_color: ANTIQUE_WHITE.with_alpha(0.4).into(),
                 alpha_mode: AlphaMode::Blend,
                 ..default()
             }),
             hover_material: world.append_asset(StandardMaterial {
-                base_color: WHITE.with_alpha(0.15).into(),
+                base_color: WHITE.with_alpha(0.25).into(),
                 alpha_mode: AlphaMode::Blend,
                 ..default()
             }),

@@ -50,7 +50,7 @@ impl BubbleSpawner {
         let effect: Handle<EffectAsset> = effects.add(
             EffectAsset::new(
                 vec![2048],
-                Spawner::rate(CpuValue::Uniform((10., 15.))),
+                Spawner::rate(CpuValue::Uniform((20., 25.))),
                 writer.finish(),
             )
             .with_name("emit:burst")
@@ -78,7 +78,7 @@ impl BubbleSpawner {
                     gradient: {
                         let mut gradient = Gradient::new();
                         gradient.add_key(0.0, Vec4::new(0.9, 1.0, 1.0, 0.0));
-                        gradient.add_key(0.5, Vec4::new(0.9, 1.0, 1.0, 0.07));
+                        gradient.add_key(0.5, Vec4::new(0.9, 1.0, 1.0, 0.1));
                         gradient.add_key(1.0, Vec4::new(0.9, 1.0, 1.0, 0.0));
                         gradient
                     },
@@ -90,7 +90,7 @@ impl BubbleSpawner {
                     gradient: {
                         let mut gradient = Gradient::new();
                         gradient.add_key(0.0, Vec2::splat(5.0));
-                        gradient.add_key(1.0, Vec2::splat(9.0));
+                        gradient.add_key(1.0, Vec2::splat(10.0));
                         gradient
                     },
                     screen_space_size: false,

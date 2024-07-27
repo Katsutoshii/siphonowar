@@ -44,8 +44,8 @@ impl Team {
     /// Number of teams.
     pub const COUNT: usize = 3;
 
-    pub const BRIGHT_SEA_GREEN: Color = Color::srgb(0.18 + 0.2, 0.55 + 0.2, 0.34 + 0.2);
-    pub const BRIGHT_TEAL: Color = Color::srgb(0.1, 0.5 + 0.1, 0.5 + 0.1);
+    pub const BRIGHT_SEA_GREEN: Color = Color::srgb(0.18 + 0.15, 0.55 + 0.15, 0.34 + 0.15);
+    pub const BRIGHT_TEAL: Color = Color::srgb(0.1 + 0.1, 0.5 + 0.15, 0.5 + 0.15);
     pub const DARKER_TOMATO: Color = Color::srgb(1.0 * 0.7, 0.39 * 0.7, 0.28 * 0.7);
 
     pub const COLORS: [Color; Self::COUNT] = [
@@ -65,19 +65,20 @@ impl TeamMaterials {
     pub fn new(color: Color, assets: &mut Assets<StandardMaterial>) -> Self {
         Self {
             primary: assets.add(StandardMaterial {
-                base_color: color.into(),
+                base_color: color,
                 perceptual_roughness: 1.0,
                 emissive: color.into(),
                 ..default()
             }),
             secondary: assets.add(StandardMaterial {
-                base_color: color.into(),
+                base_color: color,
                 perceptual_roughness: 1.0,
                 emissive: color.into(),
                 ..default()
             }),
             background: assets.add(StandardMaterial {
-                base_color: color.with_alpha(0.3).into(),
+                base_color: color.with_alpha(0.3),
+                emissive: color.with_alpha(0.3).into(),
                 perceptual_roughness: 1.0,
                 alpha_mode: AlphaMode::Blend,
                 ..default()
