@@ -14,6 +14,7 @@ strum_macros = "0.26.2"
 sipho_core = { path = "../sipho_core" }
 sipho_vfx = { path = "../sipho_vfx" }
 bevy_newtonian2d = { path = "../bevy_newtonian2d" }
+bevy_bloom = { path = "../bevy_bloom" }
 bevy_bundletree = "0.1.2"
 sipho_sfx = { path = "../sipho_sfx" }
 enum-iterator = "1.4.1"

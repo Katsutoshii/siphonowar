@@ -1,10 +1,13 @@
 use bevy::color::palettes::css::ANTIQUE_WHITE;
 use bevy::{
     core_pipeline::{
-        bloom::{BloomCompositeMode, BloomPrefilterSettings, BloomSettings},
+        // bloom::{BloomCompositeMode, BloomPrefilterSettings},
         tonemapping::Tonemapping,
     },
     render::view::RenderLayers,
+};
+use bevy_bloom::{
+    BloomCompositeMode, BloomPrefilterSettings, CustomBloomPlugin, CustomBloomSettings,
 };
 use std::f32::consts::PI;
 
@@ -15,6 +18,7 @@ impl Plugin for CameraPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(ClearColor(Color::BLACK))
             .insert_resource(Msaa::Sample4)
+            .add_plugins(CustomBloomPlugin)
             .add_event::<CameraMoveEvent>()
             .add_systems(Startup, startup)
             .insert_resource(AmbientLight {
@@ -48,7 +52,7 @@ pub fn startup(mut commands: Commands) {
             tonemapping: Tonemapping::AcesFitted,
             ..default()
         },
-        BloomSettings {
+        CustomBloomSettings {
             intensity: 0.9,
             low_frequency_boost: 0.5,
             low_frequency_boost_curvature: 0.5,
@@ -58,6 +62,8 @@ pub fn startup(mut commands: Commands) {
                 threshold_softness: 0.6,
             },
             composite_mode: BloomCompositeMode::Additive,
+            max_mip_dimension: 1024,
+            radius: 0.002,
         },
         CameraController::default(),
         InheritedVisibility::default(),
