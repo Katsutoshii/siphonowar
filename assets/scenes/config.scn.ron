@@ -323,7 +323,7 @@
       ),
       Food: ObjectConfig(
         physics_material: PhysicsMaterial(
-          max_velocity: 8.0,
+          max_velocity: 6.0,
           velocity_smoothing: 0.5,
         ),
         neighbor_radius: 128.0,
@@ -340,6 +340,34 @@
         health: 1,
         idle_speed: 0.2,
         interactions: InteractionConfigs({}),
+        controls: ObjectControlConfig({})
+      ),
+      Gem: ObjectConfig(
+        physics_material: PhysicsMaterial(
+          max_velocity: 3.0,
+          velocity_smoothing: 0.5,
+        ),
+        neighbor_radius: 32.0,
+        nav_flow_factor: 1.,
+        attack_velocity: 0.0,
+        attack_radius: 32.0,
+        spawn_velocity: 2.0,
+        spawn_cost: 4,
+        objective: ObjectiveConfig(
+          repell_radius: 0.0,
+          slow_factor: 0.0,
+        ),
+        radius: 12.0,
+        health: 1,
+        idle_speed: 0.0,
+        interactions: InteractionConfigs({
+          Gem: InteractionConfig(
+            separation_radius: 10.0,
+            separation_force: 0.50,
+            cohesion_force: 0.00,
+            alignment_factor: 0.2,
+            damage_amount: 0,
+          )}),
         controls: ObjectControlConfig({})
       )
     }),

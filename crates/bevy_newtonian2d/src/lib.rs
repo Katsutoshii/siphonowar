@@ -153,7 +153,7 @@ pub fn fixed_update(
     for (mut position, mut velocity, mut force, mass, material) in &mut query {
         let prev_velocity = *velocity;
 
-        velocity.0 += force.0 / (mass.0).max(0.1);
+        velocity.0 += force.0 / (mass.0);
         let overflow = velocity.length_squared() / (material.max_velocity.powi(2)) * 0.1;
         velocity.0 = velocity.clamp_length_max(material.max_velocity);
         velocity.0 *= overflow.clamp(1.0, 10.0);
