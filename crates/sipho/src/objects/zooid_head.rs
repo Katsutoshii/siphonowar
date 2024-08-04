@@ -55,7 +55,7 @@ impl ZooidHead {
     ) {
         let config = configs.get(&Object::Head).unwrap();
         for (mut transform, consumer) in query.iter_mut() {
-            let count = 1. + consumer.consumed as f32 / 20.;
+            let count = 1. + consumer.food_consumed() as f32 / 20.;
 
             transform.scale = Vec3::splat(config.radius * 1.5 * count / (count + 1.))
         }

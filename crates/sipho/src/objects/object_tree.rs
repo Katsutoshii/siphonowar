@@ -24,6 +24,12 @@ pub struct FoodBundle {
     pub object: ObjectBundle,
 }
 
+#[derive(Bundle, Default)]
+pub struct GemBundle {
+    pub follower: PathToHeadFollower,
+    pub object: ObjectBundle,
+}
+
 #[derive(BundleEnum, IntoBundleTree)]
 pub enum ObjectTree {
     Worker(WorkerBundle),
@@ -32,6 +38,7 @@ pub enum ObjectTree {
     Head(HeadBundle),
     Plankton(PlanktonBundle),
     Food(FoodBundle),
+    Gem(GemBundle),
     Background(BackgroundBundle),
     Highlight(HighlightBundle),
 }
@@ -39,19 +46,20 @@ impl ObjectTree {
     pub fn new(
         spec: ObjectSpec,
         mesh: Handle<Mesh>,
-        team_material: TeamMaterials,
+        background_material: Handle<StandardMaterial>,
+        primary_material: Handle<StandardMaterial>,
         config: &ObjectConfig,
         time: &Time,
     ) -> BundleTree<ObjectTree> {
         let background = BackgroundBundle {
             mesh: mesh.clone(),
-            material: team_material.background.clone(),
+            material: background_material.clone(),
             ..default()
         };
         let object_type = spec.object;
         let object = ObjectBundle {
             mesh: mesh.clone(),
-            material: team_material.primary,
+            material: primary_material.clone(),
             ..ObjectBundle::new(config, spec, time)
         };
         match object_type {
@@ -81,6 +89,11 @@ impl ObjectTree {
             }
             .with_children([background.into_tree()]),
             Object::Food => FoodBundle {
+                object,
+                ..default()
+            }
+            .with_children([background.into_tree()]),
+            Object::Gem => GemBundle {
                 object,
                 ..default()
             }

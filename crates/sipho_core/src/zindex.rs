@@ -8,6 +8,7 @@ pub const ZOOID_HEAD: f32 = 0.0 * FACTOR;
 pub const ZOOIDS_MIN: f32 = 0.010 * FACTOR;
 pub const ZOOIDS_MAX: f32 = 0.10 * FACTOR;
 pub const FOOD: f32 = 0.12 * FACTOR;
+pub const GEM: f32 = 0.13 * FACTOR;
 
 pub const NAVIGATION_LAYER: f32 = 0.14 * FACTOR;
 pub const HIGHLIGHT: f32 = 0.15 * FACTOR;

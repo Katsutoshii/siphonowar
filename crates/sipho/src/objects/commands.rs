@@ -97,8 +97,8 @@ pub struct ObjectCommands<'w, 's> {
 impl ObjectCommands<'_, '_> {
     pub fn try_consume(&mut self, entity: Entity, n: usize) -> Result<(), Error> {
         if let Ok(mut consumer) = self.consumers.get_mut(entity) {
-            if consumer.consumed >= n {
-                consumer.spend(n, &mut self.commands);
+            if consumer.food_consumed() >= n {
+                consumer.spend_food(n, &mut self.commands);
             } else {
                 return Err(Error::Default);
             }
@@ -113,8 +113,20 @@ impl ObjectCommands<'_, '_> {
                 return None;
             }
         }
+        let primary_material = if spec.object == Object::Gem {
+            self.assets.crystal_material.clone()
+        } else {
+            team_material.primary.clone()
+        };
         let mesh = self.assets.object_meshes[&spec.object].clone();
-        let bundle_tree = ObjectTree::new(spec, mesh, team_material, config, &self.time);
+        let bundle_tree = ObjectTree::new(
+            spec,
+            mesh,
+            team_material.background,
+            primary_material,
+            config,
+            &self.time,
+        );
         Some(self.commands.spawn_tree(bundle_tree))
     }
 

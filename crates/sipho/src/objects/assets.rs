@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use bevy::color::palettes::css::SEA_GREEN;
+use bevy::color::palettes::css::{PURPLE, SEA_GREEN};
 use bevy::utils::HashMap;
 
 /// Handles to common zooid assets.
@@ -10,6 +10,7 @@ pub struct ObjectAssets {
     pub team_materials: Vec<TeamMaterials>,
     pub builder_material: Handle<StandardMaterial>,
     pub food_material: Handle<StandardMaterial>,
+    pub crystal_material: Handle<StandardMaterial>,
 }
 impl ObjectAssets {
     pub fn get_team_material(&self, team: Team) -> TeamMaterials {
@@ -28,6 +29,10 @@ impl FromWorld for ObjectAssets {
                 meshes.insert(Object::Head, meshes[&Object::Worker].clone());
                 meshes.insert(Object::Plankton, meshes[&Object::Worker].clone());
                 meshes.insert(Object::Food, meshes[&Object::Worker].clone());
+                meshes.insert(
+                    Object::Gem,
+                    world.load_asset("models/minerals/Gem.glb#Mesh0/Primitive0"),
+                );
                 meshes.insert(
                     Object::Shocker,
                     world.load_asset("models/zooids/shocker/shocker.glb#Mesh0/Primitive0"),
@@ -56,6 +61,13 @@ impl FromWorld for ObjectAssets {
             food_material: world.append_asset(StandardMaterial {
                 base_color: SEA_GREEN.into(),
                 emissive: SEA_GREEN.into(),
+                perceptual_roughness: 1.0,
+                alpha_mode: AlphaMode::Opaque,
+                ..default()
+            }),
+            crystal_material: world.append_asset(StandardMaterial {
+                base_color: PURPLE.into(),
+                emissive: PURPLE.into(),
                 perceptual_roughness: 1.0,
                 alpha_mode: AlphaMode::Opaque,
                 ..default()
