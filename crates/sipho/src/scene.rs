@@ -27,7 +27,7 @@ impl Plugin for LoadableScenePlugin {
 pub struct SaveEntity;
 
 // The initial scene file will be loaded below and not change when the scene is saved
-const SCENE_FILE_PATH: &str = "scenes/test.scn.ron";
+const SCENE_FILE_PATH: &str = "scenes/config.scn.ron";
 
 pub fn load_system(
     mut commands: Commands,
