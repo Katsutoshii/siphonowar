@@ -12,6 +12,7 @@ impl Plugin for LoadableScenePlugin {
         app.add_event::<SaveEvent>()
             .register_type::<SaveEntity>()
             .register_type::<Name>()
+            .register_type::<Health>()
             .register_type::<core::num::NonZeroU16>()
             .add_systems(PreStartup, load_system)
             .add_systems(

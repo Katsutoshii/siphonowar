@@ -224,6 +224,7 @@ impl FireworkCommands<'_, '_> {
         let count = match spec.size {
             VfxSize::Small => 1,
             VfxSize::Medium => 2,
+            VfxSize::Large => 10,
         };
         for _ in 0..count {
             let entity = match spec.color {

@@ -103,6 +103,13 @@
             cohesion_force: 0.0,
             alignment_factor: 0.0,
             damage_amount: 1,
+          ),
+          GemStone: InteractionConfig(
+            separation_radius: 10.0,
+            separation_force: 0.1,
+            cohesion_force: 0.0,
+            alignment_factor: 0.0,
+            damage_amount: 1,
           )
         }),
         controls: ObjectControlConfig({
@@ -162,7 +169,15 @@
             cohesion_force: 0.0,
             alignment_factor: 0.0,
             damage_amount: 1,
+          ),
+          GemStone: InteractionConfig(
+            separation_radius: 10.0,
+            separation_force: 0.1,
+            cohesion_force: 0.0,
+            alignment_factor: 0.0,
+            damage_amount: 1,
           )
+          
         }),
         controls: ObjectControlConfig({
           Grid21: Attack
@@ -368,6 +383,27 @@
             alignment_factor: 0.2,
             damage_amount: 0,
           )}),
+        controls: ObjectControlConfig({})
+      ),
+      GemStone: ObjectConfig(
+        physics_material: PhysicsMaterial(
+          max_velocity: 0.01,
+          velocity_smoothing: 0.5,
+        ),
+        neighbor_radius: 128.0,
+        nav_flow_factor: 1.,
+        attack_velocity: 0.0,
+        attack_radius: 265.0,
+        spawn_velocity: 0.0,
+        spawn_cost: 4,
+        objective: ObjectiveConfig(
+          repell_radius: 0.0,
+          slow_factor: 0.0,
+        ),
+        radius: 100.0,
+        health: 50,
+        idle_speed: 0.01,
+        interactions: InteractionConfigs({}),
         controls: ObjectControlConfig({})
       )
     }),

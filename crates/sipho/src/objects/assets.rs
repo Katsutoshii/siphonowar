@@ -34,6 +34,10 @@ impl FromWorld for ObjectAssets {
                     world.load_asset("models/minerals/Gem.glb#Mesh0/Primitive0"),
                 );
                 meshes.insert(
+                    Object::GemStone,
+                    world.load_asset("models/minerals/GemStone.glb#Mesh0/Primitive0"),
+                );
+                meshes.insert(
                     Object::Shocker,
                     world.load_asset("models/zooids/shocker/shocker.glb#Mesh0/Primitive0"),
                 );

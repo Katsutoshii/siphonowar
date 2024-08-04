@@ -21,6 +21,7 @@ pub mod prelude {
 pub enum VfxSize {
     Small,
     Medium,
+    Large,
 }
 
 /// Plugin for effects.

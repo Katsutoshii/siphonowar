@@ -113,7 +113,7 @@ impl ObjectCommands<'_, '_> {
                 return None;
             }
         }
-        let primary_material = if spec.object == Object::Gem {
+        let primary_material = if matches!(spec.object, Object::Gem | Object::GemStone) {
             self.assets.crystal_material.clone()
         } else {
             team_material.primary.clone()

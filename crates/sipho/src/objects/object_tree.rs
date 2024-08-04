@@ -30,6 +30,11 @@ pub struct GemBundle {
     pub object: ObjectBundle,
 }
 
+#[derive(Bundle, Default)]
+pub struct GemStoneBundle {
+    pub object: ObjectBundle,
+}
+
 #[derive(BundleEnum, IntoBundleTree)]
 pub enum ObjectTree {
     Worker(WorkerBundle),
@@ -39,6 +44,7 @@ pub enum ObjectTree {
     Plankton(PlanktonBundle),
     Food(FoodBundle),
     Gem(GemBundle),
+    GemStone(GemStoneBundle),
     Background(BackgroundBundle),
     Highlight(HighlightBundle),
 }
@@ -94,6 +100,11 @@ impl ObjectTree {
             }
             .into_tree(),
             Object::Gem => GemBundle {
+                object,
+                ..default()
+            }
+            .into_tree(),
+            Object::GemStone => GemStoneBundle {
                 object,
                 ..default()
             }

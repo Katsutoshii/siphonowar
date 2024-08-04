@@ -1,5 +1,7 @@
 use std::time::Duration;
 
+use rand::random;
+
 use crate::{objectives::Stunned, prelude::*};
 
 pub struct DamagePlugin;
@@ -15,7 +17,8 @@ impl Plugin for DamagePlugin {
     }
 }
 
-#[derive(Component)]
+#[derive(Component, Reflect)]
+#[reflect(Component)]
 pub struct Health {
     pub health: i32,
     pub damageable: bool,
@@ -55,6 +58,24 @@ impl Health {
                         position: *position,
                         ..default()
                     });
+                }
+                if object == &Object::GemStone {
+                    for _ in 0..6 {
+                        let offset_pos = Position(Vec2 {
+                            x: random::<f32>() * 100.0,
+                            y: random::<f32>() * 100.0,
+                        });
+                        object_commands.spawn(ObjectSpec {
+                            object: Object::Gem,
+                            position: *position + offset_pos,
+                            ..default()
+                        });
+                        firework_events.send(FireworkSpec {
+                            size: VfxSize::Large,
+                            position: position.0.extend(0.0) + offset_pos.0.extend(0.0),
+                            color: FireworkColor::White,
+                        });
+                    }
                 }
                 if object != &Object::Food && vis != Visibility::Hidden {
                     firework_events.send(FireworkSpec {
