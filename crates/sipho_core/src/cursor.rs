@@ -35,7 +35,6 @@ pub struct Cursor;
 impl Cursor {
     ///Spawn the cursor.
     pub fn startup(mut commands: Commands, assets: Res<CursorAssets>) {
-        info!("Startup");
         let style = Style {
             width: Val::Px(32.0),
             position_type: PositionType::Absolute,

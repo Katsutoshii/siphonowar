@@ -24,6 +24,24 @@ impl Plugin for SelectorPlugin {
 #[reflect(Component)]
 #[component(storage = "SparseSet")]
 pub struct Selected;
+impl Selected {
+    pub fn highlight_selected(
+        mut commands: Commands,
+        query: Query<(Entity, &Handle<Mesh>)>,
+        assets: Res<SelectorAssets>,
+    ) {
+        for (entity, mesh) in query.iter() {
+            let child = commands
+                .spawn(HighlightBundle::new(
+                    mesh.clone(),
+                    assets.white_material.clone(),
+                    Highlight::SIZE,
+                ))
+                .id();
+            commands.entity(entity).add_child(child);
+        }
+    }
+}
 
 #[derive(Component, Default, PartialEq, Debug, Clone, Copy, Reflect)]
 #[reflect(Component)]

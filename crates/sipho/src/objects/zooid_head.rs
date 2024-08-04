@@ -28,6 +28,14 @@ impl Plugin for ZooidHeadPlugin {
     }
 }
 
+#[derive(Bundle, Default)]
+pub struct HeadBundle {
+    pub worker: ZooidHead,
+    pub nearest_head: NearestZooidHead,
+    pub object: ObjectBundle,
+    pub consumer: Consumer,
+}
+
 enum SpawnedType {
     Worker,
     Shocker,

@@ -1,20 +1,11 @@
-use crate::{
-    prelude::*,
-    ui::selector::{Highlight, HighlightBundle, SelectorAssets},
-};
+use crate::prelude::*;
 use bevy::{
     ecs::system::{EntityCommands, SystemParam},
     prelude::*,
 };
+use bevy_bundletree::*;
 
-use super::{
-    neighbors::NeighborsBundle,
-    object::ObjectBackground,
-    plankton::Plankton,
-    zooid_head::{NearestZooidHead, ZooidHead},
-    zooid_worker::ZooidWorker,
-    ObjectAssets, TeamMaterials,
-};
+use super::{neighbors::NeighborsBundle, object_tree::ObjectTree};
 
 #[derive(Default, Debug)]
 pub struct ObjectSpec {
@@ -94,7 +85,6 @@ impl ObjectBundle {
 #[derive(SystemParam)]
 pub struct ObjectCommands<'w, 's> {
     assets: Res<'w, ObjectAssets>,
-    selector_assets: Res<'w, SelectorAssets>,
     pub commands: Commands<'w, 's>,
     configs: Res<'w, ObjectConfigs>,
     parents: Query<'w, 's, &'static Children, Without<Parent>>,
@@ -123,119 +113,9 @@ impl ObjectCommands<'_, '_> {
                 return None;
             }
         }
-        let commands = match spec.object {
-            Object::Worker => {
-                let mesh = self.assets.object_meshes[&Object::Worker].clone();
-                let background = self.background_bundle(team_material.clone(), mesh.clone());
-                let mut commands = self.commands.spawn((
-                    ZooidWorker::default(),
-                    NearestZooidHead::default(),
-                    ObjectBundle {
-                        mesh: mesh.clone(),
-                        material: team_material.primary,
-                        ..ObjectBundle::new(config, spec, &self.time)
-                    },
-                ));
-                commands.with_children(|parent| {
-                    parent.spawn(background);
-                });
-                commands
-            }
-            Object::Shocker => {
-                let mesh = self.assets.object_meshes[&Object::Shocker].clone();
-                let background = self.background_bundle(team_material.clone(), mesh.clone());
-                let mut commands = self.commands.spawn((
-                    NearestZooidHead::default(),
-                    ObjectBundle {
-                        mesh,
-                        material: team_material.primary,
-                        ..ObjectBundle::new(config, spec, &self.time)
-                    },
-                ));
-                commands.with_children(|parent| {
-                    parent.spawn(background);
-                });
-                commands
-            }
-            Object::Armor => {
-                let mesh = self.assets.object_meshes[&Object::Armor].clone();
-                let background = self.background_bundle(team_material.clone(), mesh.clone());
-                let mut commands = self.commands.spawn((
-                    NearestZooidHead::default(),
-                    ObjectBundle {
-                        mesh,
-                        material: team_material.primary,
-                        ..ObjectBundle::new(config, spec, &self.time)
-                    },
-                ));
-                commands.with_children(|parent| {
-                    parent.spawn(background);
-                });
-                commands
-            }
-            Object::Head => {
-                let selected = spec.selected;
-                let mesh = self.assets.object_meshes[&Object::Head].clone();
-                let background = self.background_bundle(team_material.clone(), mesh.clone());
-                let mut commands = self.commands.spawn((
-                    ZooidHead::default(),
-                    Consumer::new(0),
-                    ObjectBundle {
-                        mesh: mesh.clone(),
-                        material: team_material.primary,
-                        ..ObjectBundle::new(config, spec, &self.time)
-                    },
-                ));
-                commands.insert(PathToHead {
-                    head: Some(commands.id()),
-                    ..default()
-                });
-                if selected {
-                    commands.insert(Selected);
-                }
-                commands.with_children(|parent| {
-                    parent.spawn(background);
-
-                    if selected {
-                        parent.spawn(HighlightBundle::new(
-                            mesh.clone(),
-                            self.selector_assets.white_material.clone(),
-                            Highlight::SIZE,
-                        ));
-                    }
-                });
-                let entity = commands.id();
-                commands.insert(Objectives::new(Objective::FollowEntity(entity)));
-
-                commands
-            }
-            Object::Plankton => {
-                let mesh = self.assets.object_meshes[&Object::Plankton].clone();
-                let background = self.background_bundle(team_material.clone(), mesh.clone());
-                let mut commands = self.commands.spawn((
-                    Plankton,
-                    ObjectBundle {
-                        mesh: mesh.clone(),
-                        material: team_material.primary,
-                        ..ObjectBundle::new(config, spec, &self.time)
-                    },
-                ));
-                commands.with_children(|parent| {
-                    parent.spawn(background);
-                });
-                commands
-            }
-            Object::Food => self.commands.spawn((
-                PathToHeadFollower::default(),
-                ObjectBundle {
-                    mesh: self.assets.object_meshes[&Object::Food].clone(),
-                    material: team_material.secondary,
-                    ..ObjectBundle::new(config, spec, &self.time)
-                },
-            )),
-            Object::BuilderPreview => unreachable!(),
-        };
-        Some(commands)
+        let mesh = self.assets.object_meshes[&spec.object].clone();
+        let bundle_tree = ObjectTree::new(spec, mesh, team_material, config, &self.time);
+        Some(self.commands.spawn_tree(bundle_tree))
     }
 
     /// Queue a despawn event for this entity.
@@ -248,30 +128,5 @@ impl ObjectCommands<'_, '_> {
             }
         }
         self.despawn_events.send(DespawnEvent(entity));
-    }
-
-    pub fn background_bundle(
-        &self,
-        team_material: TeamMaterials,
-        mesh: Handle<Mesh>,
-    ) -> impl Bundle {
-        (
-            ObjectBackground,
-            PbrBundle {
-                mesh,
-                transform: Transform {
-                    scale: Vec3::splat(1.49),
-                    translation: Vec3 {
-                        x: 0.,
-                        y: 0.,
-                        z: -0.1,
-                    },
-                    ..default()
-                },
-                material: team_material.background,
-                ..default()
-            },
-            Name::new("ObjectBackground"),
-        )
     }
 }

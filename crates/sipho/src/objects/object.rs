@@ -18,11 +18,7 @@ impl Plugin for ObjectPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<Object>().add_systems(
             FixedUpdate,
-            ((
-                Object::update_force,
-                Object::update_collisions,
-                ObjectBackground::update,
-            )
+            ((Object::update_force, Object::update_collisions)
                 .in_set(FixedUpdateStage::AccumulateForces),)
                 .in_set(GameStateSet::Running),
         );
@@ -81,7 +77,7 @@ impl Object {
 
 #[derive(QueryData)]
 #[query_data(mutable)]
-pub struct UpdateforceQueryData {
+pub struct UpdateForceQueryData {
     entity: Entity,
     object: &'static Object,
     velocity: &'static Velocity,
@@ -108,7 +104,7 @@ impl Object {
         }
     }
     pub fn update_force(
-        mut query: Query<UpdateforceQueryData>,
+        mut query: Query<UpdateForceQueryData>,
         others: Query<(&Self, &Velocity)>,
         configs: Res<ObjectConfigs>,
     ) {
@@ -252,28 +248,5 @@ impl Object {
     ) -> Force {
         let magnitude = (radius_squared - distance_squared) / radius_squared;
         Force((other_velocity.0 - velocity.0) * config.alignment_factor * magnitude)
-    }
-}
-
-#[derive(Component, Default)]
-pub struct ObjectBackground;
-impl ObjectBackground {
-    pub fn update(
-        mut query: Query<(Entity, &mut Transform, Option<&Parent>), With<Self>>,
-        parents: Query<(&GlobalTransform, &Velocity), With<Children>>,
-    ) {
-        for (entity, mut transform, parent) in &mut query {
-            if let Some(parent) = parent {
-                if let Ok((parent_transform, parent_velocity)) = parents.get(parent.get()) {
-                    let offset = -0.1 * parent_velocity.extend(0.);
-                    let inverse = parent_transform.compute_transform().rotation.inverse();
-                    let result = inverse.mul_vec3(offset);
-                    transform.translation.x = result.x;
-                    transform.translation.y = result.y;
-                }
-            } else {
-                info!("No parent, despawn background! {:?}", entity);
-            }
-        }
     }
 }

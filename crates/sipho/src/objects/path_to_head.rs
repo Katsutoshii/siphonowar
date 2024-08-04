@@ -13,7 +13,11 @@ impl Plugin for PathToHeadPlugin {
             .register_type::<PathToHeadFollower>()
             .add_systems(
                 FixedUpdate,
-                (PathToHead::update, PathToHeadFollower::update)
+                (
+                    PathToHead::init_heads,
+                    PathToHead::update,
+                    PathToHeadFollower::update,
+                )
                     .in_set(GameStateSet::Running)
                     .in_set(FixedUpdateStage::AccumulateForces),
             );
@@ -30,6 +34,14 @@ impl PathToHead {
     pub fn clear(&mut self) {
         self.head = None;
         self.next = None;
+    }
+
+    pub fn init_heads(
+        mut heads: Query<(Entity, &mut PathToHead), (Added<PathToHead>, With<ZooidHead>)>,
+    ) {
+        for (entity, mut path) in heads.iter_mut() {
+            path.head = Some(entity);
+        }
     }
 
     // Point everything to its head.

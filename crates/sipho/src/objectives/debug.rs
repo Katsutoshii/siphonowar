@@ -7,7 +7,6 @@ pub struct ObjectiveDebugger;
 impl ObjectiveDebugger {
     #[allow(dead_code)]
     pub fn bundle(self) -> impl Bundle {
-        info!("ObjectiveDebugger::bundle");
         (
             Text2dBundle {
                 text: Text {

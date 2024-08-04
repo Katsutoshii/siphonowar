@@ -6,7 +6,7 @@ version = "0.1.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = {version = "0.14.0", features = ["file_watcher"]}
+bevy = {version = "0.14", features = ["file_watcher"]}
 derive_more = "0.99.17"
 
 [lints]

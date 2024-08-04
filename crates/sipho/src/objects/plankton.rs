@@ -18,6 +18,12 @@ impl Plugin for PlanktonPlugin {
     }
 }
 
+#[derive(Bundle, Default)]
+pub struct PlanktonBundle {
+    pub plankton: Plankton,
+    pub object: ObjectBundle,
+}
+
 #[derive(Component, Default)]
 pub struct Plankton;
 impl Plankton {

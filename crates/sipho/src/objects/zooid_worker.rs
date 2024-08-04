@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use crate::zooid_head::NearestZooidHead;
 
 pub struct ZooidWorkerPlugin;
 impl Plugin for ZooidWorkerPlugin {
@@ -9,6 +10,13 @@ impl Plugin for ZooidWorkerPlugin {
                 .in_set(GameStateSet::Running),
         );
     }
+}
+
+#[derive(Bundle, Default)]
+pub struct WorkerBundle {
+    pub worker: ZooidWorker,
+    pub nearest_head: NearestZooidHead,
+    pub object: ObjectBundle,
 }
 
 /// State for an individual zooid.

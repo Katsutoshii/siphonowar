@@ -2,6 +2,7 @@ use crate::prelude::*;
 
 pub mod ai;
 mod assets;
+mod background;
 mod builder;
 mod carry;
 mod commands;
@@ -11,6 +12,7 @@ mod damage;
 mod elastic;
 mod neighbors;
 mod object;
+mod object_tree;
 mod path_to_head;
 mod plankton;
 pub mod zooid_head;
