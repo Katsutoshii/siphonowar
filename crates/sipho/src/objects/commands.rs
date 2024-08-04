@@ -7,10 +7,10 @@ use bevy_bundletree::*;
 
 use super::{neighbors::NeighborsBundle, object_tree::ObjectTree};
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone)]
 pub struct ObjectSpec {
     pub object: Object,
-    pub position: Vec2,
+    pub position: Position,
     pub team: Team,
     pub velocity: Option<Velocity>,
     pub objectives: Objectives,
@@ -60,7 +60,7 @@ impl ObjectBundle {
             },
             physics: PhysicsBundle {
                 material: config.physics_material.clone(),
-                position: Position(spec.position),
+                position: spec.position,
                 velocity: spec
                     .velocity
                     .unwrap_or(Velocity(Vec2::ONE) * config.spawn_velocity),
@@ -108,7 +108,7 @@ impl ObjectCommands<'_, '_> {
     pub fn spawn(&mut self, spec: ObjectSpec) -> Option<EntityCommands> {
         let config = &self.configs[&spec.object];
         let team_material = self.assets.get_team_material(spec.team);
-        if let Some(rowcol) = self.obstacles.to_rowcol(spec.position) {
+        if let Some(rowcol) = self.obstacles.to_rowcol(spec.position.0) {
             if self.obstacles[rowcol] != Obstacle::Empty {
                 return None;
             }
@@ -128,6 +128,13 @@ impl ObjectCommands<'_, '_> {
             &self.time,
         );
         Some(self.commands.spawn_tree(bundle_tree))
+    }
+    pub fn spawn_batch(&mut self, specs: Vec<ObjectSpec>) -> Option<Vec<Entity>> {
+        let mut entities = Vec::with_capacity(specs.len());
+        for spec in specs {
+            entities.push(self.spawn(spec)?.id());
+        }
+        Some(entities)
     }
 
     /// Queue a despawn event for this entity.

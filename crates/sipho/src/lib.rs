@@ -1,5 +1,6 @@
 pub mod ambience;
 pub mod camera;
+pub mod creatures;
 pub mod objectives;
 pub mod objects;
 pub mod scene;
@@ -38,6 +39,7 @@ impl Plugin for SiphonowarPlugin {
             CorePlugin,
             camera::CameraPlugin,
             objects::ObjectsPlugin,
+            creatures::CreaturePlugin,
             objectives::ObjectivePlugin,
             scene::LoadableScenePlugin,
             ui::UiPlugin,

@@ -92,12 +92,12 @@ impl ObjectTree {
                 object,
                 ..default()
             }
-            .with_children([background.into_tree()]),
+            .into_tree(),
             Object::Gem => GemBundle {
                 object,
                 ..default()
             }
-            .with_children([background.into_tree()]),
+            .into_tree(),
             Object::BuilderPreview => unreachable!(),
         }
     }

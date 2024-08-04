@@ -52,7 +52,7 @@ impl Health {
                 if object == &Object::Plankton {
                     object_commands.spawn(ObjectSpec {
                         object: Object::Food,
-                        position: position.0,
+                        position: *position,
                         ..default()
                     });
                 }

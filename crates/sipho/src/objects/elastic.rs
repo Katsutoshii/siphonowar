@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use bevy::ecs::system::{QueryLens, SystemParam};
+use bevy::ecs::system::{EntityCommands, QueryLens, SystemParam};
 use sipho_core::grid::fog::FogConfig;
 use smallvec::SmallVec;
 
@@ -85,39 +85,51 @@ impl ElasticCommands<'_, '_> {
     pub fn attachments(&mut self) -> QueryLens<&AttachedTo> {
         self.attachments.transmute_lens()
     }
-    pub fn tie(&mut self, entity1: Entity, entity2: Entity, team: Team) {
+    pub fn tie(&mut self, entity1: Entity, entity2: Entity, team: Team) -> Option<EntityCommands> {
+        let position1 = self.positions.get(entity1);
+        let position2 = self.positions.get(entity2);
+        if let (Ok(position1), Ok(position2)) = (position1, position2) {
+            self.tie_positions(entity1, *position1, entity2, *position2, team)
+        } else {
+            None
+        }
+    }
+
+    pub fn tie_positions(
+        &mut self,
+        entity1: Entity,
+        position1: Position,
+        entity2: Entity,
+        position2: Position,
+        team: Team,
+    ) -> Option<EntityCommands> {
         for pair in [(entity1, entity2), (entity2, entity1)] {
             let (entity1, entity2) = pair;
             if let Ok(ref mut attached_to) = self.attachments.get_mut(entity1) {
                 if attached_to.contains(&entity2) {
-                    return;
+                    return None;
                 }
                 attached_to.push(entity2);
             }
         }
+        let magnitude = position1.distance(position2.0);
 
-        let position1 = self.positions.get(entity1);
-        let position2 = self.positions.get(entity2);
-        if let (Ok(position1), Ok(position2)) = (position1, position2) {
-            let magnitude = position1.distance(position2.0);
-
-            self.commands.spawn(ElasticBundle {
-                elastic: Elastic((entity1, entity2)),
-                pbr: PbrBundle {
-                    mesh: self.assets.connector_mesh.clone(),
-                    material: self.assets.get_team_material(team).background,
-                    transform: Elastic::get_transform(
-                        position1.0,
-                        position2.0,
-                        magnitude,
-                        zindex::ZOOIDS_MIN,
-                        8.,
-                    ),
-                    ..default()
-                },
+        Some(self.commands.spawn(ElasticBundle {
+            elastic: Elastic((entity1, entity2)),
+            pbr: PbrBundle {
+                mesh: self.assets.connector_mesh.clone(),
+                material: self.assets.get_team_material(team).background,
+                transform: Elastic::get_transform(
+                    position1.0,
+                    position2.0,
+                    magnitude,
+                    zindex::ZOOIDS_MIN,
+                    8.,
+                ),
                 ..default()
-            });
-        }
+            },
+            ..default()
+        }))
     }
 }
 

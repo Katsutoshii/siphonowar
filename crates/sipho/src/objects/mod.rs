@@ -25,7 +25,7 @@ pub use {
     config::{InteractionConfig, InteractionConfigs, ObjectConfig, ObjectConfigs},
     consumer::Consumer,
     damage::{DamageEvent, Health},
-    elastic::{AttachedTo, Elastic, ElasticCommands, ElasticPlugin},
+    elastic::{AttachedTo, Elastic, ElasticCommands, ElasticPlugin, SpawnElasticEvent},
     neighbors::{AlliedCollisions, AlliedNeighbors, EnemyCollisions, EnemyNeighbors},
     object::Object,
     path_to_head::{PathToHead, PathToHeadFollower},

@@ -99,7 +99,7 @@ impl PathToHeadFollower {
                 if let Ok((target_position, target_velocity)) = others.get(target) {
                     let delta = target_position.0 - position.0;
                     let velocity_delta = target_velocity.0 - velocity.0;
-                    let magnitude = 0.4;
+                    let magnitude = 0.3;
                     *force += Force(delta * magnitude + velocity_delta);
                 } else {
                     follower.target = None;

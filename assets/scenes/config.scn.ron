@@ -263,7 +263,7 @@
           Plankton: InteractionConfig(
             separation_radius: 100.0,
             separation_force: 0.5,
-            cohesion_force: 0.1,
+            cohesion_force: 0.0,
             alignment_factor: 0.0,
             damage_amount: 0,
           )

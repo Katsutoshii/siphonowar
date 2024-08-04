@@ -34,11 +34,11 @@ impl Plankton {
     ) {
         let bounds = grid_spec.world2d_bounds_eps();
         for _ in 0..5000 {
-            let position = Vec2 {
-                x: rand::thread_rng().gen_range(bounds.min.x..bounds.max.x),
-                y: rand::thread_rng().gen_range(bounds.min.y..bounds.max.y),
-            };
-            let rowcol = obstacles.to_rowcol(position).unwrap();
+            let position = Position::new(
+                rand::thread_rng().gen_range(bounds.min.x..bounds.max.x),
+                rand::thread_rng().gen_range(bounds.min.y..bounds.max.y),
+            );
+            let rowcol = obstacles.to_rowcol(position.0).unwrap();
             if !obstacles.is_clear(rowcol) {
                 continue;
             }
@@ -57,7 +57,7 @@ impl Plankton {
                 commands.spawn(ObjectSpec {
                     object: Object::Plankton,
                     team: Team::None,
-                    position: control_event.position,
+                    position: Position(control_event.position),
                     ..default()
                 });
             }

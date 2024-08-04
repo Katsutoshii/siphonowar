@@ -269,7 +269,7 @@ impl ObjectBuilder {
                                     if commands.try_consume(head, 1).is_ok() {
                                         if let Some(entity_commands) = commands.spawn(ObjectSpec {
                                             object,
-                                            position: event.position,
+                                            position: Position(event.position),
                                             team: team_config.player_team,
                                             ..default()
                                         }) {

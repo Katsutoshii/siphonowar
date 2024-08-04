@@ -47,7 +47,7 @@ impl ZooidWorker {
                 commands.spawn(ObjectSpec {
                     object: Object::Worker,
                     team,
-                    position: control_event.position,
+                    position: Position(control_event.position),
                     ..default()
                 });
             }

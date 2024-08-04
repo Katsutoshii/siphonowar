@@ -64,7 +64,7 @@ impl ZooidHead {
     pub fn spawn_initial(mut commands: ObjectCommands, config: Res<TeamConfig>) {
         commands.spawn(ObjectSpec {
             object: Object::Head,
-            position: Vec2::ZERO,
+            position: Position::ZERO,
             selected: true,
             team: config.player_team,
             ..default()
@@ -72,7 +72,7 @@ impl ZooidHead {
         for _ in 0..20 {
             commands.spawn(ObjectSpec {
                 object: Object::Food,
-                position: Vec2::ZERO,
+                position: Position::ZERO,
                 ..default()
             });
         }
@@ -89,14 +89,14 @@ impl ZooidHead {
             if control_event.is_pressed(ControlAction::Head) {
                 commands.spawn(ObjectSpec {
                     object: Object::Head,
-                    position: control_event.position,
+                    position: Position(control_event.position),
                     team: config.player_team,
                     ..default()
                 });
                 for _ in 0..20 {
                     commands.spawn(ObjectSpec {
                         object: Object::Food,
-                        position: control_event.position,
+                        position: Position(control_event.position),
                         ..default()
                     });
                 }
@@ -111,7 +111,7 @@ impl ZooidHead {
                     {
                         commands.spawn(ObjectSpec {
                             object: Object::Head,
-                            position: control_event.position,
+                            position: Position(control_event.position),
                             team: config.player_team,
                             ..default()
                         });
@@ -174,7 +174,7 @@ impl ZooidHead {
         entity: Entity,
     ) -> Option<Entity> {
         if let Some(entity_commands) = commands.spawn(ObjectSpec {
-            position: position.0 + velocity.0,
+            position: Position(position.0 + velocity.0),
             velocity: Some(*velocity),
             team: *team,
             object,

@@ -164,7 +164,7 @@ impl EnemyAI {
                 } else {
                     let position = positions.get(head_entity).unwrap();
                     if let Some(new_entity) = commands.spawn(ObjectSpec {
-                        position: position.0 + spawn_velocity,
+                        position: Position(position.0 + spawn_velocity),
                         velocity: Some(Velocity(spawn_velocity)),
                         team: *team,
                         object: if ai.free_workers.len() % 20 == 0 {

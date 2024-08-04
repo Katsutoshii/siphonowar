@@ -69,6 +69,9 @@ impl Default for Mass {
 pub struct Position(pub Vec2);
 impl Position {
     pub const ZERO: Self = Self(Vec2::ZERO);
+    pub fn new(x: f32, y: f32) -> Self {
+        Self(Vec2::new(x, y))
+    }
 }
 
 /// Tracks velocity per entity.

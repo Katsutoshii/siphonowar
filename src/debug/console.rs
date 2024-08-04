@@ -56,11 +56,13 @@ impl SpawnCommand {
                     let sqrt_count = (count as f32).sqrt() as usize;
                     for i in 0..sqrt_count {
                         for j in 0..sqrt_count {
-                            let position = raycast_event.world_position
-                                + Vec2 {
-                                    x: (i * 40) as f32,
-                                    y: (j * 40) as f32,
-                                };
+                            let position = Position(
+                                raycast_event.world_position
+                                    + Vec2 {
+                                        x: (i * 40) as f32,
+                                        y: (j * 40) as f32,
+                                    },
+                            );
                             if let Some(mut entity_command) = commands.spawn(ObjectSpec {
                                 object,
                                 team,
@@ -108,22 +110,26 @@ impl BattleCommand {
                     for i in 0..sqrt_count {
                         for j in 0..sqrt_count {
                             let stride = 40;
-                            let blue_position = raycast_event.world_position
-                                + Vec2 {
-                                    x: (i * stride) as f32,
-                                    y: (j * stride) as f32,
-                                };
+                            let blue_position = Position(
+                                raycast_event.world_position
+                                    + Vec2 {
+                                        x: (i * stride) as f32,
+                                        y: (j * stride) as f32,
+                                    },
+                            );
                             commands.spawn(ObjectSpec {
                                 object: Object::Worker,
                                 team: Team::Blue,
                                 position: blue_position,
                                 ..default()
                             });
-                            let red_position = raycast_event.world_position
-                                + Vec2 {
-                                    x: (i * stride + stride / 2) as f32,
-                                    y: (j * stride + stride / 2) as f32,
-                                };
+                            let red_position = Position(
+                                raycast_event.world_position
+                                    + Vec2 {
+                                        x: (i * stride + stride / 2) as f32,
+                                        y: (j * stride + stride / 2) as f32,
+                                    },
+                            );
                             commands.spawn(ObjectSpec {
                                 object: Object::Worker,
                                 team: Team::Red,
