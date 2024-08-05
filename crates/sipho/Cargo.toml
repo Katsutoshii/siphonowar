@@ -16,6 +16,7 @@ sipho_vfx = { path = "../sipho_vfx" }
 bevy_newtonian2d = { path = "../bevy_newtonian2d" }
 bevy_bloom = { path = "../bevy_bloom" }
 bevy_bundletree = "0.1.2"
+bevy_heightmap = "0.2.3"
 sipho_sfx = { path = "../sipho_sfx" }
 enum-iterator = "1.4.1"
 smallvec = "1.13.2"

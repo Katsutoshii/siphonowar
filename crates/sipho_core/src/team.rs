@@ -44,8 +44,8 @@ impl Team {
     /// Number of teams.
     pub const COUNT: usize = 3;
 
-    pub const BRIGHT_SEA_GREEN: Color = Color::srgb(0.18 + 0.1, 0.55 + 0.1, 0.34 + 0.1);
-    pub const BRIGHT_TEAL: Color = Color::srgb(0.1 + 0.1, 0.5 + 0.1, 0.5 + 0.1);
+    pub const BRIGHT_SEA_GREEN: Color = Color::srgb(0.18 + 0.05, 0.55 + 0.05, 0.34 + 0.05);
+    pub const BRIGHT_TEAL: Color = Color::srgb(0.1 + 0.05, 0.5 + 0.05, 0.5 + 0.05);
     pub const DARKER_TOMATO: Color = Color::srgb(1.0 * 0.7, 0.39 * 0.7, 0.28 * 0.7);
 
     pub const COLORS: [Color; Self::COUNT] = [

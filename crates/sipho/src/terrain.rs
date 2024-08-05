@@ -1,16 +1,20 @@
 use crate::prelude::*;
 use bevy::pbr::NotShadowCaster;
 
-use std::f32::consts::PI;
+use bevy_heightmap::*;
+
 pub struct TerrainPlugin;
 impl Plugin for TerrainPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, Terrain::setup)
+        app.add_plugins(HeightMapPlugin)
+            .add_systems(Startup, Terrain::setup)
             .add_systems(OnExit(GameState::Loading), Terrain::setup_obstacles);
     }
 }
 
-pub const SCALE: f32 = 8192.;
+pub const SCALE: f32 = 1024. * 16.;
+pub const HEIGHT: f32 = 256.;
+pub const SEALEVEL: f32 = 0.7;
 
 #[derive(Component)]
 pub struct Terrain;
@@ -21,7 +25,7 @@ impl Terrain {
         mut materials: ResMut<Assets<StandardMaterial>>,
         mut load_state: ResMut<AssetLoadState>,
     ) {
-        let mesh: Handle<Mesh> = asset_server.load("models/terrain/terrain1.glb#Mesh0/Primitive0");
+        let mesh: Handle<Mesh> = asset_server.load("textures/heightmaps/terrain.hmp.png");
         load_state.track(&mesh);
         commands.spawn((
             Name::new("Terrain"),
@@ -36,8 +40,8 @@ impl Terrain {
                     ..default()
                 }),
                 transform: Transform {
-                    scale: SCALE * Vec3::ONE,
-                    rotation: Quat::from_axis_angle(Vec3::X, PI / 2.),
+                    translation: Vec2::ZERO.extend(-HEIGHT * SEALEVEL),
+                    scale: Vec2::splat(SCALE).extend(HEIGHT),
                     ..default()
                 },
                 ..default()
@@ -58,19 +62,10 @@ impl Terrain {
             .as_float3()
             .unwrap();
         for position in vertex_positions {
-            let position = Vec3::new(position[0], -position[2], position[1]) * SCALE;
-            if position.z > 0. {
+            let position = Vec3::new(position[0] * SCALE, position[1] * SCALE, position[2]);
+            if position.z > SEALEVEL {
                 if let Some(rowcol) = obstacles.to_rowcol(position.xy()) {
                     obstacles[rowcol] = Obstacle::Full;
-                    if obstacles.in_bounds(rowcol.above()) {
-                        obstacles[rowcol.above()] = Obstacle::Full;
-                    }
-                    if obstacles.in_bounds(rowcol.above_right()) {
-                        obstacles[rowcol.above_right()] = Obstacle::Full;
-                    }
-                    if obstacles.in_bounds(rowcol.right()) {
-                        obstacles[rowcol.right()] = Obstacle::Full;
-                    }
                 }
             }
         }
