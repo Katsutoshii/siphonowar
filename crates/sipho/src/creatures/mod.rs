@@ -56,6 +56,19 @@ pub fn spawn_random(
         );
         snake::spawn_snake(position, &mut commands, &mut elastics);
     }
+    // Spawn gemstones
+    for _ in 0..150 {
+        let position = Position::new(
+            rand::thread_rng().gen_range(bounds.min.x..bounds.max.x),
+            rand::thread_rng().gen_range(bounds.min.y..bounds.max.y),
+        );
+        commands.spawn(ObjectSpec {
+            object: Object::GemStone,
+            team: Team::None,
+            position,
+            ..default()
+        });
+    }
 }
 
 pub enum CreatureType {
