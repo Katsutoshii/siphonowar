@@ -9,7 +9,7 @@ pub fn spawn_snake(
     let team = Team::None;
     let specs = vec![
         ObjectSpec {
-            object: Object::Head,
+            object: Object::Shocker,
             position: position + Position::new(0.0, 0.0),
             ..default()
         },
